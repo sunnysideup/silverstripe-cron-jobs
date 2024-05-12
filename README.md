@@ -1,8 +1,8 @@
 # Enter full name (e.g. My Abc Module): Cron Jobs
 
-[![Build Status](https://travis-ci.org/sunnysideup/silverstripe-pricespy.svg?branch=master)](https://travis-ci.org/sunnysideup/silverstripe-pricespy)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sunnysideup/silverstripe-pricespy/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sunnysideup/silverstripe-pricespy/?branch=master)
-[![codecov.io](https://codecov.io/github/sunnysideup/silverstripe-pricespy/coverage.svg?branch=master)](https://codecov.io/github/sunnysideup/silverstripe-pricespy?branch=master)
+[![Build Status](https://travis-ci.org/sunnysideup/silverstripe-cron-jobs.svg?branch=master)](https://travis-ci.org/sunnysideup/silverstripe-cron-jobs)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sunnysideup/silverstripe-cron-jobs/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sunnysideup/silverstripe-cron-jobs/?branch=master)
+[![codecov.io](https://codecov.io/github/sunnysideup/silverstripe-cron-jobs/coverage.svg?branch=master)](https://codecov.io/github/sunnysideup/silverstripe-cron-jobs?branch=master)
 
 [![Latest Stable Version](https://poser.pugx.org/jq/version)](https://packagist.org/packages/jq)
 [![License](https://poser.pugx.org/jq/license)](https://packagist.org/packages/jq)
