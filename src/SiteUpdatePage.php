@@ -8,7 +8,6 @@ use SilverStripe\Security\Permission;
 
 /**
  * class that controls all migration and updates
- * uses PWUpdate0PageSequenceNumber to set current setup in migration.
  *
  */
 class SiteUpdateUpdatePgae extends Page
