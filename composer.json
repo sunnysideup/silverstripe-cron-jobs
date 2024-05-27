@@ -1,5 +1,5 @@
 {
-  "name": "jq",
+  "name": "sunnysideup/cron-jobs",
   "description": "Enter description (e.g. Does the ABC): Silverstripe Module to facilitate complext queued jobs / cron jobs to run.",
   "type": "silverstripe-vendormodule",
   "keywords": [
