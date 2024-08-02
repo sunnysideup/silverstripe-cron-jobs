@@ -1,4 +1,4 @@
-# Enter full name (e.g. My Abc Module): Cron Jobs
+# Cron Jobs
 
 [![Build Status](https://travis-ci.org/sunnysideup/silverstripe-cron-jobs.svg?branch=master)](https://travis-ci.org/sunnysideup/silverstripe-cron-jobs)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sunnysideup/silverstripe-cron-jobs/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sunnysideup/silverstripe-cron-jobs/?branch=master)
