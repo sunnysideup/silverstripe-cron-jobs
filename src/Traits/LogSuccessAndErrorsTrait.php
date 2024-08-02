@@ -16,6 +16,11 @@ use Sunnysideup\Flush\FlushNowImplementor;
  */
 trait LogSuccessAndErrorsTrait
 {
+    public function flushNowLine()
+    {
+        self::do_flush('--------------------------------------------------------');
+        ;
+    }
     public static function log_anything(string $message, ?string $type = 'changed', ?bool $important = false)
     {
         self::log_anything_inner($message, $type, $important);

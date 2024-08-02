@@ -2,7 +2,7 @@
 
 namespace Sunnysideup\CronJobs\Traits;
 
-use Sunnysideup\CronJobs\SiteUpdateUpdatePgae;
+use Sunnysideup\CronJobs\SiteUpdateUpdatePage;
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext;
@@ -15,18 +15,12 @@ use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
 
-/**
- * @method SiteUpdateRecipeTaskBaseClass getLogClassName()
- */
 trait BaseClassTrait
 {
-    use LogSuccessAndErrorsTrait;
-
     protected $log;
 
     protected $timeAtStart;
@@ -110,8 +104,8 @@ trait BaseClassTrait
 
     public function Link(): string
     {
-        /** @var SiteUpdateUpdatePgae $page */
-        $page = SiteUpdateUpdatePgae::get()->first();
+        /** @var SiteUpdateUpdatePage $page */
+        $page = SiteUpdateUpdatePage::get()->first();
         $action = $this->getAction();
 
         return $page->Link($action . '/' . $this->getEscapedClassName() . '/');

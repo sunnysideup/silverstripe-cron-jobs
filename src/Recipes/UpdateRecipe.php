@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\CronJobs\Recipes;
 
+use SilverStripe\Core\Config\Configurable;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeTasks\SiteUpdateRecipeTaskBaseClass;
@@ -13,13 +14,13 @@ use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
-use Sunnysideup\Flush\FlushNow;
 
 abstract class UpdateRecipe
 {
-    use FlushNow;
     use LogSuccessAndErrorsTrait;
     use BaseClassTrait;
+    use Configurable;
+
     /**
      * @var mixed[]
      */
@@ -28,17 +29,12 @@ abstract class UpdateRecipe
     /**
      * @var int
      */
-    private const MAX_EXECUTION_MINUTES_STEPS = 60;
+    private static $max_execution_minutes_steps = 60;
 
     /**
      * @var int
      */
-    private const MAX_EXECUTION_MINUTES_RECIPES = 180;
-
-    /**
-     * @var int
-     */
-    private const MAX_QUEUE_TIME_IN_MINUTES = 15;
+    private static $max_execution_minutes_recipes = 180;
 
     public function getGroup(): string
     {
@@ -80,13 +76,13 @@ abstract class UpdateRecipe
         return $al;
     }
 
-    protected function canRunCalculated()
+    public function canRunCalculated()
     {
         if($this->updateCanRunAtAll()) {
             if ($this->canRun()) {
                 if ($this->CanRunAtThisHour()) {
                     if ($this->IsThereEnoughTimeSinceLastRun()) {
-                        if ($this->IsAnthingElseRunnning($this)) {
+                        if ($this->IsAnythingElseRunnning($this)) {
                             return true;
                         } else {
                             $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
@@ -105,6 +101,16 @@ abstract class UpdateRecipe
         }
     }
 
+    public function IsThereEnoughTimeSinceLastRun(): bool
+    {
+        $lastRunTs = $this->LastStartedTs();
+        $now = time();
+        $diff = $now - $lastRunTs;
+        if($diff > $this->minIntervalInMinutesBetweenRuns() * 60) {
+            return true;
+        }
+        return false;
+    }
     protected function canRunAtThisHour(): bool
     {
         $hourOfDay = date('H');
@@ -116,12 +122,13 @@ abstract class UpdateRecipe
     }
 
 
-    protected function isThereEnoughTimeSinceLastRun(): bool
+
+    protected function isThereTooMuchTimeSinceLastRun(): bool
     {
         $lastRunTs = $this->LastStartedTs();
         $now = time();
         $diff = $now - $lastRunTs;
-        if($diff > $this->minIntervalInMinutesBetweenRuns() * 60) {
+        if($diff > $this->maxIntervalInMinutesBetweenRuns() * 60) {
             return true;
         }
         return false;
@@ -130,14 +137,14 @@ abstract class UpdateRecipe
     public function run(?HttpRequest $request)
     {
         $this->flushNowLine();
-        $this->flushNow('Start Recipe ' . $this->getType() . ' at ' . date('l jS \of F Y h:i:s A'), 'brown');
+        $this->logAnything('Start Recipe ' . $this->getType() . ' at ' . date('l jS \of F Y h:i:s A'));
         $this->flushNowLine();
         $errors = 0;
         $status = 'Completed';
         $notes = '';
         $this->clearOldLogs($this->getForceRun());
         if ($this->canRun() && $this->updateCanRunAtAll()) {
-            $ready = $this->IsAnthingElseRunnning($this);
+            $ready = $this->IsAnythingElseRunnning($this);
             if ($ready) {
                 $updateID = $this->startLog(0);
                 $steps = $this->getSteps();
@@ -166,9 +173,8 @@ abstract class UpdateRecipe
 
         $this->stopLog($errors, $status, $notes);
         $this->flushNowLine();
-        $this->flushNow('End Recipe ' . $this->getType(), 'brown');
+        $this->logAnything('End Recipe ' . $this->getType());
         $this->flushNowLine();
-        $this->flushNowNewLine();
     }
 
     /**
@@ -181,7 +187,7 @@ abstract class UpdateRecipe
         if (class_exists($className)) {
             $obj = $className::inst();
             if ($obj->canRun()) {
-                $ready = $this->IsAnthingElseRunnning($obj);
+                $ready = $this->IsAnythingElseRunnning($obj);
                 if ($ready) {
                     $obj->startLog($updateID);
                     $errors = $obj->run();
@@ -194,7 +200,7 @@ abstract class UpdateRecipe
             return null;
         }
 
-        $this->flushNow('Could not find: ' . $className . ' as a step', 'deleted');
+        $this->logAnything('Could not find: ' . $className . ' as a step', 'deleted');
 
         return null;
 
@@ -221,8 +227,8 @@ abstract class UpdateRecipe
     protected function clearOldLogs(?bool $clearAll = false)
     {
         $array = [
-            SiteUpdate::class => self::MAX_EXECUTION_MINUTES_RECIPES,
-            SiteUpdateStep::class => self::MAX_EXECUTION_MINUTES_STEPS,
+            SiteUpdate::class => $this->Config()->get('max_execution_minutes_recipes'),
+            SiteUpdateStep::class => $this->Config()->get('max_execution_minutes_steps'),
         ];
         foreach ($array as $className => $minutes) {
             if (false === $clearAll) {
@@ -257,7 +263,7 @@ abstract class UpdateRecipe
      *
      * @param SiteUpdateRecipeTaskBaseClass|UpdateRecipe $obj
      */
-    protected function IsAnthingElseRunnning($obj): bool
+    protected function IsAnythingElseRunnning($obj): bool
     {
         if (true === $obj->IsAnythingRunning()) {
             if (true === $obj->IsAnythingRunning()) {

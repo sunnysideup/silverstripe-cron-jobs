@@ -1,14 +1,14 @@
 <?php
 
-namespace Sunnysideup\Crob;
+namespace Sunnysideup\CronJobs;
 
 use PageController;
-use Sunnysideup\Crob\Analysis\AnalysisBaseClass;
-use Sunnysideup\Crob\Model\Logs\SiteUpdate;
-use Sunnysideup\Crob\Model\Logs\SiteUpdateStep;
-use Sunnysideup\Crob\Recipes\Entries\MainRecipe;
-use Sunnysideup\Crob\Recipes\UpdateRecipe;
-use Sunnysideup\Crob\RecipeTasks\SiteUpdateRecipeTaskBaseClass;
+use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
+use Sunnysideup\CronJobs\Recipes\Entries\MainRecipe;
+use Sunnysideup\CronJobs\Recipes\UpdateRecipe;
+use Sunnysideup\CronJobs\RecipeTasks\SiteUpdateRecipeTaskBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Config;
@@ -20,15 +20,16 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
+use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 
 /**
  * the idea is to have a bunch of functions that output various lists.
  *
- * @property \Sunnysideup\Crob\SiteUpdateUpdatePgae $dataRecord
- * @method \Sunnysideup\Crob\SiteUpdateUpdatePgae data()
- * @mixin \Sunnysideup\Crob\SiteUpdateUpdatePgae
+ * @property \Sunnysideup\CronJobs\SiteUpdateUpdatePage $dataRecord
+ * @method \Sunnysideup\CronJobs\SiteUpdateUpdatePage data()
+ * @mixin \Sunnysideup\CronJobs\SiteUpdateUpdatePage
  */
-class SiteUpdateUpdatePgaeController extends PageController
+class SiteUpdateUpdatePageController extends PageController
 {
     protected $content = '';
 

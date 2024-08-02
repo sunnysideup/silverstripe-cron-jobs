@@ -18,8 +18,6 @@ abstract class SiteUpdateRecipeTaskBaseClass
 
     use Configurable;
 
-    use FlushNow;
-
     protected $debug = false;
 
     abstract public function run(): int;

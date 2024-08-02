@@ -8,10 +8,12 @@ use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\ArrayData;
+use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 
 abstract class AnalysisBaseClass
 {
     use BaseClassTrait;
+    use LogSuccessAndErrorsTrait;
 
     /**
      * returns the HTML for the analysis.

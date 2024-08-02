@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\Crob;
+namespace Sunnysideup\CronJobs;
 
 use Page;
 use SilverStripe\CMS\Model\SiteTree;
@@ -10,7 +10,7 @@ use SilverStripe\Security\Permission;
  * class that controls all migration and updates
  *
  */
-class SiteUpdateUpdatePgae extends Page
+class SiteUpdateUpdatePage extends Page
 {
     private static $can_be_root = true;
 
@@ -18,7 +18,7 @@ class SiteUpdateUpdatePgae extends Page
 
     private static $description = 'Review data - ADMINS only';
 
-    private static $table_name = 'SiteUpdateUpdatePgae';
+    private static $table_name = 'SiteUpdateUpdatePage';
 
     /**
      * Standard SS variable.
@@ -63,7 +63,7 @@ class SiteUpdateUpdatePgae extends Page
 
     public function canCreate($member = null, $context = [])
     {
-        return SiteTree::get()->filter(['ClassName' => SiteUpdateUpdatePgae::class])->exists() ? false : parent::canCreate($member, $context);
+        return SiteTree::get()->filter(['ClassName' => SiteUpdateUpdatePage::class])->exists() ? false : parent::canCreate($member, $context);
     }
 
     public function canUse($member = null)

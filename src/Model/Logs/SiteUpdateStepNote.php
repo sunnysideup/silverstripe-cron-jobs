@@ -22,7 +22,7 @@ class SiteUpdateStepNote extends DataObject
 
     private static $singular_name = 'Update Note';
 
-    private static $plural_name = 'Update Note';
+    private static $plural_name = 'Update Notes';
 
     private static $db = [
         'Type' => 'Enum("created,deleted,changed,ERROR","ERROR")',

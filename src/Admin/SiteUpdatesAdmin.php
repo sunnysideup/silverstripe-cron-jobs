@@ -2,9 +2,7 @@
 
 namespace Sunnysideup\CronJobs\Cms;
 
-use Sunnysideup\CronJobs\Model\BackupCheck;
-use Sunnysideup\CronJobs\Model\Logs\ProductsToIgnore;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateConfig;
+use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
