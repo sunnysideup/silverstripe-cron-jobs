@@ -10,7 +10,7 @@ use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 
 /**
- * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepError
+ * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepNote
  *
  * @property string $Type
  * @property string $Title
