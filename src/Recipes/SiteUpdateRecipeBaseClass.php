@@ -52,6 +52,12 @@ abstract class SiteUpdateRecipeBaseClass
      */
     private static $max_execution_minutes_steps = 60;
 
+    private static array $always_run_at_the_start_steps = [
+        MarkOldTasksAsError::class,
+    ];
+
+    private static array $always_run_at_the_end_steps = [];
+
     public function getGroup(): string
     {
         return 'Recipe';
@@ -205,7 +211,16 @@ abstract class SiteUpdateRecipeBaseClass
     protected function getSteps(): array
     {
         $array = static::STEPS;
-        array_unshift($array, MarkOldTasksAsError::class);
+        foreach($this->Config()->get('always_run_at_the_start_steps') as $className) {
+            if(! in_array($className, $array)) {
+                array_unshift($array, $className);
+            }
+        }
+        foreach($this->Config()->get('always_run_at_the_end_steps') as $className) {
+            if(! in_array($className, $array)) {
+                $array[] = $className;
+            }
+        }
 
         return $array;
     }
