@@ -24,6 +24,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
     public function run(): int
     {
         $this->oldLogsDeleter();
+        WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long($this->getForceRun());
         return 0;
 
     }
