@@ -164,7 +164,7 @@ trait BaseClassTrait
         return ClassInfo::shortName(static::class);
     }
 
-    public function LastCompleted(): string
+    public function LastCompleted(?bool $asTs = false): string|int
     {
         /** @var SiteUpdate|SiteUpdateStep $className */
         $className = $this->getLogClassName();
@@ -172,7 +172,9 @@ trait BaseClassTrait
             $obj = $className::get()
                 ->filter(['RunnerClassName' => static::class, 'Status' => 'Completed'])
                 ->first();
-
+            if($asTs) {
+                return $obj ? strtotime($obj->LastEdited) : 0;
+            }
             return $obj ? DBField::create_field(DBDatetime::class, $obj->LastEdited)->Ago() : 'Never Ran Successfully';
         }
 
