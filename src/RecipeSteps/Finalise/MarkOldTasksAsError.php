@@ -1,15 +1,15 @@
 <?php
 
-namespace Sunnysideup\CronJobs\RecipeTasks\Finalise;
+namespace Sunnysideup\CronJobs\RecipeSteps\Finalise;
 
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext;
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
+use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepError;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepNote;
-use Sunnysideup\CronJobs\RecipeTasks\SiteUpdateRecipeTaskBaseClass;
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
-class MarkOldTasksAsError extends SiteUpdateRecipeTaskBaseClass
+class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
 {
     /**
      * @var int
@@ -32,7 +32,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeTaskBaseClass
     {
         $this->oldLogsDeleterInner(SiteUpdate::class);
         $this->oldLogsDeleterInner(SiteUpdateStep::class);
-        $this->oldLogsDeleterInner(SiteUpdateStepError::class);
+        $this->oldLogsDeleterInner(SiteUpdateNote::class);
         $this->oldLogsDeleterInner(SiteUpdateRunNext::class);
         $this->oldLogsDeleterInner(SiteUpdateStepNote::class);
     }
@@ -47,14 +47,10 @@ class MarkOldTasksAsError extends SiteUpdateRecipeTaskBaseClass
                 ),
             ]
         );
-        echo "\r\n";
         if ($logs->exists()) {
             foreach ($logs as $log) {
-                echo '. ';
                 $log->delete();
             }
         }
-
-        echo "\r\n";
     }
 }

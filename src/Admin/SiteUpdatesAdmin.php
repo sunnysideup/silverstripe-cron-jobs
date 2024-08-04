@@ -4,12 +4,11 @@ namespace Sunnysideup\CronJobs\Cms;
 
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext;
+use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepError;
 use SilverStripe\Admin\ModelAdmin;
-use SilverStripe\ORM\DataObject;
-use Sunnysideup\CMSNiceties\Forms\CMSNicetiesLinkButton;
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
 
 /**
  * Class \Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin
@@ -21,7 +20,8 @@ class SiteUpdatesAdmin extends ModelAdmin
         SiteUpdateConfig::class,
         SiteUpdate::class,
         SiteUpdateStep::class,
-        SiteUpdateStepError::class,
+        SiteUpdateNote::class,
+        SiteUpdateStepNote::class,
         SiteUpdateRunNext::class,
     ];
 

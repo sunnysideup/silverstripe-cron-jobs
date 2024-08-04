@@ -73,9 +73,9 @@ abstract class AnalysisBaseClass
         return null;
     }
 
-    protected function hasCurrentID(): int
+    protected function hasCurrentID(): bool
     {
-        return (int) $this->request->getVar('id');
+        return (bool) $this->getCurrentID();
     }
 
     protected function getCurrentID(): int
@@ -103,7 +103,7 @@ abstract class AnalysisBaseClass
 
     protected function getFormTitle(): string
     {
-        return 'Select Item / Product Code';
+        return 'Select Item';
     }
 
     protected function SelectItemForm(): string

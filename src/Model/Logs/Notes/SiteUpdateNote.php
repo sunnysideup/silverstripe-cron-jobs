@@ -1,12 +1,13 @@
 <?php
 
-namespace Sunnysideup\CronJobs\Model\Logs;
+namespace Sunnysideup\CronJobs\Model\Logs\Notes;
 
 use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepError
@@ -17,9 +18,9 @@ use SilverStripe\ORM\DataObject;
  * @property int $SiteUpdateID
  * @method \Sunnysideup\CronJobs\Model\Logs\SiteUpdate SiteUpdate()
  */
-class SiteUpdateStepError extends DataObject
+class SiteUpdateNote extends DataObject
 {
-    private static $table_name = 'SiteUpdateStepError';
+    private static $table_name = 'SiteUpdateNote';
 
     private static $singular_name = 'Update Error / Success';
 
@@ -85,10 +86,17 @@ class SiteUpdateStepError extends DataObject
     {
         parent::onBeforeWrite();
         $this->Message = strip_tags((string) $this->Message);
+        $this->Title = substr((string) $this->Message, 0, 49);
     }
 
-    protected function escapedClassNameForAdmin(): string
+    protected function onAfterWrite()
     {
-        return str_replace('\\', '-', $this->ClassName);
+        parent::onAfterWrite();
+        if($this->Type === 'ERROR') {
+            $this->SiteUpdate()->Status = 'ERROR';
+            $this->SiteUpdate()->write();
+        }
     }
+
+
 }

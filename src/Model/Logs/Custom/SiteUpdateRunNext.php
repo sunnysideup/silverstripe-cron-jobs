@@ -1,13 +1,13 @@
 <?php
 
-namespace Sunnysideup\CronJobs\Model\Logs;
+namespace Sunnysideup\CronJobs\Model\Logs\Custom;
 
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObject;
 
 /**
- * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext
+ * Class \Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext
  *
  * @property string $RecipeOrStep
  * @property string $RunnerClassName
@@ -15,6 +15,7 @@ use SilverStripe\ORM\DataObject;
 class SiteUpdateRunNext extends DataObject
 {
     use LogTrait;
+
 
     private static $table_name = 'SiteUpdateRunNext';
 
@@ -48,6 +49,10 @@ class SiteUpdateRunNext extends DataObject
     private static $casting = [
         'Title' => 'Varchar',
         'Description' => 'Varchar',
+    ];
+
+    private static $field_labels = [
+
     ];
 
     public function getCMSFields()

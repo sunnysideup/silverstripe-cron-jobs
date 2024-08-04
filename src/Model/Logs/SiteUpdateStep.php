@@ -2,6 +2,8 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs;
 
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
+
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
@@ -23,7 +25,7 @@ use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
  * @property string $RunnerClassName
  * @property int $SiteUpdateID
  * @method \Sunnysideup\CronJobs\Model\Logs\SiteUpdate SiteUpdate()
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepNote[] SiteUpdateStepNotes()
+ * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote[] SiteUpdateStepNotes()
  */
 class SiteUpdateStep extends DataObject
 {
@@ -149,5 +151,17 @@ class SiteUpdateStep extends DataObject
         $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
 
         return $fields;
+    }
+
+    protected function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $this->recordErrors(SiteUpdateStepNote::class);
+    }
+
+    public function onBeforeDelete()
+    {
+        parent::onBeforeDelete();
+        $this->deleteFile();
     }
 }

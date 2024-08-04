@@ -2,10 +2,11 @@
 
 namespace Sunnysideup\CronJobs\Traits;
 
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext;
-use Sunnysideup\CronJobs\Recipes\UpdateRecipe;
+use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use Sunnysideup\CMSNiceties\Forms\CMSNicetiesLinkButton;
 
@@ -58,7 +59,7 @@ trait LogTrait
     }
 
     /**
-     * @return null|UpdateRecipe
+     * @return null|SiteUpdateRecipeBaseClass
      */
     public function MyRunnerObject()
     {
@@ -86,11 +87,6 @@ trait LogTrait
         }
 
         return false;
-    }
-
-    protected function escapedClassNameForAdmin(): string
-    {
-        return str_replace('\\', '-', $this->ClassName);
     }
 
     protected function addGenericFields($fields)
@@ -121,6 +117,30 @@ trait LogTrait
                 ]
             );
         }
+        if ($this->ErrorLog) {
+            $data = $this->ErrorLog;
+            $source = 'Saved';
+        } else {
+            $data = $this->getLogContent();
+            $source = basename($this->logFilePath());
+        }
+
+        $logField = LiteralField::create(
+            'Logs',
+            '<h2>Response from the lastest update only - stored in (' . $source . ')</h2>
+            <div style="background-color: #300a24; padding: 20px; height: 600px; overflow-y: auto;">' . $data . '</div>'
+        );
+        $fields->addFieldsToTab(
+            'Root.Log',
+            [
+                $logField,
+            ]
+        );
+        $fields->replaceField(
+            'RunnerClassName',
+            ReadonlyField::create('RunnerClassNameNice', 'Run', Injector::inst()->get($this->RunnerClassName)->i18n_singular_name())
+        );
+
     }
 
     protected function secondsToTime(int $inputSeconds)
@@ -160,5 +180,40 @@ trait LogTrait
         }
 
         return implode(', ', $timeParts);
+    }
+
+    protected function getErrors(): ?string
+    {
+        $contents = $this->getLogContent();
+        $logError = false;
+        if ($this->hasErrorInLog($contents)) {
+            $logError = true;
+            $this->ErrorLog = $contents;
+            $this->Status = 'Errors';
+        }
+
+        if ('NotCompleted' === $this->Status) {
+            $logError = true;
+        }
+
+        if ($this->Stopped && 'Started' === $this->Status) {
+            $this->Status = 'Errors';
+            $logError = true;
+        }
+        if($logError) {
+            return $contents;
+        }
+    }
+
+    public function recordErrors(string $recordClassName)
+    {
+        $errors = $this->getErrors();
+        if ($errors) {
+            $error = $recordClassName::create();
+            $error->Type = 'ERROR';
+            $error->Message = $errors;
+            $error->SiteUpdateID = $this->ID;
+            $error->write();
+        }
     }
 }

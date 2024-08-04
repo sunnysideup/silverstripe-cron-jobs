@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\CronJobs\RecipeTasks;
+namespace Sunnysideup\CronJobs\RecipeSteps;
 
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Traits\BaseClassTrait;
@@ -10,7 +10,7 @@ use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DB;
 use Sunnysideup\Flush\FlushNow;
 
-abstract class SiteUpdateRecipeTaskBaseClass
+abstract class SiteUpdateRecipeStepBaseClass
 {
     use BaseClassTrait;
 
@@ -56,10 +56,18 @@ abstract class SiteUpdateRecipeTaskBaseClass
         return 'runstep';
     }
 
-    protected function tableHasData($tableName): bool
+    public function canRunCalculated(): bool
     {
-        $query = DB::query('SELECT * FROM ' . $tableName . ' LIMIT 1;');
-
-        return (bool) $query->numRecords();
+        // are updates running at all?
+        if ($this->canRun()) {
+            if ($this->IsAnythingElseRunnningAndStopIfNeeded($this) === false) {
+                return true;
+            } else {
+                $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
+            }
+        } else {
+            $this->logAnything('Can not run ' . $this->getType() . ' because canRun returned FALSE');
+        }
+        return false;
     }
 }

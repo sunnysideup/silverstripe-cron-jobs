@@ -2,13 +2,13 @@
 
 namespace Sunnysideup\CronJobs\Recipes\Entries;
 
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateRunNext;
-use Sunnysideup\CronJobs\Recipes\UpdateRecipe;
-use Sunnysideup\CronJobs\RecipeTasks\SiteUpdateRecipeTaskBaseClass;
+use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\ORM\DataList;
 
-class CustomRecipe extends UpdateRecipe
+class CustomRecipe extends SiteUpdateRecipeBaseClass
 {
     public function getDescription(): string
     {
@@ -47,7 +47,8 @@ class CustomRecipe extends UpdateRecipe
     }
 
     /**
-     * @return SiteUpdateRecipeTaskBaseClass
+     * run the step and delete the "run next" instruction afterwards
+     * @return SiteUpdateRecipeStepBaseClass|null
      */
     public function runOneStep(string $className, ?int $updateID = 0)
     {
@@ -69,7 +70,7 @@ class CustomRecipe extends UpdateRecipe
         return true;
     }
 
-    protected function runEvenIfCMSIsStopped(): bool
+    protected function runEvenIfUpdatesAreStopped(): bool
     {
         return true;
     }
@@ -80,6 +81,7 @@ class CustomRecipe extends UpdateRecipe
             ->column('RunnerClassName')
         ;
         $parentArrays = parent::getSteps();
+        // add the parents to the start of the array
         array_unshift($array, ...$parentArrays);
 
         return $array;

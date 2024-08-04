@@ -6,30 +6,19 @@ use PageController;
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
-use Sunnysideup\CronJobs\Recipes\Entries\MainRecipe;
-use Sunnysideup\CronJobs\Recipes\UpdateRecipe;
-use Sunnysideup\CronJobs\RecipeTasks\SiteUpdateRecipeTaskBaseClass;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
-use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 
-/**
- * the idea is to have a bunch of functions that output various lists.
- *
- * @property \Sunnysideup\CronJobs\SiteUpdateUpdatePage $dataRecord
- * @method \Sunnysideup\CronJobs\SiteUpdateUpdatePage data()
- * @mixin \Sunnysideup\CronJobs\SiteUpdateUpdatePage
- */
-class SiteUpdateUpdatePageController extends PageController
+class SiteUpdatePageController extends PageController
 {
     protected $content = '';
 
@@ -45,18 +34,18 @@ class SiteUpdateUpdatePageController extends PageController
     private static $emergency_array = [
         [
             'Title' => 'Reset Updates (start again)',
-            'Link' => 'dev/tasks/Sunnysideup-CronJobs-Tasks-SiteUpdateReset',
+            'Link' => 'dev/tasks/site-update-reset',
         ],
         [
             'Title' => 'Clear Cache: flush cache and check database',
             'Link' => 'dev/build/?flush=1',
         ],
         [
-            'Title' => 'Do now allow product updates',
+            'Title' => 'Do now allow site updates',
             'Link' => 'admin/siteupdates/stopsiteupdates',
         ],
         [
-            'Title' => 'Allow product updates',
+            'Title' => 'Allow site updates',
             'Link' => 'admin/siteupdates/startsiteupdates',
         ],
 
@@ -122,18 +111,14 @@ class SiteUpdateUpdatePageController extends PageController
 
     public function RecipeLinks()
     {
-        return UpdateRecipe::my_child_links();
+        return SiteUpdateRecipeBaseClass::my_child_links();
     }
 
     public function StepLinks()
     {
-        return SiteUpdateRecipeTaskBaseClass::my_child_links();
+        return SiteUpdateRecipeStepBaseClass::my_child_links();
     }
 
-    public function BaseDir()
-    {
-        return Director::baseFolder();
-    }
 
     public function CurrentWebsite()
     {
@@ -172,7 +157,7 @@ class SiteUpdateUpdatePageController extends PageController
         return $this->httpError(404, 'Could not find class ' . $request->param('ID'));
     }
 
-    protected function AllowProductUpdatesRightNow(): bool
+    public function AllowSiteUpdatesRightNow(): bool
     {
         return ! (bool) SiteUpdateConfig::inst()->StopSiteUpdates;
     }
@@ -204,9 +189,6 @@ class SiteUpdateUpdatePageController extends PageController
         return $doSet;
     }
 
-    //====================================================== update data
-
-    //======================================== EMERGENCY!
 
     protected function init()
     {

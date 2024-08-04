@@ -2,6 +2,8 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs;
 
+use SilverStripe\Control\Controller;
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
@@ -23,8 +25,8 @@ use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
  * @property int $MemoryTaken
  * @property string $ErrorLog
  * @property string $RunnerClassName
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateStep()
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepError[] SiteUpdateStepErrors()
+ * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateSteps()
+ * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote[] SiteUpdateNotes()
  */
 class SiteUpdate extends DataObject
 {
@@ -36,9 +38,9 @@ class SiteUpdate extends DataObject
 
     private static $table_name = 'SiteUpdate';
 
-    private static $singular_name = 'Update Recipe Log Entry';
+    private static $singular_name = 'Site Update';
 
-    private static $plural_name = 'Update Recipe Log Entries';
+    private static $plural_name = 'Site Updates';
 
     private static $db = [
         'Notes' => 'Text',
@@ -60,8 +62,8 @@ class SiteUpdate extends DataObject
         'TimeTaken' => 'Seconds',
         'TimeNice' => 'Better Time',
         'MemoryTaken' => 'MBs',
-        'SiteUpdateStep.Count' => 'Steps',
-        'SiteUpdateStepErrors.Count' => 'Errors',
+        'SiteUpdateSteps.Count' => 'Steps',
+        'SiteUpdateNotes.Count' => 'Notes',
     ];
 
     private static $field_labels = [
@@ -72,13 +74,13 @@ class SiteUpdate extends DataObject
         'Status' => 'Status',
         'TimeTaken' => 'Seconds Used',
         'MemoryTaken' => 'Megabytes Used',
-        'SiteUpdateStep' => 'Steps',
-        'SiteUpdateStepErrors' => 'Errors',
+        'SiteUpdateSteps' => 'Steps',
+        'SiteUpdateNotes' => 'Errors',
     ];
 
     private static $has_many = [
-        'SiteUpdateStep' => SiteUpdateStep::class,
-        'SiteUpdateStepErrors' => SiteUpdateStepError::class,
+        'SiteUpdateSteps' => SiteUpdateStep::class,
+        'SiteUpdateNotes' => SiteUpdateNote::class,
     ];
 
     private static $indexes = [
@@ -108,26 +110,10 @@ class SiteUpdate extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-        $this->addGenericFields($fields);
-        if ($this->ErrorLog) {
-            $data = $this->ErrorLog;
-            $source = 'Saved';
-        } else {
-            $data = $this->getLogContent();
-            $source = $this->logFileName();
-        }
 
-        $logField = LiteralField::create(
-            'Logs',
-            '<h2>Response from the lastest update only - stored in (' . $source . ')</h2>
-            <div style="background-color: #300a24; padding: 20px; height: 600px; overflow-y: auto;">' . $this->getLogContent() . '</div>'
-        );
-        $fields->addFieldsToTab(
-            'Root.Log',
-            [
-                $logField,
-            ]
-        );
+        // add generic fields
+        $this->addGenericFields($fields);
+
         $fields->removeByName([
             'RunnerClassName',
             'TimeTaken',
@@ -173,34 +159,20 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $contents = $this->getLogContent();
-        $logError = false;
-        if ($this->hasErrorInLog($contents)) {
-            $logError = true;
-            $this->ErrorLog = $contents;
-            $this->Status = 'Errors';
-        }
-
-        if ('NotCompleted' === $this->Status) {
-            $logError = true;
-        }
-
-        if ($this->Stopped && 'Started' === $this->Status) {
-            $this->Status = 'Errors';
-            $logError = true;
-        }
-
-        if ($logError) {
-            $this->logError($contents, true);
-        }
+        $this->recordErrors(SiteUpdateNote::class);
     }
 
     protected function onAfterWrite()
     {
         parent::onAfterWrite();
+        $this->markStepsAsStoppedIfThisIsStopped();
+    }
+
+    protected function markStepsAsStoppedIfThisIsStopped()
+    {
         if ($this->Stopped) {
             /** @var DataList[SiteUpdateStep]  */
-            $items = $this->SiteUpdateStep()->filterAny(['Stopped' => false]) ;
+            $items = $this->SiteUpdateSteps()->filterAny(['Stopped' => false]) ;
             foreach ($items as $step) {
                 $step->Stopped = true;
                 $step->Status = 'NotCompleted';
@@ -209,28 +181,31 @@ class SiteUpdate extends DataObject
         }
     }
 
+    public function onBeforeDelete()
+    {
+        parent::onBeforeDelete();
+        $this->deleteFile();
+    }
+
     protected function hasErrorInLog(string $contents): bool
     {
-        $needle = '[Emergency]';
-
-        return strpos($contents, $needle);
+        $needles = ['[Emergency]', '[Error]', '[CRITICAL]', '[ALERT]', '[ERROR]'];
+        foreach($needles as $needle) {
+            if (strpos($contents, $needle) !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function getLogContent(): string
     {
-        $fileName = $this->logFileName();
-        if (file_exists($fileName)) {
-            return $this->bashColorToHtml(file_get_contents($fileName));
+        $filePath = $this->logFilePath();
+        if (file_exists($filePath)) {
+            return $this->bashColorToHtml(file_get_contents($filePath));
         }
 
-        return 'no file found.';
-    }
-
-    protected function logFileName(): string
-    {
-        $type = strtolower($this->Type);
-
-        return Director::baseFolder() . '/updatelogs/' . $type . '-recipe-update.log';
+        return 'no file found here '.$filePath;
     }
 
 }

@@ -2,9 +2,11 @@
 
 namespace Sunnysideup\CronJobs\Tasks;
 
+use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 
 class SiteUpdateLogsDelete extends BuildTask
 {
@@ -17,11 +19,15 @@ class SiteUpdateLogsDelete extends BuildTask
     public function run($request)
     {
         $this->truncateTable('SiteUpdate');
+        $this->truncateTable('SiteUpdateNote');
         $this->truncateTable('SiteUpdateStep');
-        $this->truncateTable('SiteUpdateStepError');
         $this->truncateTable('SiteUpdateStepNote');
         $this->truncateTable('SiteUpdateRunNext');
-        self::log_anything('DONE, make sure to run a dev/build');
+
+        // delete all log files
+        Injector::inst()->get(SiteUpdate::class)->deleteAllFilesInFolder();
+
+        LogSuccessAndErrorsTrait::log_anything('DONE, make sure to run a dev/build');
     }
 
     public function truncateTable(string $tableName)

@@ -10,41 +10,31 @@ use SilverStripe\Security\Permission;
  * class that controls all migration and updates
  *
  */
-class SiteUpdateUpdatePage extends Page
+class SiteUpdatePage extends Page
 {
     private static $can_be_root = true;
 
     private static $icon = '';
 
-    private static $description = 'Review data - ADMINS only';
+    private static $description = 'Allows you review the Site Updates';
 
-    private static $table_name = 'SiteUpdateUpdatePage';
-
-    /**
-     * Standard SS variable.
-     */
-    private static $singular_name = 'Data Update Page';
+    private static $table_name = 'SiteUpdatePage';
 
     /**
      * Standard SS variable.
      */
-    private static $plural_name = 'Data Update Pages';
+    private static $singular_name = 'Site Update Page';
+
+    /**
+     * Standard SS variable.
+     */
+    private static $plural_name = 'Site Update Pages';
 
     private static $defaults = [
-        'URLSegment' => 'admin-update',
+        'URLSegment' => 'site-update-page',
         'ShowInMenus' => '0',
         'ShowInSearch' => '0',
     ];
-
-    public function i18n_singular_name()
-    {
-        return _t('DataUpdatePage.SINGULARNAME', 'Data Update Page');
-    }
-
-    public function i18n_plural_name()
-    {
-        return _t('DataUpdatePage.PLURALNAME', 'Data Update Pages');
-    }
 
     public function canView($member = null)
     {
@@ -63,7 +53,7 @@ class SiteUpdateUpdatePage extends Page
 
     public function canCreate($member = null, $context = [])
     {
-        return SiteTree::get()->filter(['ClassName' => SiteUpdateUpdatePage::class])->exists() ? false : parent::canCreate($member, $context);
+        return SiteTree::get()->filter(['ClassName' => SiteUpdatePage::class])->exists() ? false : parent::canCreate($member, $context);
     }
 
     public function canUse($member = null)

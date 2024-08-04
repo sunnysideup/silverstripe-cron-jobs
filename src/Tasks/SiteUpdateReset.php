@@ -10,6 +10,8 @@ class SiteUpdateReset extends BuildTask
 {
     use LogSuccessAndErrorsTrait;
 
+    private static $segment = 'site-update-reset';
+
     protected $title = 'Reset all Site Updates';
 
     protected $description = 'Set all the Site Updates steps to STOPPED';
