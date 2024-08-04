@@ -104,7 +104,6 @@ trait BaseClassTrait
             }
 
             $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunning) . ' is/are still running');
-            WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long();
             // check again
             return $obj->IsAnythingRunning();
         }
