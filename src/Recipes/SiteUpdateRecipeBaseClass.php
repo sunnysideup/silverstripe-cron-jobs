@@ -150,12 +150,14 @@ abstract class SiteUpdateRecipeBaseClass
         if ($this->canRunCalculated()) {
             $steps = $this->getSteps();
             foreach ($steps as $className) {
-                $obj = $this->runOneStep($className, $updateID);
-                if ($obj && !$obj->allowNextTaskToRun()) {
+                $stepRunner = $this->runOneStep($className, $updateID);
+                if ($stepRunner && !$stepRunner->allowNextStepToRun()) {
                     $errors = 1;
                     $status = 'Shortened';
                     $notes = 'This update recipe stopped early because a step prevented the next step from running.';
-
+                    $log = $stepRunner->getLog();
+                    $log->AllowedNextStep = false;
+                    $log->write();
                     break;
                 }
             }

@@ -9,6 +9,13 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use Sunnysideup\CMSNiceties\Forms\CMSNicetiesLinkButton;
+use InvalidArgumentException;
+use RuntimeException;
+use SilverStripe\Control\Controller;
+use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
+use SilverStripe\Control\Director;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Config\Config;
 
 trait LogTrait
 {
@@ -89,6 +96,17 @@ trait LogTrait
         return false;
     }
 
+    public function getShortClassCode(): string
+    {
+        if(! $this->RunnerClassName) {
+            return 'error';
+        }
+        if(! class_exists($this->RunnerClassName)) {
+            return 'error';
+        }
+        return ClassInfo::shortName($this->RunnerClassName);
+    }
+
     protected function addGenericFields($fields)
     {
         $fields->addFieldsToTab(
@@ -128,7 +146,7 @@ trait LogTrait
         $logField = LiteralField::create(
             'Logs',
             '<h2>Response from the lastest update only - stored in (' . $source . ')</h2>
-            <div style="background-color: #300a24; padding: 20px; height: 600px; overflow-y: auto;">' . $data . '</div>'
+            <div style="background-color: #300a24; padding: 20px; height: 600px; overflow-y: auto; border-radius: 10px; color: #efefef;">' . $data . '</div>'
         );
         $fields->addFieldsToTab(
             'Root.Log',
@@ -136,9 +154,15 @@ trait LogTrait
                 $logField,
             ]
         );
+        /**
+         * @var
+         *
+         */
+        $obj = $this->MyRunnerObject();
+        $runnerClassNameNice = $obj ? $obj->getTitle() : 'Error';
         $fields->replaceField(
             'RunnerClassName',
-            ReadonlyField::create('RunnerClassNameNice', 'Run', Injector::inst()->get($this->RunnerClassName)->i18n_singular_name())
+            ReadonlyField::create('RunnerClassNameNice', 'Run', $runnerClassNameNice)
         );
 
     }
@@ -203,6 +227,7 @@ trait LogTrait
         if($logError) {
             return $contents;
         }
+        return null;
     }
 
     public function recordErrors(string $recordClassName)
@@ -216,4 +241,72 @@ trait LogTrait
             $error->write();
         }
     }
+
+    public function logFilePath(): string
+    {
+        return Controller::join_links(
+            $this->logFileFolderPath(),
+            $this->getShortClassCode() . '_' . $this->ID . '-update.log'
+        );
+
+    }
+
+    public function deleteAllFilesInFolder(?string $directory = '')
+    {
+        if(! $directory) {
+            $directory = $this->logFileFolderPath();
+        }
+        if (!is_dir($directory)) {
+            throw new InvalidArgumentException('The provided path is not a directory.');
+        }
+
+        $files = glob($directory . '/*', GLOB_MARK);
+
+        foreach ($files as $file) {
+            if (is_dir($file)) {
+                $this->deleteAllFilesInFolder($file);
+                if (!rmdir($file)) {
+                    throw new RuntimeException('Failed to delete directory ' . $file);
+                }
+            } else {
+                if (!unlink($file)) {
+                    throw new RuntimeException('Failed to delete file ' . $file);
+                }
+            }
+        }
+
+    }
+
+    protected function logFileFolderPath(): string
+    {
+        return Controller::join_links(
+            Director::baseFolder(),
+            Config::inst()->get(SiteUpdateConfig::class, 'log_file_folder'),
+        );
+
+    }
+
+
+    protected function getLogContent(): string
+    {
+        $filePath = $this->logFilePath();
+        if (file_exists($filePath)) {
+            return $this->bashColorToHtml(file_get_contents($filePath));
+        }
+
+        return 'no file found here '.$filePath;
+    }
+
+
+    protected function hasErrorInLog(string $contents): bool
+    {
+        $needles = ['[Emergency]', '[Error]', '[CRITICAL]', '[ALERT]', '[ERROR]'];
+        foreach($needles as $needle) {
+            if (strpos($contents, $needle) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

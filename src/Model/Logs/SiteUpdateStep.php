@@ -19,7 +19,7 @@ use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
  * @property string $Type
  * @property int $Errors
  * @property string $Status
- * @property bool $AllowNextStep
+ * @property bool $AllowedNextStep
  * @property int $TimeTaken
  * @property int $MemoryTaken
  * @property string $RunnerClassName
@@ -47,7 +47,7 @@ class SiteUpdateStep extends DataObject
         'Type' => 'Varchar(255)',
         'Errors' => 'Int',
         'Status' => 'Enum("Started,Errors,NotCompleted,Completed,Skipped","Started")',
-        'AllowNextStep' => 'Boolean',
+        'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
         'RunnerClassName' => 'Varchar(255)',
@@ -67,7 +67,7 @@ class SiteUpdateStep extends DataObject
         'Stopped.NiceAndColourfull' => 'Stopped',
         'Title' => 'Step',
         'Status' => 'Status',
-        'AllowNextStep.NiceAndColourfull' => 'Allow Next Step?',
+        'AllowedNextStep.NiceAndColourfull' => 'Allow Next Step?',
         'TimeTaken' => 'Seconds',
         'TimeNice' => 'Better Time',
         'MemoryTaken' => 'MBs',
@@ -78,7 +78,7 @@ class SiteUpdateStep extends DataObject
         'Notes' => 'Notes',
         'Stopped' => 'Stopped',
         'Status' => 'Status',
-        'AllowNextStep' => 'Allow next step to run',
+        'AllowedNextStep' => 'Allowed next step to run',
         'TimeTaken' => 'Seconds Used',
         'MemoryTaken' => 'Megabytes Used',
     ];
@@ -88,10 +88,11 @@ class SiteUpdateStep extends DataObject
         'Status' => 'ExactMatchFilter',
         'Type' => 'PartialMatchFilter',
         'Notes' => 'PartialMatchFilter',
-        'AllowNextStep' => 'ExactMatchFilter',
+        'AllowedNextStep' => 'ExactMatchFilter',
     ];
 
     private static $indexes = [
+        'AllowedNextStep' => true,
         'Stopped' => true,
         'LastEdited' => true,
         'Type' => true,
@@ -106,6 +107,10 @@ class SiteUpdateStep extends DataObject
 
     private static $default_sort = [
         'ID' => 'DESC',
+    ];
+
+    private static $defaults = [
+        'AllowedNextStep' => true,
     ];
 
     public function canEdit($member = null)

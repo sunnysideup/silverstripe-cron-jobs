@@ -18,10 +18,13 @@ class SiteUpdateRun extends BuildTask
         Runs any SiteUpdateRunNext objects (to be deleted afterwards).
         If none, then runs the item set through the recipe "GET" variable. ';
 
+    protected string $recipe = '';
 
     private static $segment = 'site-update-run';
 
-    protected string $recipe = '';
+    private static array $always_run_at_start_recipes = [];
+
+    private static array $always_run_at_end_recipes = [];
 
     public function setRecipe(string $recipe): self
     {
@@ -58,7 +61,14 @@ class SiteUpdateRun extends BuildTask
                 $stepOrRecipeClassName = WorkOutWhatToRunNext::get_next_recipe_to_run();
             }
         }
-
+        foreach($this->Config()->get('always_run_at_start_recipes') as $recipe) {
+            $obj = $recipe::inst();
+            if ($obj) {
+                $obj->run($request);
+            } else {
+                user_error('Could not inst() class ' . $recipe . ' for always_run_at_start_recipes');
+            }
+        }
         if($stepOrRecipeClassName) {
             if (!class_exists($stepOrRecipeClassName)) {
                 DB::alteration_message('Could not find Recipe, using CustomRecipe!', 'deleted');
@@ -69,6 +79,14 @@ class SiteUpdateRun extends BuildTask
                 $obj->run($request);
             } else {
                 user_error('Could not inst() class ' . $stepOrRecipeClassName);
+            }
+        }
+        foreach($this->Config()->get('always_run_at_end_recipes') as $recipe) {
+            $obj = $recipe::inst();
+            if ($obj) {
+                $obj->run($request);
+            } else {
+                user_error('Could not inst() class ' . $recipe . ' for always_run_at_start_recipes');
             }
         }
     }

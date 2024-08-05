@@ -70,7 +70,7 @@ trait BaseClassTrait
 
         $runItNow = '';
         if (false === $isRecipe) {
-            $runItNow = 'Or run it now by browsing to: <a href="/dev/tasks/SiteUpdateRun">dev/tasks/SiteUpdateRun</a>.<br />';
+            $runItNow = 'Or run it now by browsing to: <a href="/dev/tasks/site-update-run">dev/tasks/site-update-run</a>.<br />';
         }
 
         return
@@ -134,9 +134,12 @@ trait BaseClassTrait
     {
         /** @var SiteUpdatePage $page */
         $page = SiteUpdatePage::get()->first();
-        $action = $this->getAction();
+        if($page) {
+            $action = $this->getAction();
 
-        return $page->Link($action . '/' . $this->getEscapedClassName() . '/');
+            return $page->Link($action . '/' . $this->getEscapedClassName() . '/');
+        }
+        return 'please-create-site-update-page';
     }
 
     public function Title(): string
@@ -310,6 +313,11 @@ trait BaseClassTrait
         return $this->request;
     }
 
+    public function getLog()
+    {
+        return $this->log;
+    }
+
     protected function getLogClassSingleton()
     {
         return Injector::inst()->get($this->getLogClassName());
@@ -320,48 +328,5 @@ trait BaseClassTrait
         return str_replace('\\', '-', static::class);
     }
 
-    public function logFilePath(): string
-    {
-        return Controller::join_links(
-            $this->logFileFolderPath(),
-            $this->getShortClassCode() . '_' . $this->ID . '-update.log'
-        );
-
-    }
-
-    public function deleteAllFilesInFolder(?string $directory = '')
-    {
-        if(! $directory) {
-            $directory = $this->logFileFolderPath();
-        }
-        if (!is_dir($directory)) {
-            throw new InvalidArgumentException('The provided path is not a directory.');
-        }
-
-        $files = glob($directory . '/*', GLOB_MARK);
-
-        foreach ($files as $file) {
-            if (is_dir($file)) {
-                $this->deleteAllFilesInFolder($file);
-                if (!rmdir($file)) {
-                    throw new RuntimeException('Failed to delete directory ' . $file);
-                }
-            } else {
-                if (!unlink($file)) {
-                    throw new RuntimeException('Failed to delete file ' . $file);
-                }
-            }
-        }
-
-    }
-
-    protected function logFileFolderPath(): string
-    {
-        return Controller::join_links(
-            Director::baseFolder(),
-            Config::inst()->get(SiteUpdateConfig::class, 'log_file_folder'),
-        );
-
-    }
 
 }

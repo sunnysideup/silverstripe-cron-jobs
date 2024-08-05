@@ -38,17 +38,17 @@ class SiteUpdatePage extends Page
 
     public function canView($member = null)
     {
-        return $this->canUse($member);
+        return $this->hasEditRights($member);
     }
 
     public function canEdit($member = null, $context = [])
     {
-        return $this->canUse($member);
+        return $this->hasEditRights($member);
     }
 
     public function canDelete($member = null)
     {
-        return $this->canUse($member);
+        return $this->hasEditRights($member);
     }
 
     public function canCreate($member = null, $context = [])
@@ -56,7 +56,7 @@ class SiteUpdatePage extends Page
         return SiteTree::get()->filter(['ClassName' => SiteUpdatePage::class])->exists() ? false : parent::canCreate($member, $context);
     }
 
-    public function canUse($member = null)
+    protected function hasEditRights($member = null)
     {
         return Permission::check('ADMIN');
     }

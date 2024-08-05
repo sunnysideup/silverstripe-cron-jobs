@@ -31,7 +31,7 @@ abstract class SiteUpdateRecipeStepBaseClass
      * we assume that runners run successfull,
      * but some can return false.
      */
-    public function allowNextTaskToRun(): bool
+    public function allowNextStepToRun(): bool
     {
         return true;
     }

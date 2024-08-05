@@ -107,7 +107,7 @@ class MyFirstUpdateStep extends SiteUpdateRecipeStepBaseClass
     /**
      * allows you to stop the process altogether if something went wrong.
      */
-    public function allowNextTaskToRun(): int
+    public function allowNextStepToRun(): int
     {
         return true;
     }

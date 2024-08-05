@@ -187,25 +187,5 @@ class SiteUpdate extends DataObject
         $this->deleteFile();
     }
 
-    protected function hasErrorInLog(string $contents): bool
-    {
-        $needles = ['[Emergency]', '[Error]', '[CRITICAL]', '[ALERT]', '[ERROR]'];
-        foreach($needles as $needle) {
-            if (strpos($contents, $needle) !== false) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    protected function getLogContent(): string
-    {
-        $filePath = $this->logFilePath();
-        if (file_exists($filePath)) {
-            return $this->bashColorToHtml(file_get_contents($filePath));
-        }
-
-        return 'no file found here '.$filePath;
-    }
 
 }
