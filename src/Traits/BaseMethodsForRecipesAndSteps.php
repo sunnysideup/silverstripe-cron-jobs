@@ -25,7 +25,7 @@ use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 
-trait BaseClassTrait
+trait BaseMethodsForRecipesAndSteps
 {
     protected $log;
 
@@ -94,35 +94,29 @@ trait BaseClassTrait
      *
      * @param SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj
      */
-    protected function IsAnythingElseRunnningAndStopIfNeeded(SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj): bool
+    protected function IsAnythingRunning(null|SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj = null): bool
     {
-        if (true === $obj->IsAnythingRunning()) {
-            $whatElseIsRunning = [];
-            $otherOnes = $obj->WhatElseIsRunning();
-            foreach ($otherOnes as $otherOne) {
-                $whatElseIsRunning[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
+        $whatIsRunning = $this->WhatIsRunning();
+        if ($whatIsRunning->exists()) {
+            $whatIsRunningArray = [];
+            foreach ($whatIsRunning as $otherOne) {
+                $whatIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
             }
-
-            $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunning) . ' is/are still running');
+            if($obj) {
+                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatIsRunningArray) . ' is/are still running');
+            }
             // check again
-            return $obj->IsAnythingRunning();
+            return true;
         }
 
         return false;
     }
 
-    /**
-     * we check if a Recipe or a Recipe Step is running
-     */
-    public function IsAnythingRunning(): bool
-    {
-        return (bool) $this->WhatElseIsRunning()->exists();
-    }
 
     /**
      * list of other items running
      */
-    public function WhatElseIsRunning(): DataList
+    protected function WhatIsRunning(): DataList
     {
         /** @var SiteUpdate|SiteUpdateStep $className */
         $className = $this->getLogClassName();
@@ -166,41 +160,53 @@ trait BaseClassTrait
         return ClassInfo::shortName(static::class);
     }
 
+    public function LastStarted(?bool $asTs = false): string|int
+    {
+        return $this->getLastStartedOrCompleted($asTs, true);
+    }
     public function LastCompleted(?bool $asTs = false): string|int
     {
-        /** @var SiteUpdate|SiteUpdateStep $className */
+        return $this->getLastStartedOrCompleted($asTs, false);
+    }
+
+    protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
+    {
+        $list = $this->listOfLogsForThisRecipeOrStep();
+        if ($list) {
+            $field = 'LastEdited';
+            if($startedRatherThanCompleted) {
+                $field = 'Created';
+            }
+            $obj = $list->sort('ID', 'DESC')->first();
+            if($asTs) {
+                return $obj ? strtotime($obj->$field) : 0;
+            }
+            return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
+        }
+        if($asTs) {
+            return 0;
+        } else {
+            return 'Never Ran Successfully';
+        }
+    }
+
+    protected function listOfLogsForThisRecipeOrStep(): ?DataList
+    {
         $className = $this->getLogClassName();
         if ($className && class_exists($className)) {
-            $obj = $className::get()
-                ->filter(['RunnerClassName' => static::class, 'Status' => 'Completed'])
-                ->first();
-            if($asTs) {
-                return $obj ? strtotime($obj->LastEdited) : 0;
-            }
-            return $obj ? DBField::create_field(DBDatetime::class, $obj->LastEdited)->Ago() : 'Never Ran Successfully';
+            return $className::get()
+                ->filter(['RunnerClassName' => static::class, 'Status' => 'Completed']);
         }
-
-        return 'Error, could not find class '.$className;
+        return null;
     }
 
-    protected function LastStartedTs(): int
-    {
-        /** @var SiteUpdate|SiteUpdateStep $className */
-        $className = $this->getLogClassName();
-        if ($className) {
-            $log = $className::get()->sort('ID', 'DESC')->first();
-            return $log ? strtotime($log->Created) : 0;
-        }
-        return 0;
-    }
 
     public function HasErrors(): bool
     {
-        /** @var SiteUpdate|SiteUpdateStep $className */
-        $className = $this->getLogClassName();
-        if ($className) {
-            return $className::get()
-                ->filter(['RunnerClassName' => static::class, 'Status' => ['Errors', 'NotCompleted']])
+        $list = $this->listOfLogsForThisRecipeOrStep();
+        if ($list) {
+            return $list
+                ->filter(['Status' => ['Errors', 'NotCompleted']])
                 ->exists();
         }
 
@@ -209,15 +215,49 @@ trait BaseClassTrait
 
     public function CurrentlyRunning(): bool
     {
-        /** @var SiteUpdate|SiteUpdateStep $className */
-        $className = $this->getLogClassName();
-        if ($className) {
-            return $className::get()
-                ->filter(['RunnerClassName' => static::class, 'Status' => 'Started'])
+        $list = $this->listOfLogsForThisRecipeOrStep();
+        if ($list) {
+            return $list
+                ->filter(['Status' => 'Started'])
                 ->exists();
         }
 
         return false;
+    }
+
+    public function NumberOfLogs(): int
+    {
+        return $this->aggregateTaken('COUNT', 'ID');
+    }
+
+    public function AverageTimeTaken(): int
+    {
+        return $this->aggregateTaken('AVG', 'TimeTaken');
+    }
+
+    public function AverageMemoryTaken(): int
+    {
+        return $this->aggregateTaken('AVG', 'MemoryTaken');
+
+    }
+
+    public function MaxTimeTaken(): int
+    {
+        return $this->aggregateTaken('MAX', 'TimeTaken');
+    }
+
+    public function MaxMemoryTaken(): int
+    {
+        return $this->aggregateTaken('MAX', 'MemoryTaken');
+    }
+
+    protected function aggregateTaken(string $aggregateType, string $field): int
+    {
+        $list = $this->listOfLogsForThisRecipeOrStep();
+        if($list) {
+            return $list->aggregate($aggregateType.'("' . $field . '")');
+        }
+        return 0;
     }
 
     public function XML_val(string $method, $arguments = [])
@@ -242,7 +282,6 @@ trait BaseClassTrait
         /** @var SiteUpdate|SiteUpdateStep $className */
         $this->log = $className::create();
         $this->log->Title = trim(strip_tags((string) $this->getTitle()));
-        $this->log->Description = trim(strip_tags((string) $this->getDescription()));
         $this->log->Type = $this->getType();
         $this->log->Status = 'Started';
         $this->log->RunnerClassName = static::class;
@@ -290,9 +329,15 @@ trait BaseClassTrait
                     'Title' => $obj->getTitle(),
                     'Link' => Director::absoluteURL($obj->Link()),
                     'Description' => trim($obj->getDescription()),
+                    'LastStarted' => $obj->LastStarted(),
                     'LastCompleted' => $obj->LastCompleted(),
                     'HasErrors' => $obj->HasErrors(),
                     'SubLinks' => $obj->SubLinks(),
+                    'NumberOfLogs' => $obj->CountOfLogs(),
+                    'AverageTimeTaken' => $obj->AverageTimeTaken(),
+                    'AverageMemoryTaken' => $obj->AverageMemoryTaken(),
+                    'MaxTimeTaken' => $obj->MaxTimeTaken(),
+                    'MaxMemoryTaken' => $obj->MaxMemoryTaken(),
                 ]
             );
             $al->push($arrayData);
@@ -300,6 +345,7 @@ trait BaseClassTrait
 
         return $al;
     }
+
 
     public function setRequest($request)
     {

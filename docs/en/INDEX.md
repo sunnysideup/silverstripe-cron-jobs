@@ -46,6 +46,8 @@ class MySiteUpdateRecipe extends SiteUpdateRecipeBaseClass
     public function canRunHoursOfTheDay(): array 
     {
         return [0, 1, 2, 3];
+        // OR
+        // return []; // to always run
     }
     
     public function minIntervalInMinutesBetweenRuns(): int

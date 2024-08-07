@@ -123,7 +123,13 @@ trait LogTrait
             $fields->addFieldsToTab(
                 'Root.GeneralInfo',
                 [
-                    ReadonlyField::create('LastRan', 'Last Completed', $obj->LastCompleted()),
+                    ReadonlyField::create('NumberOfLogs', 'Last Completed', $obj->NumberOfLogs()),
+                    ReadonlyField::create('LastStarted', 'Last Completed', $obj->LastStarted()),
+                    ReadonlyField::create('LastCompleted', 'Last Completed', $obj->LastCompleted()),
+                    ReadonlyField::create('AverageTimeTaken', 'Average Time Taken', $obj->AverageTimeTaken()),
+                    ReadonlyField::create('AverageMemoryTaken', 'Average Memory Taken', $obj->AverageMemoryTaken()),
+                    ReadonlyField::create('MaxTimeTaken', 'Max Time Taken', $obj->MaxTimeTaken()),
+                    ReadonlyField::create('MaxMemoryTaken', 'Max Memory Taken', $obj->MaxMemoryTaken()),
                     ReadonlyField::create('HasErrors', 'Has Errors', $obj->HasErrors() ? 'YES' : 'NO'),
                     ReadonlyField::create('CurrentlyRunning', 'Currently Running', $obj->CurrentlyRunning() ? 'YES' : 'NO'),
                 ]
@@ -205,6 +211,7 @@ trait LogTrait
 
         return implode(', ', $timeParts);
     }
+
 
     protected function getErrors(): ?string
     {

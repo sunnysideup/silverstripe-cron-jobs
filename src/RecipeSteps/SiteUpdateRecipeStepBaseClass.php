@@ -3,7 +3,7 @@
 namespace Sunnysideup\CronJobs\RecipeSteps;
 
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
-use Sunnysideup\CronJobs\Traits\BaseClassTrait;
+use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\ORM\ArrayList;
@@ -12,7 +12,7 @@ use Sunnysideup\Flush\FlushNow;
 
 abstract class SiteUpdateRecipeStepBaseClass
 {
-    use BaseClassTrait;
+    use BaseMethodsForRecipesAndSteps;
 
     use LogSuccessAndErrorsTrait;
 
@@ -60,7 +60,7 @@ abstract class SiteUpdateRecipeStepBaseClass
     {
         // are updates running at all?
         if ($this->canRun()) {
-            if ($this->IsAnythingElseRunnningAndStopIfNeeded($this) === false) {
+            if ($this->IsAnythingRunning($this) === false) {
                 return true;
             } else {
                 $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');

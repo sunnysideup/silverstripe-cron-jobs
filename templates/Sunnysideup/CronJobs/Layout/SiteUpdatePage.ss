@@ -67,7 +67,13 @@ Currently Product Update from Advance Retail are
         <h3><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h3>
         <p class="show-on-hover">
             <a href="$Link">▶ schedule now</a>
+            <br /><strong>Number of Logs:</strong> $NumberOfLogs
+            <br /><strong>Last Started:</strong> $LastStarted
             <br /><strong>Last Completed:</strong> $LastCompleted
+            <br /><strong>Average Time Taken:</strong> $AverageTimeTaken
+            <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
+            <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
+            <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
             <br />$getDescription
         </p>
             <% if $SubLinks %>
@@ -77,7 +83,13 @@ Currently Product Update from Advance Retail are
                 <h4><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h4>
                     <p class="show-on-hover">
                         <a href="$Link">▶ schedule now</a>
+                        <br /><strong>Number of Logs:</strong> $NumberOfLogs
+                        <br /><strong>Last Started:</strong> $LastStarted
                         <br /><strong>Last Completed:</strong> $LastCompleted
+                        <br /><strong>Average Time Taken:</strong> $AverageTimeTaken
+                        <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
+                        <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
+                        <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
                         <br />$getDescription
                     </p>
                 </li>

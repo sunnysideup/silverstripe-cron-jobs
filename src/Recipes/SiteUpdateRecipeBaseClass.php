@@ -7,7 +7,7 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\Finalise\MarkOldTasksAsError;
-use Sunnysideup\CronJobs\Traits\BaseClassTrait;
+use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
@@ -20,7 +20,7 @@ abstract class SiteUpdateRecipeBaseClass
 {
     use LogSuccessAndErrorsTrait;
 
-    use BaseClassTrait;
+    use BaseMethodsForRecipesAndSteps;
 
     use Configurable;
 
@@ -30,6 +30,7 @@ abstract class SiteUpdateRecipeBaseClass
     abstract public function canRun(): bool;
 
     abstract public function canRunHoursOfTheDay(): array;
+    abstract public function canRunAtTheSameTimeAsOtherRecipes(): bool;
 
     abstract public function minIntervalInMinutesBetweenRuns(): int;
 
@@ -86,7 +87,7 @@ abstract class SiteUpdateRecipeBaseClass
             if ($this->canRun()) {
                 if ($this->CanRunAtThisHour()) {
                     if ($this->IsThereEnoughTimeSinceLastRun()) {
-                        if ($this->IsAnythingElseRunnningAndStopIfNeeded($this) === false) {
+                        if ($this->IsAnythingRunning($this) === false || $this->canRunAtTheSameTimeAsOtherRecipes()) {
                             return true;
                         } else {
                             $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
@@ -110,7 +111,7 @@ abstract class SiteUpdateRecipeBaseClass
     {
         $hourOfDay = date('H');
         $hoursOfTheDay = $this->canRunHoursOfTheDay();
-        if(in_array($hourOfDay, $hoursOfTheDay)) {
+        if(empty($hoursOfTheDay) || in_array($hourOfDay, $hoursOfTheDay)) {
             return true;
         }
         return false;
@@ -118,7 +119,7 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function IsThereEnoughTimeSinceLastRun(): bool
     {
-        $lastRunTs = $this->LastStartedTs();
+        $lastRunTs = $this->LastCompleted(true);
         $now = time();
         $diff = $now - $lastRunTs;
         if($diff > $this->minIntervalInMinutesBetweenRuns() * 60) {
@@ -129,7 +130,7 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function overTimeSinceLastRun(): int
     {
-        $lastRunTs = $this->LastStartedTs();
+        $lastRunTs = $this->LastCompleted(true);
         $now = time();
         $diff = $now - $lastRunTs;
         $over = $diff > $this->maxIntervalInMinutesBetweenRuns() * 60;

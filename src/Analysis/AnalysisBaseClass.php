@@ -2,7 +2,7 @@
 
 namespace Sunnysideup\CronJobs\Analysis;
 
-use Sunnysideup\CronJobs\Traits\BaseClassTrait;
+use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
@@ -12,7 +12,7 @@ use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 
 abstract class AnalysisBaseClass
 {
-    use BaseClassTrait;
+    use BaseMethodsForRecipesAndSteps;
     use LogSuccessAndErrorsTrait;
 
     /**
