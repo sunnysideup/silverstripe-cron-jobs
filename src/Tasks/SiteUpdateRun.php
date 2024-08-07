@@ -43,7 +43,7 @@ class SiteUpdateRun extends BuildTask
         // recipe already set ...
         if(! $this->recipe) {
             // get variable
-            $this->recipe = $request->getVar('recipe');
+            $this->recipe = (string) $request->getVar('recipe');
         }
         if($this->recipe) {
             $recipesAvailable = WorkOutWhatToRunNext::get_recipes();

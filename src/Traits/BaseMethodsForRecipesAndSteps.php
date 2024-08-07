@@ -96,14 +96,14 @@ trait BaseMethodsForRecipesAndSteps
      */
     protected function IsAnythingRunning(null|SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj = null): bool
     {
-        $whatIsRunning = $this->WhatIsRunning();
-        if ($whatIsRunning->exists()) {
-            $whatIsRunningArray = [];
-            foreach ($whatIsRunning as $otherOne) {
-                $whatIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
+        $whatElseIsRunning = $this->whatElseIsRunning();
+        if ($whatElseIsRunning->exists()) {
+            $whatElseIsRunningArray = [];
+            foreach ($whatElseIsRunning as $otherOne) {
+                $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
             }
             if($obj) {
-                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatIsRunningArray) . ' is/are still running');
+                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunningArray) . ' is/are still running');
             }
             // check again
             return true;
@@ -116,12 +116,13 @@ trait BaseMethodsForRecipesAndSteps
     /**
      * list of other items running
      */
-    protected function WhatIsRunning(): DataList
+    protected function whatElseIsRunning(): DataList
     {
         /** @var SiteUpdate|SiteUpdateStep $className */
         $className = $this->getLogClassName();
 
-        return $className::get()->filter(['Stopped' => false]);
+        $logID = (int) $this->log?->ID ?: 0;
+        return $className::get()->filter(['Stopped' => false])->exclude(['ID' => $logID]);
     }
 
     public function Link(): string
@@ -172,7 +173,12 @@ trait BaseMethodsForRecipesAndSteps
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
-        if ($list) {
+        if($startedRatherThanCompleted) {
+            // list = $list->filter(['Status' => 'Started']);
+        } else {
+            $list = $list->exclude(['Status' => 'Started']);
+        }
+        if ($list && $list->exists()) {
             $field = 'LastEdited';
             if($startedRatherThanCompleted) {
                 $field = 'Created';
@@ -195,7 +201,7 @@ trait BaseMethodsForRecipesAndSteps
         $className = $this->getLogClassName();
         if ($className && class_exists($className)) {
             return $className::get()
-                ->filter(['RunnerClassName' => static::class, 'Status' => 'Completed']);
+                ->filter(['RunnerClassName' => static::class]);
         }
         return null;
     }
@@ -224,38 +230,118 @@ trait BaseMethodsForRecipesAndSteps
 
         return false;
     }
+    public function HoursOfTheDayNice(): string
+    {
+        if($this instanceof SiteUpdateRecipeBaseClass) {
+            $array = $this->canRunHoursOfTheDay();
+            if(empty($array)) {
+                return 'any time';
+            }
+            return $this->summariseHours($array);
+        }
+        return 'n/a';
+    }
+
+    protected function summariseHours(array $hours): string
+    {
+        sort($hours);
+        $ranges = [];
+        $start = $hours[0];
+        $end = $hours[0];
+
+        for ($i = 1; $i < count($hours); $i++) {
+            if ($hours[$i] == $end + 1) {
+                $end = $hours[$i];
+            } else {
+                $ranges[] = $start == $end ? sprintf('%02d:00', $start) : sprintf('%02d:00 - %02d:00', $start, $end + 1);
+                $start = $hours[$i];
+                $end = $hours[$i];
+            }
+        }
+
+        $ranges[] = $start == $end ? sprintf('%02d:00', $start) : sprintf('%02d:00 - %02d:00', $start, $end + 1);
+
+        return implode(', ', $ranges);
+    }
+
+
+    public function MinMinutesBetweenRunsNice(): string
+    {
+        if($this instanceof SiteUpdateRecipeBaseClass) {
+            return $this->minutesToTime($this->minIntervalInMinutesBetweenRuns());
+        }
+
+        return 'n/a';
+    }
+
+    public function MaxMinutesBetweenRunsNice(): string
+    {
+        if($this instanceof SiteUpdateRecipeBaseClass) {
+            return $this->minutesToTime($this->maxIntervalInMinutesBetweenRuns());
+        }
+        return 'n/a';
+    }
+
+    protected function minutesToTime(int $minutes): string
+    {
+        if($minutes < 1) {
+            return 'immediately';
+        }
+        if ($minutes < 60) {
+            return $minutes . ' minutes';
+        }
+
+        $hours = round($minutes / 60);
+        $remainingMinutes = $minutes % 60;
+
+        if ($hours < 24) {
+            return $remainingMinutes > 0
+                ? "$hours hours $remainingMinutes minutes"
+                : "$hours hours";
+        }
+
+        $days = round($hours / 24);
+        $remainingHours = $hours % 24;
+
+        return $remainingHours > 0
+            ? "$days days $remainingHours hours"
+            : "$days days ";
+    }
 
     public function NumberOfLogs(): int
     {
-        return $this->aggregateTaken('COUNT', 'ID');
+        return $this->aggregateTaken('count');
     }
 
     public function AverageTimeTaken(): int
     {
-        return $this->aggregateTaken('AVG', 'TimeTaken');
+        return $this->aggregateTaken('avg', 'TimeTaken');
     }
 
     public function AverageMemoryTaken(): int
     {
-        return $this->aggregateTaken('AVG', 'MemoryTaken');
+        return $this->aggregateTaken('avg', 'MemoryTaken');
 
     }
 
     public function MaxTimeTaken(): int
     {
-        return $this->aggregateTaken('MAX', 'TimeTaken');
+        return $this->aggregateTaken('max', 'TimeTaken');
     }
 
     public function MaxMemoryTaken(): int
     {
-        return $this->aggregateTaken('MAX', 'MemoryTaken');
+        return $this->aggregateTaken('max', 'MemoryTaken');
     }
 
-    protected function aggregateTaken(string $aggregateType, string $field): int
+    protected function aggregateTaken(string $aggregateMethod, ?string $field = null): int
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
-        if($list) {
-            return $list->aggregate($aggregateType.'("' . $field . '")');
+        if ($list && $list->exists()) {
+            $list = $list->filter(['Status' => 'Completed']);
+            if ($list->exists()) {
+                return round($field ? $list->$aggregateMethod($field) : $list->$aggregateMethod());
+            }
         }
         return 0;
     }
@@ -333,9 +419,12 @@ trait BaseMethodsForRecipesAndSteps
                     'LastCompleted' => $obj->LastCompleted(),
                     'HasErrors' => $obj->HasErrors(),
                     'SubLinks' => $obj->SubLinks(),
-                    'NumberOfLogs' => $obj->CountOfLogs(),
+                    'NumberOfLogs' => $obj->NumberOfLogs(),
                     'AverageTimeTaken' => $obj->AverageTimeTaken(),
                     'AverageMemoryTaken' => $obj->AverageMemoryTaken(),
+                    'HoursOfTheDayNice' => $obj->HoursOfTheDayNice(),
+                    'MinMinutesBetweenRunsNice' => $obj->MinMinutesBetweenRunsNice(),
+                    'MaxMinutesBetweenRunsNice' => $obj->MaxMinutesBetweenRunsNice(),
                     'MaxTimeTaken' => $obj->MaxTimeTaken(),
                     'MaxMemoryTaken' => $obj->MaxMemoryTaken(),
                 ]

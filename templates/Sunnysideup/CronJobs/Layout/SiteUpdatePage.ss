@@ -66,7 +66,11 @@ Currently Product Update from Advance Retail are
     <li>
         <h3><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h3>
         <p class="show-on-hover">
-            <a href="$Link">▶ schedule now</a>
+            $Description<br />
+            <a href="$Link">▶ schedule now</a><br />
+            <br /><strong>Hours of the day it runs:</strong> $HoursOfTheDayNice
+            <br /><strong>Minimum number of minutes between runs:</strong> $MinMinutesBetweenRunsNice
+            <br /><strong>Maximum number of minutes between runs:</strong> $MaxMinutesBetweenRunsNice
             <br /><strong>Number of Logs:</strong> $NumberOfLogs
             <br /><strong>Last Started:</strong> $LastStarted
             <br /><strong>Last Completed:</strong> $LastCompleted
@@ -74,7 +78,6 @@ Currently Product Update from Advance Retail are
             <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
             <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
             <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
-            <br />$getDescription
         </p>
             <% if $SubLinks %>
             <ol>

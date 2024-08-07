@@ -3,6 +3,7 @@
 namespace Sunnysideup\CronJobs\Traits;
 
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
 use SilverStripe\Core\Injector\Injector;
@@ -120,6 +121,16 @@ trait LogTrait
         );
         $obj = $this->MyRunnerObject();
         if ($obj) {
+            if($obj instanceof SiteUpdate) {
+                $fields->addFieldsToTab(
+                    'Root.GeneralInfo',
+                    [
+                        ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
+                        ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Number of Minutes between Runs', $obj->MinMinutesBetweenRunsNice()),
+                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Max Number of Minutes between Runs', $obj->MaxMinutesBetweenRunsNice()),
+                    ]
+                );
+            }
             $fields->addFieldsToTab(
                 'Root.GeneralInfo',
                 [

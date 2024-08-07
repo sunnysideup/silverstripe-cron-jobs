@@ -120,8 +120,11 @@ abstract class SiteUpdateRecipeBaseClass
     public function IsThereEnoughTimeSinceLastRun(): bool
     {
         $lastRunTs = $this->LastCompleted(true);
-        $now = time();
-        $diff = $now - $lastRunTs;
+        $nowTs = time();
+        $diff = round(($nowTs - $lastRunTs) / 60);
+        // echo "diff: $diff\n";
+        // echo "lastRunTs: $lastRunTs\n";
+        // echo "now: $now\n";
         if($diff > $this->minIntervalInMinutesBetweenRuns() * 60) {
             return true;
         }
@@ -131,9 +134,9 @@ abstract class SiteUpdateRecipeBaseClass
     public function overTimeSinceLastRun(): int
     {
         $lastRunTs = $this->LastCompleted(true);
-        $now = time();
-        $diff = $now - $lastRunTs;
-        $over = $diff > $this->maxIntervalInMinutesBetweenRuns() * 60;
+        $nowTs = time();
+        $diff = round(($nowTs - $lastRunTs) / 60);
+        $over = $diff > $this->maxIntervalInMinutesBetweenRuns();
         if($over > 0) {
             return $over;
         }
