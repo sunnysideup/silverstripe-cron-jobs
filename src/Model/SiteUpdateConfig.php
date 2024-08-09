@@ -33,4 +33,15 @@ class SiteUpdateConfig extends DataObject
         }
         return self::$me;
     }
+
+    public function canDelete($member = null)
+    {
+        return false;
+    }
+
+    public function canCreate($member = null, $context = [])
+    {
+        return SiteUpdateConfig::get()->count() ? false : parent::canCreate($member, $context);
+    }
+
 }

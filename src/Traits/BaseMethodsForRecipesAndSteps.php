@@ -173,21 +173,23 @@ trait BaseMethodsForRecipesAndSteps
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
-        if($startedRatherThanCompleted) {
-            // list = $list->filter(['Status' => 'Started']);
-        } else {
-            $list = $list->exclude(['Status' => 'Started']);
-        }
         if ($list && $list->exists()) {
-            $field = 'LastEdited';
             if($startedRatherThanCompleted) {
-                $field = 'Created';
+                // list = $list->filter(['Status' => 'Started']);
+            } else {
+                $list = $list->exclude(['Status' => 'Started']);
             }
-            $obj = $list->sort('ID', 'DESC')->first();
-            if($asTs) {
-                return $obj ? strtotime($obj->$field) : 0;
+            if ($list && $list->exists()) {
+                $field = 'LastEdited';
+                if($startedRatherThanCompleted) {
+                    $field = 'Created';
+                }
+                $obj = $list->sort('ID', 'DESC')->first();
+                if($asTs) {
+                    return $obj ? strtotime($obj->$field) : 0;
+                }
+                return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
             }
-            return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
         }
         if($asTs) {
             return 0;
