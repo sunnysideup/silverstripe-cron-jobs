@@ -29,7 +29,7 @@ class SiteUpdateReset extends BuildTask
     {
         DB::query('Update SiteUpdate SET Stopped = 1;');
         DB::query('Update SiteUpdateStep SET Stopped = 1;');
-        DB::query('Delete from SiteUpdateRunNext');
+        DB::query('TRUNCATE SiteUpdateRunNext');
         if ($this->verbose) {
             self::log_anything('DONE');
         }

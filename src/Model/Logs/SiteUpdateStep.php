@@ -167,6 +167,6 @@ class SiteUpdateStep extends DataObject
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();
-        $this->deleteFile();
+        $this->deleteLogFile();
     }
 }

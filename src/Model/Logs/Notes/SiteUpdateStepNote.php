@@ -92,8 +92,8 @@ class SiteUpdateStepNote extends DataObject
     {
         parent::onAfterWrite();
         if($this->Type === 'ERROR') {
-            $this->SiteUpdate()->Status = 'ERROR';
-            $this->SiteUpdate()->write();
+            $this->SiteUpdateStep()->Status = 'ERROR';
+            $this->SiteUpdateStep()->write();
         }
     }
 }

@@ -315,6 +315,11 @@ trait LogTrait
         return 'no file found here '.$filePath;
     }
 
+    protected function deleteLogFile()
+    {
+        unlink($this->logFilePath());
+    }
+
 
     protected function hasErrorInLog(string $contents): bool
     {

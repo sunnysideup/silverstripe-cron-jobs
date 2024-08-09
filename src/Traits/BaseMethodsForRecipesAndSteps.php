@@ -176,7 +176,7 @@ trait BaseMethodsForRecipesAndSteps
         if($startedRatherThanCompleted) {
             // list = $list->filter(['Status' => 'Started']);
         } else {
-            $list = $list->exclude(['Status' => 'Started']);
+            $list = $list?->exclude(['Status' => 'Started']);
         }
         if ($list && $list->exists()) {
             $field = 'LastEdited';
@@ -184,10 +184,12 @@ trait BaseMethodsForRecipesAndSteps
                 $field = 'Created';
             }
             $obj = $list->sort('ID', 'DESC')->first();
-            if($asTs) {
-                return $obj ? strtotime($obj->$field) : 0;
+            if($obj) {
+                if($asTs) {
+                    return $obj ? strtotime($obj->$field) : 0;
+                }
+                return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
             }
-            return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
         }
         if($asTs) {
             return 0;
@@ -378,7 +380,7 @@ trait BaseMethodsForRecipesAndSteps
             $this->mySiteUpdateID = (int) $this->log->ID;
         }
         $id = $this->log->write();
-        LogSuccessAndErrorsTrait::set_current_log_file_object($this->log);
+        $this->logset_current_log_file_object($this->log);
         return $id;
     }
 
@@ -399,7 +401,6 @@ trait BaseMethodsForRecipesAndSteps
         if ('Errors' === $status) {
             $this->logError($notes, true);
         }
-        LogSuccessAndErrorsTrait::set_current_log_file_object(null);
 
         return $returnID;
     }

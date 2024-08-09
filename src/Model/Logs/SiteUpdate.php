@@ -171,8 +171,9 @@ class SiteUpdate extends DataObject
     protected function markStepsAsStoppedIfThisIsStopped()
     {
         if ($this->Stopped) {
-            /** @var DataList[SiteUpdateStep]  */
+            /** @var DataList  */
             $items = $this->SiteUpdateSteps()->filterAny(['Stopped' => false]) ;
+            /** @var SiteUpdateStep $step  */
             foreach ($items as $step) {
                 $step->Stopped = true;
                 $step->Status = 'NotCompleted';
@@ -184,7 +185,7 @@ class SiteUpdate extends DataObject
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();
-        $this->deleteFile();
+        $this->deleteLogFile();
     }
 
 
