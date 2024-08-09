@@ -14,37 +14,16 @@ use Sunnysideup\Flush\FlushNowImplementor;
  */
 trait LogSuccessAndErrorsTrait
 {
-    protected static DataObjectInterface|null $current_log_file_object = null;
-    protected static string $current_log_file_path = '';
-
-    public static function set_current_log_file_object(null|SiteUpdate|SiteUpdateStep $logObject)
+    public static function log_anything(string $message, ?string $type = 'changed', ?bool $important = false, ?string $logFilePath = '')
     {
-        self::$current_log_file_object = $logObject;
-        if(self::$current_log_file_object) {
-            self::$current_log_file_path = $logObject->logFilePath();
-        } else {
-            self::$current_log_file_path = '';
-        }
+        self::log_anything_inner($message, $type, $important, $logFilePath);
     }
 
 
 
-    public static function log_anything(string $message, ?string $type = 'changed', ?bool $important = false)
+    public function logAnything(string $message, ?string $type = 'changed', ?bool $important = false)
     {
-        self::log_anything_inner($message, $type, $important);
-    }
-
-
-    protected function logHeader(string $message)
-    {
-        FlushNowImplementor::do_flush('---');
-        FlushNowImplementor::do_flush($message);
-        FlushNowImplementor::do_flush('---');
-    }
-
-    protected function logAnything(string $message, ?string $type = 'changed', ?bool $important = false)
-    {
-        self::log_anything_inner($message, $type, $important);
+        self::log_anything_inner($message, $type, $important, $this->getLogFilePath());
     }
 
     protected function logSuccess(string $message, ?bool $important = false)
@@ -62,18 +41,41 @@ trait LogSuccessAndErrorsTrait
         $this->logAnything($message, 'changed', $important);
     }
 
+    protected function logHeader(string $message)
+    {
+        $this->logAnything('---');
+        $this->logAnything($message);
+        $this->logAnything('---');
+    }
 
     protected static $time_since_last_message = 0;
 
+    /**
+     *
+     * put out a message one a minute, or a . for every time a message is called.
+     * @param string $message
+     * @param mixed $type
+     * @param mixed $important
+     * @return void
+     */
     protected function signOfLife(string $message, ?string $type = 'changed', ?bool $important = false)
     {
         if((time() - self::$time_since_last_message) > 60) {
-            self::log_anything_inner('... ', $type, $important);
-            self::log_anything_inner($message, $type, $important);
+            $this->logAnything($message, $type, $important);
+        } else {
+            $this->logAnything('. ', $type, $important);
         }
     }
 
-    private static function log_anything_inner(string $message, ?string $type = 'changed', ?bool $important = false)
+    protected function getLogFilePath(): ?string
+    {
+        if($this->hasMethod('logFilePath')) {
+            return $this->logFilePath();
+        }
+        return null;
+    }
+
+    private static function log_anything_inner(string $message, ?string $type = 'changed', ?bool $important = false, ?string $logFilePath = '')
     {
         self::$time_since_last_message = time();
         $type = strtolower($type);
@@ -94,8 +96,9 @@ trait LogSuccessAndErrorsTrait
         if (Director::isDev() || $type) {
             FlushNowImplementor::do_flush(substr((string) $message, 0, 200), $flushType);
         }
-        if(self::$current_log_file_path) {
-            file_put_contents(self::$current_log_file_path, $message . "\r\n", FILE_APPEND);
+        if($logFilePath) {
+            $message .= PHP_EOL;
+            file_put_contents($logFilePath, $message, FILE_APPEND);
         }
     }
 }

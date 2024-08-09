@@ -173,18 +173,18 @@ trait BaseMethodsForRecipesAndSteps
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
+        if($startedRatherThanCompleted) {
+            // list = $list->filter(['Status' => 'Started']);
+        } else {
+            $list = $list?->exclude(['Status' => 'Started']);
+        }
         if ($list && $list->exists()) {
+            $field = 'LastEdited';
             if($startedRatherThanCompleted) {
-                // list = $list->filter(['Status' => 'Started']);
-            } else {
-                $list = $list->exclude(['Status' => 'Started']);
+                $field = 'Created';
             }
-            if ($list && $list->exists()) {
-                $field = 'LastEdited';
-                if($startedRatherThanCompleted) {
-                    $field = 'Created';
-                }
-                $obj = $list->sort('ID', 'DESC')->first();
+            $obj = $list->sort('ID', 'DESC')->first();
+            if($obj) {
                 if($asTs) {
                     return $obj ? strtotime($obj->$field) : 0;
                 }
@@ -380,7 +380,6 @@ trait BaseMethodsForRecipesAndSteps
             $this->mySiteUpdateID = (int) $this->log->ID;
         }
         $id = $this->log->write();
-        LogSuccessAndErrorsTrait::set_current_log_file_object($this->log);
         return $id;
     }
 
@@ -401,7 +400,6 @@ trait BaseMethodsForRecipesAndSteps
         if ('Errors' === $status) {
             $this->logError($notes, true);
         }
-        LogSuccessAndErrorsTrait::set_current_log_file_object(null);
 
         return $returnID;
     }
