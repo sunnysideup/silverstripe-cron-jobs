@@ -56,7 +56,7 @@ class WorkOutWhatToRunNext
                 ];
             } else {
                 $singleton = Injector::inst()->get($className);
-                LogSuccessAndErrorsTrait::log_anything('Checking for ' . $singleton->i18n_singular_name() . ' not STOPPED and marking them as NotCompleted.');
+                $singleton->logAnything('Checking for ' . $singleton->i18n_singular_name() . ' not STOPPED and marking them as NotCompleted.');
                 $mustBeCreatedBeforeDate = date(
                     'Y-m-d H:i:s',
                     strtotime('-' . $minutes . ' minutes')
@@ -65,15 +65,15 @@ class WorkOutWhatToRunNext
                     'Stopped' => false,
                     'Created:LessThan' => $mustBeCreatedBeforeDate,
                 ];
-                LogSuccessAndErrorsTrait::log_anything(
+                $singleton->logAnything(
                     'Checking for ' . Injector::inst()->get($className)->i18n_plural_name() .
-                    ' started before ('.'-' . $minutes . ' minutes'.')' . $mustBeCreatedBeforeDate . ' and marking them as NotCompleted.'
+                    ' started before ' . $mustBeCreatedBeforeDate . ' (' . $minutes . ' minutes ago) and marking them as NotCompleted.'
                 );
             }
 
             $logs = $className::get()->filter($filter);
             foreach ($logs as $log) {
-                LogSuccessAndErrorsTrait::log_anything('Found: -- ' . $log->getTitle() . ' with ID ' . $log->ID . '  -- ... marking as NotCompleted.');
+                $log->logAnything('Found: -- ' . $log->getTitle() . ' with ID ' . $log->ID . '  -- ... marking as NotCompleted.');
                 $log->Status = 'NotCompleted';
                 $log->Stopped = true;
                 $log->write();
