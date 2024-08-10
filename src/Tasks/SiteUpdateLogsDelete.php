@@ -27,7 +27,7 @@ class SiteUpdateLogsDelete extends BuildTask
         // delete all log files
         Injector::inst()->get(SiteUpdate::class)->deleteAllFilesInFolder();
 
-        LogSuccessAndErrorsTrait::log_anything('DONE, make sure to run a dev/build');
+        DB::alteration_message('DONE, make sure to run a dev/build');
     }
 
     public function truncateTable(string $tableName)
