@@ -22,9 +22,6 @@ class SiteUpdateRun extends BuildTask
 
     private static $segment = 'site-update-run';
 
-    private static array $always_run_at_start_recipes = [];
-
-    private static array $always_run_at_end_recipes = [];
 
     public function setRecipe(string $recipe): self
     {
@@ -39,54 +36,39 @@ class SiteUpdateRun extends BuildTask
      */
     public function run($request)
     {
-        $stepOrRecipeClassName = null;
+        $forceRun = true;
         // recipe already set ...
         if(! $this->recipe) {
             // get variable
             $this->recipe = (string) $request->getVar('recipe');
         }
-        if($this->recipe) {
-            $recipesAvailable = WorkOutWhatToRunNext::get_recipes();
-            $stepOrRecipeClassName = $recipesAvailable[$this->recipe] ?? '';
-        } else {
+        if(!$this->recipe) {
             // check if a run next is listed...
             $runNowObj = SiteUpdateRunNext::get()
                 ->filter(['RecipeOrStep' => 'Recipe'])
                 ->sort(['ID' => 'DESC'])->first();
             if ($runNowObj) {
-                $stepOrRecipeClassName = $runNowObj->RunnerClassName;
+                $this->recipe = $runNowObj->RunnerClassName;
                 $runNowObj->delete();
-            } elseif(! $stepOrRecipeClassName) {
+            } elseif(! $this->recipe) {
                 // check out what should run next
-                $stepOrRecipeClassName = WorkOutWhatToRunNext::get_next_recipe_to_run();
+                $forceRun = false;
+                $this->recipe = WorkOutWhatToRunNext::get_next_recipe_to_run();
             }
         }
-        foreach($this->Config()->get('always_run_at_start_recipes') as $recipe) {
-            $obj = $recipe::inst();
-            if ($obj) {
-                $obj->run($request);
-            } else {
-                user_error('Could not inst() class ' . $recipe . ' for always_run_at_start_recipes');
-            }
-        }
-        if($stepOrRecipeClassName) {
-            if (!class_exists($stepOrRecipeClassName)) {
+        if($this->recipe) {
+            if (!class_exists($this->recipe)) {
                 DB::alteration_message('Could not find Recipe, using CustomRecipe!', 'deleted');
-                $stepOrRecipeClassName = CustomRecipe::class;
+                $this->recipe = CustomRecipe::class;
             }
-            $obj = $stepOrRecipeClassName::inst();
+            $obj = $this->recipe::inst();
             if ($obj) {
+                if($forceRun) {
+                    $obj->setIgnoreLastRanAndTimeOfDay(true);
+                }
                 $obj->run($request);
             } else {
-                user_error('Could not inst() class ' . $stepOrRecipeClassName);
-            }
-        }
-        foreach($this->Config()->get('always_run_at_end_recipes') as $recipe) {
-            $obj = $recipe::inst();
-            if ($obj) {
-                $obj->run($request);
-            } else {
-                user_error('Could not inst() class ' . $recipe . ' for always_run_at_start_recipes');
+                user_error('Could not inst() class ' . $this->recipe);
             }
         }
     }
