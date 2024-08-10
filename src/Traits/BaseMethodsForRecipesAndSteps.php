@@ -103,7 +103,7 @@ trait BaseMethodsForRecipesAndSteps
                 $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
             }
             if($obj) {
-                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunningArray) . ' is/are still running');
+                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
             }
             // check again
             return true;
@@ -173,12 +173,10 @@ trait BaseMethodsForRecipesAndSteps
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
-        if($startedRatherThanCompleted) {
-            // list = $list->filter(['Status' => 'Started']);
-        } else {
-            $list = $list?->exclude(['Status' => 'Started']);
-        }
         if ($list && $list->exists()) {
+            if($startedRatherThanCompleted === false) {
+                $list = $list?->exclude(['Status' => 'Started']);
+            }
             $field = 'LastEdited';
             if($startedRatherThanCompleted) {
                 $field = 'Created';
