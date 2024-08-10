@@ -17,6 +17,7 @@ use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 trait LogTrait
 {
@@ -27,6 +28,7 @@ trait LogTrait
 
     public function getTitle(): string
     {
+        /** @var SiteUpdateRecipeBaseClass $obj */
         $obj = $this->MyRunnerObject();
 
         return $obj ? $obj->getTitle() : 'Error';
@@ -34,6 +36,7 @@ trait LogTrait
 
     public function getDescription(): string
     {
+        /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->MyRunnerObject();
 
         return $obj ? trim($obj->getDescription()) : 'Error';
@@ -61,6 +64,7 @@ trait LogTrait
 
     public function getGroup(): string
     {
+        /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->MyRunnerObject();
 
         return $obj ? $obj->getGroup() : 'Error';
@@ -71,7 +75,8 @@ trait LogTrait
      */
     public function MyRunnerObject()
     {
-        if (class_exists($this->RunnerClassName)) {
+        /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
+        if (class_exists((string) $this->RunnerClassName)) {
             return Injector::inst()->get($this->RunnerClassName);
         }
 
@@ -119,6 +124,8 @@ trait LogTrait
                 ReadonlyField::create('LastEdited', 'Last Edited'),
             ]
         );
+
+        /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->MyRunnerObject();
         if ($obj) {
             if($obj instanceof SiteUpdate) {
@@ -274,21 +281,24 @@ trait LogTrait
         if(! $directory) {
             $directory = $this->logFileFolderPath();
         }
-        if (!is_dir($directory)) {
-            throw new InvalidArgumentException('The provided path is not a directory.');
-        }
+        if(file_exists($directory)) {
+            $this->deleteAllFilesInFolder($directory);
+            if (!is_dir($directory)) {
+                throw new InvalidArgumentException('The provided path is not a directory: '.$directory);
+            }
 
-        $files = glob($directory . '/*', GLOB_MARK);
+            $files = glob($directory . '/*', GLOB_MARK);
 
-        foreach ($files as $file) {
-            if (is_dir($file)) {
-                $this->deleteAllFilesInFolder($file);
-                if (!rmdir($file)) {
-                    throw new RuntimeException('Failed to delete directory ' . $file);
-                }
-            } else {
-                if (!unlink($file)) {
-                    throw new RuntimeException('Failed to delete file ' . $file);
+            foreach ($files as $file) {
+                if (is_dir($file)) {
+                    $this->deleteAllFilesInFolder($file);
+                    if (!rmdir($file)) {
+                        throw new RuntimeException('Failed to delete directory ' . $file);
+                    }
+                } else {
+                    if (!unlink($file)) {
+                        throw new RuntimeException('Failed to delete file ' . $file);
+                    }
                 }
             }
         }

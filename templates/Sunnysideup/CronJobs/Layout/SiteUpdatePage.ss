@@ -65,8 +65,8 @@ Currently Product Update from Advance Retail are
     <% loop $RecipeLinks %>
     <li>
         <h3><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h3>
+        <p>$Description</p>
         <p class="show-on-hover">
-            $Description<br />
             <a href="$Link">▶ schedule now</a><br />
             <br /><strong>Hours of the day it runs:</strong> $HoursOfTheDayNice
             <br /><strong>Minimum number of minutes between runs:</strong> $MinMinutesBetweenRunsNice
@@ -83,9 +83,10 @@ Currently Product Update from Advance Retail are
             <ol>
             <% loop $SubLinks %>
                 <li>
-                <h4><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h4>
+                    <h4><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h4>
+                    <p>$getDescription</p>
                     <p class="show-on-hover">
-                        <a href="$Link">▶ schedule now</a>
+                        <a href="$Link">▶ schedule now</a><br />
                         <br /><strong>Number of Logs:</strong> $NumberOfLogs
                         <br /><strong>Last Started:</strong> $LastStarted
                         <br /><strong>Last Completed:</strong> $LastCompleted

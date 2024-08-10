@@ -69,7 +69,7 @@ trait LogSuccessAndErrorsTrait
 
     protected function getLogFilePath(): ?string
     {
-        if($this->hasMethod('logFilePath')) {
+        if($this instanceof LogTrait) {
             return $this->logFilePath();
         }
         return null;
