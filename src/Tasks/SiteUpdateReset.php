@@ -8,8 +8,6 @@ use SilverStripe\ORM\DB;
 
 class SiteUpdateReset extends BuildTask
 {
-    use LogSuccessAndErrorsTrait;
-
     private static $segment = 'site-update-reset';
 
     protected $title = 'Reset all Site Updates';
@@ -31,7 +29,7 @@ class SiteUpdateReset extends BuildTask
         DB::query('Update SiteUpdateStep SET Stopped = 1;');
         DB::query('TRUNCATE SiteUpdateRunNext');
         if ($this->verbose) {
-            self::log_anything('DONE');
+            DB::alteration_message('DONE');
         }
     }
 }

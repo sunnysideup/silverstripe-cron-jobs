@@ -10,8 +10,6 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 
 class SiteUpdateLogsDelete extends BuildTask
 {
-    use LogSuccessAndErrorsTrait;
-
     protected $title = 'Delete All Site Update Logs';
 
     protected $description = 'Delete all the Site Update Logs to start afresh';
