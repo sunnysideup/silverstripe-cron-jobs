@@ -59,6 +59,29 @@ abstract class SiteUpdateRecipeBaseClass
 
     private static array $always_run_at_the_end_steps = [];
 
+    protected bool $ignoreLastRan = false;
+    
+    protected bool $ignoreTimeOfDay = false;
+
+    public function setIgnoreLastRanAndTimeOfDay(): static
+    {
+        $this->setIgnoreLastRan();
+        $this->setIgnoreTimeOfDay();
+        return $this;
+    }
+
+    public function setIgnoreLastRan(): static
+    {
+        $this->ignoreLastRan = true;
+        return $this;
+    }
+
+    public function setIgnoreTimeOfDay(): static
+    {
+        $this->ignoreTimeOfDay = true;
+        return $this;
+    }
+
     public function getGroup(): string
     {
         return 'Recipe';
@@ -109,6 +132,9 @@ abstract class SiteUpdateRecipeBaseClass
 
     protected function canRunAtThisHour(): bool
     {
+        if($this->ignoreTimeOfDay) {
+            return true;
+        }
         $hourOfDay = date('H');
         $hoursOfTheDay = $this->canRunHoursOfTheDay();
         if(empty($hoursOfTheDay) || in_array($hourOfDay, $hoursOfTheDay)) {
@@ -119,6 +145,10 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function IsThereEnoughTimeSinceLastRun(): bool
     {
+        if($this->ignoreLastRan) {
+            return true;
+        }
+
         $lastRunTs = $this->LastCompleted(true);
         $nowTs = time();
         $diff = round(($nowTs - $lastRunTs) / 60);
@@ -142,6 +172,7 @@ abstract class SiteUpdateRecipeBaseClass
         }
         return 0;
     }
+
 
     public function run(?HttpRequest $request)
     {
