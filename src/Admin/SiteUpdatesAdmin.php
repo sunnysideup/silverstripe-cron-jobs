@@ -8,9 +8,9 @@ use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Forms\LiteralField;
+use Sunnysideup\CronJobs\Control\SiteUpdateController;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
-use Sunnysideup\CronJobs\SiteUpdatePage;
 
 /**
  * Class \Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin
@@ -43,15 +43,12 @@ class SiteUpdatesAdmin extends ModelAdmin
         if($this->modelClass === SiteUpdateConfig::class) {
             $fields = $form->Fields();
             $fields->removeByName('Sunnysideup-CronJobs-Model-SiteUpdateConfig');
-            $page = SiteUpdatePage::get()->first();
-            if($page) {
-                $fields->push(
-                    LiteralField::create(
-                        'SiteUpdateConfigInfo',
-                        '<p>Please review <a href="'.$page->Link().'">update details</p>'
-                    ),
-                );
-            }
+            $fields->push(
+                LiteralField::create(
+                    'SiteUpdateConfigInfo',
+                    '<p>Please review <a href="'.SiteUpdateController::my_link().'">update details</p>'
+                ),
+            );
         }
         return $form;
     }

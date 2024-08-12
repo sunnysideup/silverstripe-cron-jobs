@@ -1,0 +1,6 @@
+---
+Name: cron-job-routes
+---
+SilverStripe\Control\Director:
+  rules:
+    admin/site-update-review//$Action/$ID/$OtherID: PhotoWarehouse\AdvanceRetailSync\Control\CheckList

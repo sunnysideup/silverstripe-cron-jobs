@@ -4,9 +4,7 @@ namespace Sunnysideup\CronJobs\Traits;
 
 use InvalidArgumentException;
 use RuntimeException;
-use SilverStripe\Control\Controller;
-use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
-use Sunnysideup\CronJobs\SiteUpdatePage;
+
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
@@ -16,14 +14,13 @@ use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
-use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
+use Sunnysideup\CronJobs\Control\SiteUpdateController;
 
 trait BaseMethodsForRecipesAndSteps
 {
@@ -125,16 +122,10 @@ trait BaseMethodsForRecipesAndSteps
         return $className::get()->filter(['Stopped' => false])->exclude(['ID' => $logID]);
     }
 
-    public function Link(): string
+    public function Link($action): string
     {
-        /** @var SiteUpdatePage $page */
-        $page = SiteUpdatePage::get()->first();
-        if($page) {
-            $action = $this->getAction();
-
-            return $page->Link($action . '/' . $this->getEscapedClassName() . '/');
-        }
-        return 'please-create-site-update-page';
+        $action = $this->getAction();
+        return SiteUpdateController::my_link($action . '/' . $this->getEscapedClassName() . '/');
     }
 
     public function Title(): string

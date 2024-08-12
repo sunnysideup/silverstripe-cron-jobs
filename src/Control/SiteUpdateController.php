@@ -1,8 +1,9 @@
 <?php
 
-namespace Sunnysideup\CronJobs;
+namespace Sunnysideup\CronJobs\Control;
 
 use PageController;
+use SilverStripe\Control\Controller;
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
@@ -18,9 +19,11 @@ use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 
-class SiteUpdatePageController extends PageController
+class SiteUpdateController extends Controller
 {
     protected $content = '';
+
+    private static $url_segment = 'admin/site-update-review';
 
     private static $allowed_actions = [
         'index' => 'ADMIN',
@@ -200,5 +203,19 @@ class SiteUpdatePageController extends PageController
         parent::init();
 
         Requirements::clear();
+    }
+
+    public function Link($action = null)
+    {
+        return Controller::join_links(
+            Director::baseURL(),
+            $this->config()->get('url_segment'),
+            $action
+        );
+    }
+
+    public static function my_link($action = null)
+    {
+        return self::singleton()->Link($action);
     }
 }

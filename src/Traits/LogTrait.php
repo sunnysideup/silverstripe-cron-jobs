@@ -271,7 +271,7 @@ trait LogTrait
     public function logFilePath(): string
     {
         return Controller::join_links(
-            $this->logFileFolderPath(),
+            SiteUpdateConfig::folder_path(),
             $this->getShortClassCode() . '_' . $this->ID . '-update.log'
         );
 
@@ -280,7 +280,7 @@ trait LogTrait
     public function deleteAllFilesInFolder(?string $directory = '')
     {
         if(! $directory) {
-            $directory = $this->logFileFolderPath();
+            $directory = SiteUpdateConfig::folder_path();
         }
         if(file_exists($directory)) {
             $this->deleteAllFilesInFolder($directory);
@@ -303,15 +303,6 @@ trait LogTrait
                 }
             }
         }
-
-    }
-
-    protected function logFileFolderPath(): string
-    {
-        return Controller::join_links(
-            Director::baseFolder(),
-            Config::inst()->get(SiteUpdateConfig::class, 'log_file_folder'),
-        );
 
     }
 
