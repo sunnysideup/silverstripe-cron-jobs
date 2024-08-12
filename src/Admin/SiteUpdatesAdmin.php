@@ -20,11 +20,11 @@ class SiteUpdatesAdmin extends ModelAdmin
 {
     private static $managed_models = [
         SiteUpdateConfig::class,
-        SiteUpdate::class,
-        SiteUpdateStep::class,
-        SiteUpdateNote::class,
-        SiteUpdateStepNote::class,
         SiteUpdateRunNext::class,
+        SiteUpdate::class,
+        SiteUpdateNote::class,
+        SiteUpdateStep::class,
+        SiteUpdateStepNote::class,
     ];
 
     private static $url_segment = 'site-updates';

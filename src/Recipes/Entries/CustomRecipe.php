@@ -42,7 +42,7 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
 
     public function maxIntervalInMinutesBetweenRuns(): int
     {
-        return 86400 * 999999;
+        return 0;
 
     }
 

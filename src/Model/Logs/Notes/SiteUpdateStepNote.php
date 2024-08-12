@@ -7,6 +7,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
+use Sunnysideup\CronJobs\Traits\NoteTrait;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote
@@ -19,14 +20,16 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
  */
 class SiteUpdateStepNote extends DataObject
 {
+    use NoteTrait;
+
     private static $table_name = 'SiteUpdateStepNote';
 
-    private static $singular_name = 'Update Step Note';
+    private static $singular_name = 'Step Error';
 
-    private static $plural_name = 'Update Step Notes';
+    private static $plural_name = 'Step Errors';
 
     private static $db = [
-        'Type' => 'Enum("created,deleted,changed,ERROR","ERROR")',
+        'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
         'Title' => 'Varchar(50)',
         'Message' => 'Text',
     ];
@@ -42,58 +45,10 @@ class SiteUpdateStepNote extends DataObject
         'Title' => 'Subject',
     ];
 
-    private static $default_sort = [
-        'ID' => 'ASC',
-    ];
 
-    public function canCreate($member = null, $context = [])
+    public function ParentRel(): string
     {
-        return false;
+        return 'SiteUpdateStep';
     }
 
-    public function canEdit($member = null)
-    {
-        return false;
-    }
-
-    public function canDelete($member = null)
-    {
-        return false;
-    }
-
-    public function getCMSFields()
-    {
-        $fields = parent::getCMSFields();
-        $fields->addFieldsToTab(
-            'Root.Main',
-            [
-                ReadonlyField::create('Created', 'When'),
-            ]
-        );
-
-        //...
-
-        return $fields;
-    }
-
-    public function CMSEditLink(): string
-    {
-        return Injector::inst()->get(SiteUpdatesAdmin::class)->getCMSEditLinkForManagedDataObject($this);
-    }
-
-    protected function onBeforeWrite()
-    {
-        parent::onBeforeWrite();
-        $this->Message = strip_tags((string) $this->Message);
-        $this->Title = substr((string) $this->Message, 0, 49);
-    }
-
-    protected function onAfterWrite()
-    {
-        parent::onAfterWrite();
-        if($this->Type === 'ERROR') {
-            $this->SiteUpdateStep()->Status = 'ERROR';
-            $this->SiteUpdateStep()->write();
-        }
-    }
 }

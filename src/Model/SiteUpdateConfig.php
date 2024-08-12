@@ -15,9 +15,9 @@ class SiteUpdateConfig extends DataObject
 {
     private static string $table_name = 'SiteUpdateConfig';
 
-    private static string $singular_name = 'Update Recipe Configuration';
+    private static string $singular_name = 'Configuration';
 
-    private static string $plural_name = 'Update Recipe Configurations';
+    private static string $plural_name = 'Configurations';
 
     private static string $log_file_folder = 'site-update-logs';
 

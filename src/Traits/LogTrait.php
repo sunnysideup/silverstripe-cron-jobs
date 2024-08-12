@@ -17,6 +17,7 @@ use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
+use Sunnysideup\CronJobs\Api\BashColours;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 trait LogTrait
@@ -255,14 +256,14 @@ trait LogTrait
         return null;
     }
 
-    public function recordErrors(string $recordClassName)
+    public function recordErrors(string $recordClassName = SiteUpdate::class, $relFieldName = 'SiteUpdateID')
     {
         $errors = $this->getErrors();
         if ($errors) {
             $error = $recordClassName::create();
-            $error->Type = 'ERROR';
+            $error->Type = 'HAS ERROR IN LOG';
             $error->Message = $errors;
-            $error->SiteUpdateID = $this->ID;
+            $error->$relFieldName = $this->ID;
             $error->write();
         }
     }
@@ -319,7 +320,7 @@ trait LogTrait
     {
         $filePath = $this->logFilePath();
         if (file_exists($filePath)) {
-            return $this->bashColorToHtml(file_get_contents($filePath));
+            return BashColours::bash_to_html(file_get_contents($filePath));
         }
 
         return 'no file found here '.$filePath;

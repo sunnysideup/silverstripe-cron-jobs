@@ -45,11 +45,14 @@ class SiteUpdateRun extends BuildTask
         if(!$this->recipe) {
             // check if a run next is listed...
             $runNowObj = SiteUpdateRunNext::get()
-                ->filter(['RecipeOrStep' => 'Recipe'])
                 ->sort(['ID' => 'DESC'])->first();
             if ($runNowObj) {
-                $this->recipe = $runNowObj->RunnerClassName;
-                $runNowObj->delete();
+                if($runNowObj->RecipeOrStep === 'Step') {
+                    $this->recipe = CustomRecipe::class;
+                } else {
+                    $this->recipe = $runNowObj->RunnerClassName;
+                    $runNowObj->delete();
+                }
             } elseif(! $this->recipe) {
                 // check out what should run next
                 $forceRun = false;

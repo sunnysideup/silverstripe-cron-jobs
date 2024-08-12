@@ -8,6 +8,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
+use Sunnysideup\CronJobs\Traits\NoteTrait;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepNote
@@ -20,15 +21,17 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
  */
 class SiteUpdateNote extends DataObject
 {
+    use NoteTrait;
+
     private static $table_name = 'SiteUpdateNote';
 
-    private static $singular_name = 'Update Error / Success';
+    private static $singular_name = 'Recipe Error';
 
-    private static $plural_name = 'Update Errors / Successes';
+    private static $plural_name = 'Recipe Errors';
 
     private static $db = [
         'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
-        'Title' => 'Varchar(255)',
+        'Title' => 'Varchar(50)',
         'Message' => 'Text',
     ];
 
@@ -42,53 +45,6 @@ class SiteUpdateNote extends DataObject
         'Type' => 'Type',
         'Title' => 'Subject',
     ];
-
-    private static $default_sort = [
-        'ID' => 'DESC',
-    ];
-
-    public function canCreate($member = null, $context = [])
-    {
-        return false;
-    }
-
-    public function canEdit($member = null)
-    {
-        return Director::isDev();
-    }
-
-    public function canDelete($member = null)
-    {
-        return false;
-    }
-
-    public function getCMSFields()
-    {
-        $fields = parent::getCMSFields();
-        $fields->addFieldsToTab(
-            'Root.Main',
-            [
-                ReadonlyField::create('Created', 'When did this error occur?'),
-            ]
-        );
-
-        //...
-
-        return $fields;
-    }
-
-    public function CMSEditLink(): string
-    {
-        return Injector::inst()->get(SiteUpdatesAdmin::class)->getCMSEditLinkForManagedDataObject($this);
-    }
-
-    protected function onBeforeWrite()
-    {
-        parent::onBeforeWrite();
-        $this->Message = strip_tags((string) $this->Message);
-        $this->Title = substr((string) $this->Message, 0, 49);
-    }
-
     protected function onAfterWrite()
     {
         parent::onAfterWrite();
@@ -98,5 +54,10 @@ class SiteUpdateNote extends DataObject
         }
     }
 
+
+    public function ParentRel(): string
+    {
+        return 'SiteUpdate';
+    }
 
 }

@@ -25,7 +25,7 @@ use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
  * @property string $RunnerClassName
  * @property int $SiteUpdateID
  * @method \Sunnysideup\CronJobs\Model\Logs\SiteUpdate SiteUpdate()
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote[] SiteUpdateStepNotes()
+ * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote[] ImportantLogs()
  */
 class SiteUpdateStep extends DataObject
 {
@@ -37,9 +37,9 @@ class SiteUpdateStep extends DataObject
 
     private static $table_name = 'SiteUpdateStep';
 
-    private static $singular_name = 'Update Step Log Entry';
+    private static $singular_name = 'Step Log';
 
-    private static $plural_name = 'Update Step Log Entries';
+    private static $plural_name = 'Step Logs';
 
     private static $db = [
         'Notes' => 'Text',
@@ -58,7 +58,7 @@ class SiteUpdateStep extends DataObject
     ];
 
     private static $has_many = [
-        'SiteUpdateStepNotes' => SiteUpdateStepNote::class,
+        'ImportantLogs' => SiteUpdateStepNote::class,
     ];
 
     private static $summary_fields = [
@@ -71,6 +71,7 @@ class SiteUpdateStep extends DataObject
         'TimeTaken' => 'Seconds',
         'TimeNice' => 'Better Time',
         'MemoryTaken' => 'MBs',
+        'ImportantLogs.Count' => 'Logs',
     ];
 
     private static $field_labels = [
@@ -81,6 +82,7 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep' => 'Allowed next step to run',
         'TimeTaken' => 'Seconds Used',
         'MemoryTaken' => 'Megabytes Used',
+        'ImportantLogs' => 'Important Logs',
     ];
 
     private static $searchable_fields = [
@@ -161,7 +163,14 @@ class SiteUpdateStep extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->recordErrors(SiteUpdateStepNote::class);
+        $this->recordErrors(SiteUpdateStepNote::class, 'SiteUpdateStepID');
+        if($this->Status === 'Errors') {
+            $parent = $this->SiteUpdate();
+            if($parent && $parent->exists()) {
+                $parent->Status = $this->Status;
+                $parent->write();
+            }
+        }
     }
 
     public function onBeforeDelete()

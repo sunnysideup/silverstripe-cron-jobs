@@ -26,7 +26,7 @@ use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
  * @property string $ErrorLog
  * @property string $RunnerClassName
  * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateSteps()
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote[] SiteUpdateNotes()
+ * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote[] ImportantLogs()
  */
 class SiteUpdate extends DataObject
 {
@@ -38,9 +38,9 @@ class SiteUpdate extends DataObject
 
     private static $table_name = 'SiteUpdate';
 
-    private static $singular_name = 'Site Update';
+    private static $singular_name = 'Recipe Log';
 
-    private static $plural_name = 'Site Updates';
+    private static $plural_name = 'Recipe Logs';
 
     private static $db = [
         'Notes' => 'Text',
@@ -54,17 +54,12 @@ class SiteUpdate extends DataObject
         'RunnerClassName' => 'Varchar(255)',
     ];
 
-    private static $summary_fields = [
-        'Created.Ago' => 'Started',
-        'Status' => 'Status',
-        'Stopped.NiceAndColourfull' => 'Stopped',
-        'Title' => 'Recipe',
-        'TimeTaken' => 'Seconds',
-        'TimeNice' => 'Better Time',
-        'MemoryTaken' => 'MBs',
-        'SiteUpdateSteps.Count' => 'Steps',
-        'SiteUpdateNotes.Count' => 'Notes',
+
+    private static $has_many = [
+        'SiteUpdateSteps' => SiteUpdateStep::class,
+        'ImportantLogs' => SiteUpdateNote::class,
     ];
+
 
     private static $field_labels = [
         'Title' => 'Update Recipe',
@@ -75,12 +70,21 @@ class SiteUpdate extends DataObject
         'TimeTaken' => 'Seconds Used',
         'MemoryTaken' => 'Megabytes Used',
         'SiteUpdateSteps' => 'Steps',
-        'SiteUpdateNotes' => 'Errors',
+        'ImportantLogs' => 'Important Logs',
     ];
 
-    private static $has_many = [
-        'SiteUpdateSteps' => SiteUpdateStep::class,
-        'SiteUpdateNotes' => SiteUpdateNote::class,
+
+
+    private static $summary_fields = [
+        'Created.Ago' => 'Started',
+        'Status' => 'Status',
+        'Stopped.NiceAndColourfull' => 'Stopped',
+        'Title' => 'Recipe',
+        'TimeTaken' => 'Seconds',
+        'TimeNice' => 'Better Time',
+        'MemoryTaken' => 'MBs',
+        'SiteUpdateSteps.Count' => 'Steps',
+        'ImportantLogs.Count' => 'Logs',
     ];
 
     private static $indexes = [

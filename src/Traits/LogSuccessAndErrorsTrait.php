@@ -14,16 +14,9 @@ use Sunnysideup\Flush\FlushNowImplementor;
  */
 trait LogSuccessAndErrorsTrait
 {
-    public static function log_anything(string $message, ?string $type = 'changed', ?bool $important = false, ?string $logFilePath = '')
-    {
-        self::log_anything_inner($message, $type, $important, $logFilePath);
-    }
-
-
-
     public function logAnything(string $message, ?string $type = 'changed', ?bool $important = false)
     {
-        self::log_anything_inner($message, $type, $important, $this->getLogFilePath());
+        $this->logAnythingInner($message, $type, $important, $this->getLogFilePath());
     }
 
     protected function logSuccess(string $message, ?bool $important = false)
@@ -69,13 +62,26 @@ trait LogSuccessAndErrorsTrait
 
     protected function getLogFilePath(): ?string
     {
-        if($this instanceof LogTrait) {
-            return $this->logFilePath();
+        if($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
+            if($this->ID) {
+                return $this->logFilePath();
+            }
         }
         return null;
     }
 
-    private static function log_anything_inner(string $message, ?string $type = 'changed', ?bool $important = false, ?string $logFilePath = '')
+    protected function createNote(string $message, string $messageTypeForNote): void
+    {
+        if($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
+            $logClassName = $this->getRelationClass('ImportantLogs');
+            $obj = $logClassName::create();
+            $obj->Message = $message;
+            $obj->Type = $messageTypeForNote;
+            $this->ImportantLogs()->add($obj->write());
+        }
+    }
+
+    protected function logAnythingInner(string $message, ?string $type = 'changed', ?bool $important = false, ?string $logFilePath = '')
     {
         self::$time_since_last_message = time();
         $type = strtolower($type);
@@ -93,8 +99,15 @@ trait LogSuccessAndErrorsTrait
 
         $message = date('h:i:s') . ' | ' . $message;
 
-        if (Director::isDev() || $type) {
+        if (Director::isDev() || $type !== 'changed' || $important) {
             FlushNowImplementor::do_flush(substr((string) $message, 0, 200), $flushType);
+            $messageTypeForNote = [
+                'created' => 'Success',
+                'changed' => 'Warning',
+                'deleted' => 'Error',
+            ];
+            $messageTypeForNote = $messageTypeForNote[$flushType] ?? 'Warning';
+            $this->createNote($message, $messageTypeForNote);
         }
         if($logFilePath) {
             $message .= PHP_EOL;

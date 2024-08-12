@@ -19,9 +19,9 @@ class SiteUpdateRunNext extends DataObject
 
     private static $table_name = 'SiteUpdateRunNext';
 
-    private static $singular_name = 'Site Update Run Next';
+    private static $singular_name = 'Manually Run Next';
 
-    private static $plural_name = 'Site Update Run Next Records';
+    private static $plural_name = 'Manually Run Next';
 
     private static $db = [
         'RecipeOrStep' => 'Enum("Recipe,Step", "Recipe")',

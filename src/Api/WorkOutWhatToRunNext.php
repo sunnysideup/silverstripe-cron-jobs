@@ -37,7 +37,8 @@ class WorkOutWhatToRunNext
         // else return the last candidate.
         if(! empty($candidates)) {
             asort($candidates);
-            return array_pop(array_keys($candidates));
+            $candidateKeys = array_keys($candidates);
+            return array_pop($candidateKeys);
         }
         return null;
     }
