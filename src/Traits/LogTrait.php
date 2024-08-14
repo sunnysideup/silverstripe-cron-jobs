@@ -283,7 +283,6 @@ trait LogTrait
             $directory = SiteUpdateConfig::folder_path();
         }
         if(file_exists($directory)) {
-            $this->deleteAllFilesInFolder($directory);
             if (!is_dir($directory)) {
                 throw new InvalidArgumentException('The provided path is not a directory: '.$directory);
             }
