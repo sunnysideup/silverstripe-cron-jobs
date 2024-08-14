@@ -122,7 +122,7 @@ trait BaseMethodsForRecipesAndSteps
         return $className::get()->filter(['Stopped' => false])->exclude(['ID' => $logID]);
     }
 
-    public function Link($action): string
+    public function Link(?string $action = null): string
     {
         $action = $this->getAction();
         return SiteUpdateController::my_link($action . '/' . $this->getEscapedClassName() . '/');

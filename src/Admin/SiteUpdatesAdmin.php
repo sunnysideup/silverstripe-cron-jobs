@@ -42,11 +42,12 @@ class SiteUpdatesAdmin extends ModelAdmin
         $form = parent::getEditForm($id, $fields);
         if($this->modelClass === SiteUpdateConfig::class) {
             $fields = $form->Fields();
-            $fields->removeByName('Sunnysideup-CronJobs-Model-SiteUpdateConfig');
             $fields->push(
                 LiteralField::create(
-                    'SiteUpdateConfigInfo',
-                    '<p>Please review <a href="'.SiteUpdateController::my_link().'">update details</p>'
+                    'SiteUpdateConfigInfoReviewLink',
+                    '
+                    <h2><a href="'.SiteUpdateController::my_link().'" target="_blank">open review</a></h2>
+                    ',
                 ),
             );
         }

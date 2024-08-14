@@ -17,7 +17,7 @@
             #Wrapper {
                 margin: 0 auto;
                 max-width: 1200px;
-                padding-left: calc(240px + 10vw);
+                padding-left: calc(260px + 10vw);
             }
             .logo {
                 display: block;
@@ -92,7 +92,7 @@
                 bottom: 0;
                 background-color: navy;
                 left: 0;
-                width: calc(300px + 10vw);
+                width:  calc(220px + 10vw);
                 overflow-y: auto;
             }
             #toc ol,
@@ -134,8 +134,120 @@
         <div id="Wrapper">
             <div id="toc"></div>
             <div class="typography" id="content">
-                $Layout
-                $Form
+
+<% if $HasContent %>
+    <h2>Sub Page</h2>
+    $Content.RAW
+    <p><a href="$Link">Return to Main Page</a></p>
+<% else %>
+    <h2>Main Page</h2>
+
+<h1>Intro</h1>
+<div class="content">
+    <p>
+        Please also visit <a href='/admin/site-updates'>The Site Update Log</a>
+        to review update logs.
+    </p>
+</div>
+
+<h1>Currently Running</h1>
+<% if $CurrentlyRunning %>
+<p>
+    <a href='/admin/site-updates'>Review list of updates:</a>
+</p>
+
+<ul>
+
+<% loop $CurrentlyRunning %>
+    <li>
+    <% if $Group = 'Step' %> - <% end_if %><a href="$CMSEditLink">$Title ($getGroup)</a>
+    </li>
+<% end_loop %>
+</ul>
+<% else %>
+    <p>
+        Nothing is running right now.
+    </p>
+<% end_if %>
+
+
+
+
+<h2>Emergency Links</h2>
+<% include MyChildLinks MyList=$EmergencyLinks %>
+<p class="message warning">
+Currently Product Update from Advance Retail are
+<strong>
+    <% if $AllowSiteUpdatesRightNow %>
+        Allowed to Run.
+    <% else %>
+        Not Allowed to Run.
+    <% end_if %>
+    </strong>
+    You can change this above.
+</p>
+
+<% if $AnalysisLinks %>
+<h2>Analyses</h2>
+<% include MyChildLinks MyList=$AnalysisLinks %>
+<% end_if %>
+
+<% if $RecipeLinks %>
+<h2>Update Recipes</h2>
+<ul>
+    <% loop $RecipeLinks %>
+    <li>
+        <h3><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h3>
+        <p>$Description</p>
+        <p class="show-on-hover">
+            <a href="$Link">▶ schedule now</a><br />
+            <br /><strong>Hours of the day it runs:</strong> $HoursOfTheDayNice
+            <br /><strong>Minimum number of minutes between runs:</strong> $MinMinutesBetweenRunsNice
+            <br /><strong>Maximum number of minutes between runs:</strong> $MaxMinutesBetweenRunsNice
+            <br /><strong>Number of Logs:</strong> $NumberOfLogs
+            <br /><strong>Last Started:</strong> $LastStarted
+            <br /><strong>Last Completed:</strong> $LastCompleted
+            <br /><strong>Average Time Taken:</strong> $AverageTimeTaken
+            <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
+            <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
+            <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
+        </p>
+            <% if $SubLinks %>
+            <ol>
+            <% loop $SubLinks %>
+                <li>
+                    <h4><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h4>
+                    <p>$getDescription</p>
+                    <p class="show-on-hover">
+                        <a href="$Link">▶ schedule now</a><br />
+                        <br /><strong>Number of Logs:</strong> $NumberOfLogs
+                        <br /><strong>Last Started:</strong> $LastStarted
+                        <br /><strong>Last Completed:</strong> $LastCompleted
+                        <br /><strong>Average Time Taken:</strong> $AverageTimeTaken
+                        <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
+                        <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
+                        <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
+                        <br />$getDescription
+                    </p>
+                </li>
+            <% end_loop %>
+            </ol>
+            <% end_if %>
+    </li>
+<% end_loop %>
+</ul>
+<% end_if %>
+<% end_if %>
+
+
+
+
+
+
+
+
+
+
             </div>
 
         </div>

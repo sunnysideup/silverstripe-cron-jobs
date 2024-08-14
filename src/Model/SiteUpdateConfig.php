@@ -89,6 +89,13 @@ class SiteUpdateConfig extends DataObject
         return is_writable(static::folder_path());
     }
 
-
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        if(! $this->Title) {
+            $defaults = $this->Config()->get('defaults');
+            $this->Title = $defaults['Title'] ?? 'Default Site Update Configuration';
+        }
+    }
 
 }
