@@ -63,7 +63,7 @@ class SiteUpdateStep extends DataObject
 
     private static $summary_fields = [
         'Created.Ago' => 'Started',
-        'SiteUpdate.Type' => 'Recipe',
+        'SiteUpdate.Title' => 'Recipe',
         'Stopped.NiceAndColourfull' => 'Stopped',
         'Title' => 'Step',
         'Status' => 'Status',

@@ -185,9 +185,15 @@ trait LogTrait
                 'ImportantLogs'
             );
         }
-        $gfNotes = $fields->dataFieldByName('ImportantLogs');
-        if ($gfNotes) {
-            $gfNotes->getConfig()->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
+        $removeOptionsFields = [
+            'ImportantLogs',
+            'SiteUpdateSteps',
+        ];
+        foreach($removeOptionsFields as $removeOptionsField) {
+            $gfNotes = $fields->dataFieldByName($removeOptionsField);
+            if ($gfNotes) {
+                $gfNotes->getConfig()->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
+            }
         }
         $fields->addFieldsToTab(
             'Root.RunNow',
