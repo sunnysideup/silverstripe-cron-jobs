@@ -1,0 +1,11 @@
+---
+Name: cron-job-routes
+Before:
+  - '#adminroutes'
+---
+SilverStripe\Control\Director:
+  rules:
+    'admin/site-update-review//$Action/$ID/$OtherID':
+      Controller: 'Sunnysideup\CronJobs\Control\SiteUpdateController'
+      Permissions:
+        CMS_ACCESS: CMS_ACCESS
