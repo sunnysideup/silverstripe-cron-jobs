@@ -30,6 +30,11 @@ class SiteUpdateConfig extends DataObject
         'Title' => 'Default Site Update Configuration',
     ];
 
+    private static $summary_fields = [
+        'Title' => 'Config Name',
+        'StopSiteUpdates.NiceAndColourfullInvertedColours' => 'Updates stopped?',
+    ];
+
     private static string $log_file_folder = 'site-update-logs';
 
     public static function folder_path(): string
