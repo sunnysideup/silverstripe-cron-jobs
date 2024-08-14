@@ -142,7 +142,7 @@
 <% else %>
     <h2>Main Page</h2>
 
-<h1>Intro</h1>
+<h2>Intro</h2>
 <div class="content">
     <p>
         Please also visit <a href='/admin/site-updates'>The Site Update Log</a>
@@ -150,7 +150,7 @@
     </p>
 </div>
 
-<h1>Currently Running</h1>
+<h2>Currently Running</h2>
 <% if $CurrentlyRunning %>
 <p>
     <a href='/admin/site-updates'>Review list of updates:</a>
@@ -169,23 +169,24 @@
         Nothing is running right now.
     </p>
 <% end_if %>
+<p class="message warning">
+Currently Site Updates are
+<strong>
+    <% if $AllowSiteUpdatesRightNow %>
+        allowed
+    <% else %>
+        not allowed
+    <% end_if %>
+</strong>
+    to run.
+    You can change this below.
+</p>
 
 
 
 
 <h2>Emergency Links</h2>
 <% include MyChildLinks MyList=$EmergencyLinks %>
-<p class="message warning">
-Currently Product Update from Advance Retail are
-<strong>
-    <% if $AllowSiteUpdatesRightNow %>
-        Allowed to Run.
-    <% else %>
-        Not Allowed to Run.
-    <% end_if %>
-    </strong>
-    You can change this above.
-</p>
 
 <% if $AnalysisLinks %>
 <h2>Analyses</h2>
@@ -201,7 +202,7 @@ Currently Product Update from Advance Retail are
         <p>$Description</p>
         <p class="show-on-hover">
             <a href="$Link">▶ schedule now</a><br />
-            <br /><strong>Hours of the day it runs:</strong> $HoursOfTheDayNice
+            <br /><strong>Can Run:</strong> $CanRun
             <br /><strong>Minimum number of minutes between runs:</strong> $MinMinutesBetweenRunsNice
             <br /><strong>Maximum number of minutes between runs:</strong> $MaxMinutesBetweenRunsNice
             <br /><strong>Number of Logs:</strong> $NumberOfLogs
@@ -220,6 +221,7 @@ Currently Product Update from Advance Retail are
                     <p>$getDescription</p>
                     <p class="show-on-hover">
                         <a href="$Link">▶ schedule now</a><br />
+                        <br /><strong>Can Run:</strong> $CanRunNice
                         <br /><strong>Number of Logs:</strong> $NumberOfLogs
                         <br /><strong>Last Started:</strong> $LastStarted
                         <br /><strong>Last Completed:</strong> $LastCompleted
@@ -227,7 +229,6 @@ Currently Product Update from Advance Retail are
                         <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
                         <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
                         <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
-                        <br />$getDescription
                     </p>
                 </li>
             <% end_loop %>

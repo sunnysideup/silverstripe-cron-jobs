@@ -393,17 +393,24 @@ trait BaseMethodsForRecipesAndSteps
         return $returnID;
     }
 
+    public function CanRunNice(): string
+    {
+        return $this->CanRun() ? 'YES' : 'NO';
+    }
+
     public static function my_child_links(): ArrayList
     {
         $array = ClassInfo::subclassesFor(static::class, false);
         $al = new ArrayList();
         foreach ($array as $class) {
             $obj = $class::inst();
+            // we need to list them here as the class is not viewable data.
             $arrayData = new ArrayData(
                 [
                     'Title' => $obj->getTitle(),
                     'Link' => Director::absoluteURL($obj->Link()),
                     'Description' => trim($obj->getDescription()),
+                    'CanRunNuce' => $obj->CanRunNice(),
                     'LastStarted' => $obj->LastStarted(),
                     'LastCompleted' => $obj->LastCompleted(),
                     'HasErrors' => $obj->HasErrors(),

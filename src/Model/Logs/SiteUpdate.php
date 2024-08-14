@@ -118,32 +118,6 @@ class SiteUpdate extends DataObject
         // add generic fields
         $this->addGenericFields($fields);
 
-        $fields->removeByName([
-            'RunnerClassName',
-            'TimeTaken',
-        ]);
-
-        $readonlyFields = [
-            'Status',
-            'Type',
-            'Errors',
-            'TimeTaken',
-            'MemoryTaken',
-            'ErrorLog',
-            'RunnerClassName',
-        ];
-        $fields->addFieldsToTab(
-            'Root.Main',
-            [
-                ReadonlyField::create(
-                    'TimeNice',
-                    'Time taken'
-                ),
-            ],
-            'Errors'
-        );
-        $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
-
         return $fields;
     }
 

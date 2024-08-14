@@ -17,6 +17,8 @@ use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
+use SilverStripe\Forms\HeaderField;
 use Sunnysideup\CronJobs\Api\BashColours;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
@@ -116,23 +118,39 @@ trait LogTrait
 
     protected function addGenericFields($fields)
     {
+
+        $readonlyFields = [
+            'AllowedNextStep',
+            'Status',
+            'Type',
+            'Errors',
+            'TimeTaken',
+            'MemoryTaken',
+            'ErrorLog',
+            'SiteUpdateID',
+        ];
+        $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
+
         $fields->addFieldsToTab(
             'Root.Main',
             [
-                ReadonlyField::create('Title', 'Step'),
+                ReadonlyField::create('Title', 'Name'),
                 ReadonlyField::create('Description', 'Description'),
-                ReadonlyField::create('Created', 'Created'),
-                ReadonlyField::create('LastEdited', 'Last Edited'),
+                ReadonlyField::create('Created', 'Started')
+                    ->setDescription($this->dbObject('Created')->Ago()),
+                ReadonlyField::create('LastEdited', 'Last Active')
+                    ->setDescription($this->dbObject('LastEdited')->Ago()),
             ]
         );
 
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->MyRunnerObject();
         if ($obj) {
-            if($obj instanceof SiteUpdate) {
+            if($this instanceof SiteUpdate) {
                 $fields->addFieldsToTab(
-                    'Root.GeneralInfo',
+                    'Root.WhenDoesItRun',
                     [
+                        ReadonlyField::create('CurrentlyRunning', 'Currently Running', $obj->CurrentlyRunning() ? 'YES' : 'NO'),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
                         ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Number of Minutes between Runs', $obj->MinMinutesBetweenRunsNice()),
                         ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Max Number of Minutes between Runs', $obj->MaxMinutesBetweenRunsNice()),
@@ -140,26 +158,43 @@ trait LogTrait
                 );
             }
             $fields->addFieldsToTab(
-                'Root.GeneralInfo',
+                'Root.Stats',
                 [
-                    ReadonlyField::create('NumberOfLogs', 'Last Completed', $obj->NumberOfLogs()),
-                    ReadonlyField::create('LastStarted', 'Last Completed', $obj->LastStarted()),
+                    // $fields->dataFieldByName('TimeNice'),
+                    ReadonlyField::create('LastStarted', 'Last Started', $obj->LastStarted()),
                     ReadonlyField::create('LastCompleted', 'Last Completed', $obj->LastCompleted()),
+                    HeaderField::create('TimeUse', 'Time Use (in seconds)'),
+                    ReadonlyField::create('TimeTaken', 'Time Taken', $this->getTimeNice()),
                     ReadonlyField::create('AverageTimeTaken', 'Average Time Taken', $obj->AverageTimeTaken()),
-                    ReadonlyField::create('AverageMemoryTaken', 'Average Memory Taken', $obj->AverageMemoryTaken()),
                     ReadonlyField::create('MaxTimeTaken', 'Max Time Taken', $obj->MaxTimeTaken()),
+                    HeaderField::create('MemoryUse', 'Memory Use (in megabytes)'),
+                    $fields->dataFieldByName('MemoryTaken'),
+                    ReadonlyField::create('AverageMemoryTaken', 'Average Memory Taken', $obj->AverageMemoryTaken()),
                     ReadonlyField::create('MaxMemoryTaken', 'Max Memory Taken', $obj->MaxMemoryTaken()),
-                    ReadonlyField::create('HasErrors', 'Has Errors', $obj->HasErrors() ? 'YES' : 'NO'),
-                    ReadonlyField::create('CurrentlyRunning', 'Currently Running', $obj->CurrentlyRunning() ? 'YES' : 'NO'),
-                ]
+
+                ],
             );
             $fields->addFieldsToTab(
-                'Root.RunNow',
+                'Root.ImportantLogs',
                 [
-                    CMSNicetiesLinkButton::create('RunNow', 'Run Now', $obj->Link()),
-                ]
+                    ReadonlyField::create('Notes', 'Notes / Errors'),
+                    ReadonlyField::create('HasErrors', 'Has Errors', $obj->HasErrors() ? 'YES' : 'NO'),
+                    ReadonlyField::create('Errors', 'Error Count'),
+                    ReadonlyField::create('ErrorLog', 'Error Log'),
+                ],
+                'ImportantLogs'
             );
         }
+        $gfNotes = $fields->dataFieldByName('ImportantLogs');
+        if ($gfNotes) {
+            $gfNotes->getConfig()->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
+        }
+        $fields->addFieldsToTab(
+            'Root.RunNow',
+            [
+                CMSNicetiesLinkButton::create('RunNow', 'Run Now', $obj->Link(), true),
+            ]
+        );
         if ($this->ErrorLog) {
             $data = $this->ErrorLog;
             $source = 'Saved';
@@ -174,20 +209,15 @@ trait LogTrait
             <div style="background-color: #300a24; padding: 20px; height: 600px; overflow-y: auto; border-radius: 10px; color: #efefef;">' . $data . '</div>'
         );
         $fields->addFieldsToTab(
-            'Root.Log',
+            'Root.ImportantLogs',
             [
                 $logField,
             ]
         );
-        /**
-         * @var
-         *
-         */
         $obj = $this->MyRunnerObject();
         $runnerClassNameNice = $obj ? $obj->getTitle() : 'Error';
-        $fields->replaceField(
+        $fields->removeByName(
             'RunnerClassName',
-            ReadonlyField::create('RunnerClassNameNice', 'Run', $runnerClassNameNice)
         );
 
     }

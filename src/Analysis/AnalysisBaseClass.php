@@ -2,17 +2,20 @@
 
 namespace Sunnysideup\CronJobs\Analysis;
 
+use SilverStripe\Control\Director;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\ArrayData;
+use Sunnysideup\CronJobs\Control\SiteUpdateController;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 
 abstract class AnalysisBaseClass
 {
-    use BaseMethodsForRecipesAndSteps;
     use LogSuccessAndErrorsTrait;
 
     /**
@@ -157,4 +160,50 @@ abstract class AnalysisBaseClass
 
         return $out . '</ul>';
     }
+
+    public static function my_child_links(): ArrayList
+    {
+        $array = ClassInfo::subclassesFor(static::class, false);
+        $al = new ArrayList();
+        foreach ($array as $class) {
+            $obj = Injector::inst()->get($class);
+            $arrayData = new ArrayData(
+                [
+                    'Title' => $obj->getTitle(),
+                    'Link' => Director::absoluteURL($obj->Link()),
+                    'Description' => trim($obj->getDescription()),
+                ]
+            );
+            $al->push($arrayData);
+        }
+
+        return $al;
+    }
+
+    public function Link(?string $action = null): string
+    {
+        $action = $this->getAction();
+        return SiteUpdateController::my_link($action . '/' . $this->getEscapedClassName() . '/');
+    }
+
+    protected function getEscapedClassName(): string
+    {
+        return str_replace('\\', '-', static::class);
+    }
+
+
+
+    public function setRequest($request)
+    {
+        $this->request = $request;
+
+        return $this;
+    }
+
+    protected function getRequest()
+    {
+        return $this->request;
+    }
+
+
 }

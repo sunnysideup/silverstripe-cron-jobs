@@ -38,18 +38,22 @@ class SiteUpdateController extends Controller
         [
             'Title' => 'Reset Updates (start again)',
             'Link' => 'dev/tasks/site-update-reset',
+            'Description' => 'reset any updates that are currently running so that new ones can run.',
         ],
         [
             'Title' => 'Clear Cache: flush cache and check database',
             'Link' => 'dev/build/?flush=1',
+            'Description' => 'Flush any caches to update what the website shows (e.g. images)',
         ],
         [
             'Title' => 'Do now allow site updates',
-            'Link' => 'admin/siteupdates/stopsiteupdates',
+            'Link' => 'stopsiteupdates',
+            'Description' => 'Stop any updates from starting to run.',
         ],
         [
             'Title' => 'Allow site updates',
-            'Link' => 'admin/siteupdates/startsiteupdates',
+            'Link' => 'startsiteupdates',
+            'Description' => 'Allow any updates from starting to run.',
         ],
 
     ];
@@ -103,7 +107,11 @@ class SiteUpdateController extends Controller
     public function EmergencyLinks()
     {
         $array = $this->config()->get('emergency_array');
-
+        foreach($array as $key => $item) {
+            if(isset($array[$key]['Link'])) {
+                $array[$key]['Link'] = self::my_link($item['Link']);
+            }
+        }
         return $this->createList($array);
     }
 

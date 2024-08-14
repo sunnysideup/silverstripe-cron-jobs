@@ -60,7 +60,7 @@ abstract class SiteUpdateRecipeBaseClass
     private static array $always_run_at_the_end_steps = [];
 
     protected bool $ignoreLastRan = false;
-    
+
     protected bool $ignoreTimeOfDay = false;
 
     public function setIgnoreLastRanAndTimeOfDay(): static
@@ -176,6 +176,7 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function run(?HttpRequest $request)
     {
+        register_shutdown_function([$this, 'fatalHandler']);
         $this->logHeader('Start Recipe ' . $this->getType() . ' at ' . date('l jS \of F Y h:i:s A'));
         $errors = 0;
         $status = 'Completed';
@@ -202,6 +203,28 @@ abstract class SiteUpdateRecipeBaseClass
 
         $this->stopLog($errors, $status, $notes);
         $this->logHeader('End Recipe ' . $this->getType());
+    }
+
+
+
+    public function fatalHandler(): void
+    {
+        $errno   = E_CORE_ERROR;
+        $errfile = 'unknown file';
+        $errline = 0;
+        $errstr  = 'shutdown';
+
+        $error = error_get_last();
+
+        if ($error !== null) {
+            $errno   = $error['type'];
+            $errfile = $error['file'];
+            $errline = $error['line'];
+            $errstr  = $error['message'];
+            $errorFormatted = "Error [$errno]: $errstr in $errfile on line $errline";
+            $this->stopLog(1, 'Errors', $errorFormatted);
+
+        }
     }
 
     /**
