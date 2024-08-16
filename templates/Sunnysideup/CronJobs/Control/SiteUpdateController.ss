@@ -5,11 +5,8 @@
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
         <title>$Subject</title>
         <style>
-            body {
+            body, * {
                 font-family: sans-serif;
-            }
-            h1, h2, h3, h4 {
-                font-family: serif;
             }
             h1 {
                 font-size: 45px;
@@ -19,10 +16,7 @@
                 max-width: 1200px;
                 padding-left: calc(260px + 10vw);
             }
-            .logo {
-                display: block;
-                margin: 20px auto;
-            }
+
             td {
                 padding: 5px;
             }
@@ -33,16 +27,6 @@
                 list-style: circle;
                 padding-bottom: 5px;
             }
-            li > .show-on-hover {
-                /* display: none; */
-                font-size: 12px;
-                color: grey;
-            }
-            li:hover li > .show-on-hover,
-            li:hover > .show-on-hover {
-                /* display: block; */
-            }
-
             #content h1 {
                 color: navy;
                 border-top: 2px solid navy;
@@ -58,26 +42,17 @@
             #content h3 {
                 border-top: 1px solid #ccc;
                 padding-top: 20px;
+                padding-bottom: 0;
+                margin-bottom: 0;
+            }
+            #content h4 {
+                font-size: 17px;
+                padding-top: 20px;
+                padding-bottom: 0;
+                margin-bottom: 0;
+
             }
 
-            #content ul,
-            #content ol {
-                list-style: none;
-                counter-reset: my-awesome-counter;
-            }
-            #content ol li {
-                counter-increment: my-awesome-counter;
-            }
-            #content ol li::before {
-              content: counter(my-awesome-counter);
-              color: #fcd000;
-              float: left;
-            }
-            h4 {
-                padding: 0;
-                margin: 0;
-                margin-left: 1em;
-            }
             td {
                 border: 1px solid #ccc;
             }
@@ -127,7 +102,52 @@
             #toc ol {
                 padding-left: 12px;
             }
+            .button {
+                background-color: #007bff; /* Primary color */
+                color: white;              /* Text color */
+                padding: 10px 20px;        /* Padding around text */
+                border: none;              /* Remove default border */
+                border-radius: 5px;        /* Rounded corners */
+                cursor: pointer;           /* Pointer cursor on hover */
+                font-size: 16px;           /* Font size */
+                font-weight: bold;         /* Bold text */
+                transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition */
+                text-align: center;        /* Center text */
+                display: inline-block;     /* Inline-block for proper sizing */
+                text-decoration: none;     /* Remove underline for links */
+            }
 
+            /* Hover state */
+            .button:hover {
+                background-color: #0056b3; /* Darker shade on hover */
+            }
+
+            /* Active state */
+            .button:active {
+                background-color: #004494; /* Even darker on active press */
+                transform: translateY(2px); /* Slightly moves the button down */
+            }
+
+            /* Disabled state */
+            .button:disabled {
+                background-color: #cccccc; /* Gray background */
+                cursor: not-allowed;       /* Not-allowed cursor */
+            }
+            .boolean-nice-and-colourfull {
+                display: inline-block;
+                padding: 3px;
+            }
+            .show-on-hover .stat-item {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: space-between;
+                display: none;
+                padding: 5px 0;
+                max-width: 400px;
+            }
+            .show-on-hover:hover .stat-item {
+                display: flex;
+            }
         </style>
     </head>
     <body>
@@ -198,38 +218,40 @@ Currently Site Updates are
 <ul>
     <% loop $RecipeLinks %>
     <li>
-        <h3><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h3>
-        <p>$Description</p>
-        <p class="show-on-hover">
-            <a href="$Link">▶ schedule now</a><br />
-            <br /><strong>Can Run:</strong> $CanRun
-            <br /><strong>Minimum number of minutes between runs:</strong> $MinMinutesBetweenRunsNice
-            <br /><strong>Maximum number of minutes between runs:</strong> $MaxMinutesBetweenRunsNice
-            <br /><strong>Number of Logs:</strong> $NumberOfLogs
-            <br /><strong>Last Started:</strong> $LastStarted
-            <br /><strong>Last Completed:</strong> $LastCompleted
-            <br /><strong>Average Time Taken:</strong> $AverageTimeTaken
-            <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
-            <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
-            <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
-        </p>
+        <h3><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h3>
+        <div class="show-on-hover">
+            <% if $Description %><p>$Description</p><% end_if %>
+            <div class="stat-item"><strong>Minimum number of minutes between runs:</strong> <span>$MinMinutesBetweenRunsNice</span></div>
+            <div class="stat-item"><strong>Maximum number of minutes between runs:</strong> <span>$MaxMinutesBetweenRunsNice</span></div>
+            <div class="stat-item"><a href="$Link" class="button">▶ schedule now</a></div>
+            <div class="stat-item"><strong>Has had Errors:</strong> <span>$HasHadErrorsNice</span></div>
+            <div class="stat-item"><strong>Can Run:</strong> <span>$CanRunNice</span></div>
+            <div class="stat-item"><strong>Number of Logs:</strong> <span>$NumberOfLogs</span></div>
+            <div class="stat-item"><strong>Last Started:</strong> <span>$LastStarted</span></div>
+            <div class="stat-item"><strong>Last Completed:</strong> <span>$LastCompleted</span></div>
+            <div class="stat-item"><strong>Average Time Taken:</strong> <span>$AverageTimeTaken seconds</span></div>
+            <div class="stat-item"><strong>Max Time Taken:</strong> <span>$MaxTimeTaken seconds</span></div>
+            <div class="stat-item"><strong>Average Memory Taken:</strong> <span>$AverageMemoryTaken megabytes</span></div>
+            <div class="stat-item"><strong>Max Memory Taken:</strong> <span>$MaxMemoryTaken megabytes</span></div>
+        </div>
             <% if $SubLinks %>
             <ol>
             <% loop $SubLinks %>
                 <li>
-                    <h4><% if $HasErrors %>❌<% else %>✓<% end_if %> $Title</h4>
-                    <p>$getDescription</p>
-                    <p class="show-on-hover">
-                        <a href="$Link">▶ schedule now</a><br />
-                        <br /><strong>Can Run:</strong> $CanRunNice
-                        <br /><strong>Number of Logs:</strong> $NumberOfLogs
-                        <br /><strong>Last Started:</strong> $LastStarted
-                        <br /><strong>Last Completed:</strong> $LastCompleted
-                        <br /><strong>Average Time Taken:</strong> $AverageTimeTaken
-                        <br /><strong>Average Memory Taken:</strong> $AverageMemoryTaken
-                        <br /><strong>Max Time Taken:</strong> $MaxTimeTaken
-                        <br /><strong>Max Memory Taken:</strong> $MaxMemoryTaken
-                    </p>
+                    <h4><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h4>
+                    <div class="show-on-hover">
+                        <% if $Description %><p>$Description</p><% end_if %>
+                        <div class="stat-item"><a href="$Link" class="button">▶ schedule now</a></div>
+                        <div class="stat-item"><strong>Has had Errors:</strong> <span>$HasHadErrorsNice</span></div>
+                        <div class="stat-item"><strong>Can Run:</strong> <span>$CanRunNice</span></div>
+                        <div class="stat-item"><strong>Number of Logs:</strong> <span>$NumberOfLogs</span></div>
+                        <div class="stat-item"><strong>Last Started:</strong> <span>$LastStarted</span></div>
+                        <div class="stat-item"><strong>Last Completed:</strong> <span>$LastCompleted</span></div>
+                        <div class="stat-item"><strong>Average Time Taken:</strong> <span>$AverageTimeTaken seconds</span></div>
+                        <div class="stat-item"><strong>Max Time Taken:</strong> <span>$MaxTimeTaken seconds</span></div>
+                        <div class="stat-item"><strong>Average Memory Taken:</strong> <span>$AverageMemoryTaken megabytes</span></div>
+                        <div class="stat-item"><strong>Max Memory Taken:</strong> <span>$MaxMemoryTaken megabytes</span></div>
+                    </div>
                 </li>
             <% end_loop %>
             </ol>

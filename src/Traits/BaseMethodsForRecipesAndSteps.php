@@ -17,6 +17,7 @@ use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\FieldType\DBBoolean;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
@@ -27,8 +28,6 @@ trait BaseMethodsForRecipesAndSteps
     protected $log;
 
     protected $timeAtStart;
-
-    protected $request;
 
     protected $mySiteUpdateID = 0;
 
@@ -46,11 +45,6 @@ trait BaseMethodsForRecipesAndSteps
         $obj = self::inst();
         $recipeOrStep = 'Step';
         $isRecipe = false;
-        if ($obj instanceof AnalysisBaseClass) {
-            $obj->setRequest($request);
-
-            return $obj->run($request);
-        }
 
         if ($obj instanceof SiteUpdateRecipeStepBaseClass) {
             // all set
@@ -81,10 +75,7 @@ trait BaseMethodsForRecipesAndSteps
         ';
     }
 
-    public static function inst()
-    {
-        return Injector::inst()->get(static::class);
-    }
+
 
     /**
      * put in holding pattern until nothing else is running.
@@ -110,6 +101,11 @@ trait BaseMethodsForRecipesAndSteps
     }
 
 
+    protected function getLogClassSingleton()
+    {
+        return Injector::inst()->get($this->getLogClassName());
+    }
+
     /**
      * list of other items running
      */
@@ -122,23 +118,6 @@ trait BaseMethodsForRecipesAndSteps
         return $className::get()->filter(['Stopped' => false])->exclude(['ID' => $logID]);
     }
 
-    public function Link(?string $action = null): string
-    {
-        $action = $this->getAction();
-        return SiteUpdateController::my_link($action . '/' . $this->getEscapedClassName() . '/');
-    }
-
-    public function Title(): string
-    {
-        return $this->getTitle();
-    }
-
-    public function getTitle(): string
-    {
-        $string = ClassInfo::shortName(static::class);
-
-        return preg_replace('#(?<!\ )[A-Z]#', ' $0', $string);
-    }
 
     abstract public function getDescription(): string;
 
@@ -197,8 +176,34 @@ trait BaseMethodsForRecipesAndSteps
         return null;
     }
 
+    public function LastCompletedLog()
+    {
+        $list = $this->listOfLogsForThisRecipeOrStep();
+        if ($list) {
+            return $list
+                ->excludeAny(['Status' => ['Started', 'Skipped']])
+                ->sort(['ID' => 'DESC'])
+                ->first();
+        }
+        return null;
+    }
 
-    public function HasErrors(): bool
+    public function LastRunHadErrors(): bool
+    {
+        $obj = $this->LastCompletedLog();
+        if ($obj) {
+            return $obj->Status === 'Errors';
+        }
+
+        return false;
+    }
+
+    public function LastRunHadErrorsNice(): DBBoolean
+    {
+        return DBBoolean::create_field('Boolean', $this->LastRunHadErrors());
+    }
+
+    public function HasHadErrors(): bool
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list) {
@@ -208,6 +213,11 @@ trait BaseMethodsForRecipesAndSteps
         }
 
         return false;
+    }
+
+    public function HasHadErrorsNice(): DBBoolean
+    {
+        return DBBoolean::create_field('Boolean', $this->HasHadErrors());
     }
 
     public function CurrentlyRunning(): bool
@@ -221,6 +231,12 @@ trait BaseMethodsForRecipesAndSteps
 
         return false;
     }
+
+    public function CurrentlyRunningNice(): DBBoolean
+    {
+        return DBBoolean::create_field('Boolean', $this->CurrentlyRunning());
+    }
+
     public function HoursOfTheDayNice(): string
     {
         if($this instanceof SiteUpdateRecipeBaseClass) {
@@ -301,7 +317,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function NumberOfLogs(): int
     {
-        return $this->aggregateTaken('count');
+        return $this->listOfLogsForThisRecipeOrStep()->count();
     }
 
     public function AverageTimeTaken(): int
@@ -393,9 +409,9 @@ trait BaseMethodsForRecipesAndSteps
         return $returnID;
     }
 
-    public function CanRunNice(): string
+    public function CanRunNice(): DBBoolean
     {
-        return $this->CanRun() ? 'YES' : 'NO';
+        return DBBoolean::create_field('Boolean', $this->CanRun());
     }
 
     public static function my_child_links(): ArrayList
@@ -403,61 +419,54 @@ trait BaseMethodsForRecipesAndSteps
         $array = ClassInfo::subclassesFor(static::class, false);
         $al = new ArrayList();
         foreach ($array as $class) {
-            $obj = $class::inst();
-            // we need to list them here as the class is not viewable data.
-            $arrayData = new ArrayData(
-                [
-                    'Title' => $obj->getTitle(),
-                    'Link' => Director::absoluteURL($obj->Link()),
-                    'Description' => trim($obj->getDescription()),
-                    'CanRunNuce' => $obj->CanRunNice(),
-                    'LastStarted' => $obj->LastStarted(),
-                    'LastCompleted' => $obj->LastCompleted(),
-                    'HasErrors' => $obj->HasErrors(),
-                    'SubLinks' => $obj->SubLinks(),
-                    'NumberOfLogs' => $obj->NumberOfLogs(),
-                    'AverageTimeTaken' => $obj->AverageTimeTaken(),
-                    'AverageMemoryTaken' => $obj->AverageMemoryTaken(),
-                    'HoursOfTheDayNice' => $obj->HoursOfTheDayNice(),
-                    'MinMinutesBetweenRunsNice' => $obj->MinMinutesBetweenRunsNice(),
-                    'MaxMinutesBetweenRunsNice' => $obj->MaxMinutesBetweenRunsNice(),
-                    'MaxTimeTaken' => $obj->MaxTimeTaken(),
-                    'MaxMemoryTaken' => $obj->MaxMemoryTaken(),
-                ]
-            );
-            $al->push($arrayData);
+            $al->push($class::inst()->getKeyVarsAsArrayData());
         }
 
         return $al;
     }
 
 
-    public function setRequest($request)
+    public function getKeyVarsAsArrayData(): ArrayData
     {
-        $this->request = $request;
-
-        return $this;
+        if($this instanceof SiteUpdateRecipeBaseClass) {
+            $subLinksAsArrayList = new ArrayList();
+            foreach($this->SubLinks(true) as $subLink) {
+                $subLinksAsArrayList->push($subLink->getKeyVarsAsArrayData());
+            }
+        } else {
+            $subLinksAsArrayList = null;
+        }
+        // we need to list them here as the class is not viewable data.
+        return new ArrayData(
+            [
+                'Title' => $this->getTitle(),
+                'Link' => Director::absoluteURL($this->Link()),
+                'Description' => trim($this->getDescription()),
+                'CanRunNice' => $this->CanRunNice()->NiceAndColourfull(),
+                'LastStarted' => $this->LastStarted(),
+                'LastCompleted' => $this->LastCompleted(),
+                'LastRunHadErrors' => $this->LastRunHadErrors(),
+                'LastRunHadErrorsNice' => $this->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours(),
+                'HasHadErrorsNice' => $this->HasHadErrorsNice()->NiceAndColourfullInvertedColours(),
+                'NumberOfLogs' => $this->NumberOfLogs(),
+                'AverageTimeTaken' => $this->AverageTimeTaken(),
+                'AverageMemoryTaken' => $this->AverageMemoryTaken(),
+                'HoursOfTheDayNice' => $this->HoursOfTheDayNice(),
+                'MinMinutesBetweenRunsNice' => $this->MinMinutesBetweenRunsNice(),
+                'MaxMinutesBetweenRunsNice' => $this->MaxMinutesBetweenRunsNice(),
+                'MaxTimeTaken' => $this->MaxTimeTaken(),
+                'MaxMemoryTaken' => $this->MaxMemoryTaken(),
+                'SubLinks' => $subLinksAsArrayList,
+            ]
+        );
     }
 
-    protected function getRequest()
-    {
-        return $this->request;
-    }
 
     public function getLog()
     {
         return $this->log;
     }
 
-    protected function getLogClassSingleton()
-    {
-        return Injector::inst()->get($this->getLogClassName());
-    }
-
-    protected function getEscapedClassName(): string
-    {
-        return str_replace('\\', '-', static::class);
-    }
 
 
 }

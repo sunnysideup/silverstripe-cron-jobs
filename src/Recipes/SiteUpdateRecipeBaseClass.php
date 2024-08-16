@@ -15,14 +15,18 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
+use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
 
 abstract class SiteUpdateRecipeBaseClass
 {
+    use Configurable;
+
     use LogSuccessAndErrorsTrait;
 
     use BaseMethodsForRecipesAndSteps;
 
-    use Configurable;
+    use BaseMethodsForAllRunners;
+
 
     abstract public function getType(): string;
     abstract public function getDescription(): string;
@@ -90,12 +94,12 @@ abstract class SiteUpdateRecipeBaseClass
 
 
 
-    public function SubLinks(): ?ArrayList
+    public function SubLinks(?bool $all = false): ?ArrayList
     {
         $al = ArrayList::create();
         foreach (static::STEPS as $className) {
             $obj = Injector::inst()->get($className);
-            if ($obj->canRun()) {
+            if ($obj->canRun() || $all) {
                 $al->push($obj);
             }
         }

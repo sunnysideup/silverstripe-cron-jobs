@@ -137,6 +137,7 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
+        $this->fixStartedAndStoppedOnBeforeWriteHelper();
         $this->recordErrors(SiteUpdateNote::class);
     }
 

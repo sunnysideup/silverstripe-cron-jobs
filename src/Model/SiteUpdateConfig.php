@@ -12,6 +12,7 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
+use Sunnysideup\HierarchicalListField\HierarchicalListField;
 
 class SiteUpdateConfig extends DataObject
 {
@@ -77,6 +78,7 @@ class SiteUpdateConfig extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
+
         if(! $this->folderPathIsWritable()) {
             $fields->addFieldToTab(
                 'Root.Main',

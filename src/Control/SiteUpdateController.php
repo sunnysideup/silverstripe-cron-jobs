@@ -38,12 +38,12 @@ class SiteUpdateController extends Controller
         [
             'Title' => 'Reset Updates (start again)',
             'Link' => 'dev/tasks/site-update-reset',
-            'Description' => 'reset any updates that are currently running so that new ones can run.',
+            'Description' => 'Mark as completed any updates that are currently running so that new ones can run.',
         ],
         [
             'Title' => 'Clear Cache: flush cache and check database',
             'Link' => 'dev/build/?flush=1',
-            'Description' => 'Flush any caches to update what the website shows (e.g. images)',
+            'Description' => 'Flush any caches to update what the website shows (e.g. images).',
         ],
         [
             'Title' => 'Do now allow site updates',
@@ -53,7 +53,7 @@ class SiteUpdateController extends Controller
         [
             'Title' => 'Allow site updates',
             'Link' => 'startsiteupdates',
-            'Description' => 'Allow any updates from starting to run.',
+            'Description' => 'Allow updates to run.',
         ],
 
     ];
@@ -107,12 +107,22 @@ class SiteUpdateController extends Controller
     public function EmergencyLinks()
     {
         $array = $this->config()->get('emergency_array');
-        foreach($array as $key => $item) {
-            if(isset($array[$key]['Link'])) {
-                $array[$key]['Link'] = self::my_link($item['Link']);
+        $doSet = new ArrayList();
+        foreach ($array as $key => $item) {
+            if(isset($item['Link'])) {
+                $item['Link'] = self::my_link($item['Link']);
             }
+            $doSet->push(
+                new ArrayData(
+                    [
+                        'Title' => $item['Title'],
+                        'Link' => $item['Link'],
+                        'Description' => $item['Description'] ?? '',
+                    ]
+                )
+            );
         }
-        return $this->createList($array);
+        return $doSet;
     }
 
     public function AnalysisLinks()
@@ -122,7 +132,7 @@ class SiteUpdateController extends Controller
 
     public function RecipeLinks()
     {
-        return SiteUpdateRecipeBaseClass::my_child_links();
+        return SiteUpdateRecipeBaseClass::my_child_links()->sort('Title');
     }
 
     public function StepLinks()
@@ -177,27 +187,6 @@ class SiteUpdateController extends Controller
     {
         SiteUpdateConfig::inst()->StopSiteUpdates = $on;
         SiteUpdateConfig::inst()->write();
-    }
-
-    protected function createList($array): ArrayList
-    {
-        $doSet = new ArrayList();
-        foreach ($array as $item) {
-            $doSet->push(
-                new ArrayData(
-                    [
-                        'Title' => $item['Title'],
-                        'Link' => $item['Link'],
-                        'Description' => $item['Description'] ?? '',
-                        'LastCompleted' => $item['LastCompleted'] ?? '',
-                        'HasErrors' => $item['HasErrors'] ?? '',
-                        'SubLinks' => $item['SubLinks'] ?? null,
-                    ]
-                )
-            );
-        }
-
-        return $doSet;
     }
 
 

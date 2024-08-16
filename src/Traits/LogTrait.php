@@ -150,7 +150,8 @@ trait LogTrait
                 $fields->addFieldsToTab(
                     'Root.WhenDoesItRun',
                     [
-                        ReadonlyField::create('CurrentlyRunning', 'Currently Running', $obj->CurrentlyRunning() ? 'YES' : 'NO'),
+                        ReadonlyField::create('CanRunNice', 'Can Run?', $obj->CanRunNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CurrentlyRunningNice', 'Currently Running', $obj->CurrentlyRunningNice()->NiceAndColourfull()),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
                         ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Number of Minutes between Runs', $obj->MinMinutesBetweenRunsNice()),
                         ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Max Number of Minutes between Runs', $obj->MaxMinutesBetweenRunsNice()),
@@ -178,7 +179,8 @@ trait LogTrait
                 'Root.ImportantLogs',
                 [
                     ReadonlyField::create('Notes', 'Notes / Errors'),
-                    ReadonlyField::create('HasErrors', 'Has Errors', $obj->HasErrors() ? 'YES' : 'NO'),
+                    ReadonlyField::create('HasHadErrorsNice', 'Has had Errors', $obj->HasHadErrorsNice()->NiceAndColourfullInvertedColours()),
+                    ReadonlyField::create('LastRunHadErrorsNice', 'Last Run had Errors', $obj->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours()),
                     ReadonlyField::create('Errors', 'Error Count'),
                     ReadonlyField::create('ErrorLog', 'Error Log'),
                 ],
@@ -274,8 +276,6 @@ trait LogTrait
         $logError = false;
         if ($this->hasErrorInLog($contents)) {
             $logError = true;
-            $this->ErrorLog = $contents;
-            $this->Status = 'Errors';
         }
 
         if ('NotCompleted' === $this->Status) {
@@ -283,10 +283,11 @@ trait LogTrait
         }
 
         if ($this->Stopped && 'Started' === $this->Status) {
-            $this->Status = 'Errors';
             $logError = true;
         }
         if($logError) {
+            $this->ErrorLog = $contents;
+            $this->Status = 'Errors';
             return $contents;
         }
         return null;
@@ -296,6 +297,10 @@ trait LogTrait
     {
         $errors = $this->getErrors();
         if ($errors) {
+            $this->ErrorLog = $errors;
+            $this->Status = 'Errors';
+            // $this->write();
+            // No need to write as this is called from onBeforeWrite!
             $error = $recordClassName::create();
             $error->Type = 'HAS ERROR IN LOG';
             $error->Message = $errors;
@@ -367,6 +372,17 @@ trait LogTrait
             }
         }
         return false;
+    }
+
+    protected function fixStartedAndStoppedOnBeforeWriteHelper()
+    {
+        if($this->Stopped && $this->Status === 'Started') {
+            $this->Status = 'NotCompleted';
+        }
+        // it may already have an error, but not be stopped yet.
+        // if($this->Status !== 'Started') {
+        //     $this->Stopped = true;
+        // }
     }
 
 }

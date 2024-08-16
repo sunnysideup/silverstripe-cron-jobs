@@ -3,6 +3,7 @@
 namespace Sunnysideup\CronJobs\Analysis;
 
 use SilverStripe\Control\Director;
+use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
@@ -18,25 +19,15 @@ abstract class AnalysisBaseClass
 {
     use LogSuccessAndErrorsTrait;
 
+    use BaseMethodsForAllRunners;
+
     /**
      * returns the HTML for the analysis.
      */
     abstract public function run(HTTPRequest $request): string;
 
-    public function SubLinks(): ?ArrayList
-    {
-        return null;
-    }
+    abstract public function getDescription(): string;
 
-    /**
-     * nothing to return here
-     *
-     * @return string
-     */
-    public function getLogClassName(): string
-    {
-        return '';
-    }
 
     public function getGroup(): string
     {
@@ -180,29 +171,15 @@ abstract class AnalysisBaseClass
         return $al;
     }
 
-    public function Link(?string $action = null): string
+    public static function run_me(HTTPRequest $request)
     {
-        $action = $this->getAction();
-        return SiteUpdateController::my_link($action . '/' . $this->getEscapedClassName() . '/');
-    }
+        $obj = self::inst();
+        if ($obj instanceof AnalysisBaseClass) {
+            $obj->setRequest($request);
 
-    protected function getEscapedClassName(): string
-    {
-        return str_replace('\\', '-', static::class);
-    }
+            return $obj->run($request);
+        }
 
-
-
-    public function setRequest($request)
-    {
-        $this->request = $request;
-
-        return $this;
-    }
-
-    protected function getRequest()
-    {
-        return $this->request;
     }
 
 
