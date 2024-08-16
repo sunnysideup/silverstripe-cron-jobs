@@ -18,7 +18,7 @@ class SiteUpdateRun extends BuildTask
         Runs any SiteUpdateRunNext objects (to be deleted afterwards).
         If none, then runs the item set through the recipe "GET" variable. ';
 
-    protected string $recipe = '';
+    protected ?string $recipe = '';
 
     private static $segment = 'site-update-run';
 

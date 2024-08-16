@@ -143,7 +143,10 @@
                 justify-content: space-between;
                 display: none;
                 padding: 5px 0;
-                max-width: 400px;
+                max-width: 900px;
+            }
+            .show-on-hover .stat-item span {
+                text-align: right;
             }
             .show-on-hover:hover .stat-item {
                 display: flex;
@@ -218,8 +221,8 @@ Currently Site Updates are
 <ul>
     <% loop $RecipeLinks %>
     <li>
-        <h3><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h3>
         <div class="show-on-hover">
+            <h3><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h3>
             <% if $Description %><p>$Description</p><% end_if %>
             <div class="stat-item"><strong>Minimum number of minutes between runs:</strong> <span>$MinMinutesBetweenRunsNice</span></div>
             <div class="stat-item"><strong>Maximum number of minutes between runs:</strong> <span>$MaxMinutesBetweenRunsNice</span></div>
@@ -238,8 +241,8 @@ Currently Site Updates are
             <ol>
             <% loop $SubLinks %>
                 <li>
-                    <h4><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h4>
                     <div class="show-on-hover">
+                        <h4><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h4>
                         <% if $Description %><p>$Description</p><% end_if %>
                         <div class="stat-item"><a href="$Link" class="button">▶ schedule now</a></div>
                         <div class="stat-item"><strong>Has had Errors:</strong> <span>$HasHadErrorsNice</span></div>
