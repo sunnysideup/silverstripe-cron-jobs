@@ -232,6 +232,9 @@ trait LogTrait
 
     protected function secondsToTime(int $inputSeconds)
     {
+        if($inputSeconds < 1) {
+            return '< 1 second';
+        }
         $secondsInAMinute = 60;
         $secondsInAnHour = 60 * $secondsInAMinute;
         $secondsInADay = 24 * $secondsInAnHour;

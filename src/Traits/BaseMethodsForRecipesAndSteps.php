@@ -131,8 +131,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function CMSEditLink(): ?string
     {
-        $className = $this->getLogClassName();
-        return $className::get()->first()?->CMSEditLink();
+        return $this->LastCompletedLog()?->CMSEditLink();
     }
 
     public function LastStarted(?bool $asTs = false): string|int
