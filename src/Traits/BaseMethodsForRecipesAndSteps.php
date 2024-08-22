@@ -455,7 +455,7 @@ trait BaseMethodsForRecipesAndSteps
             [
                 'Title' => $this->getTitle(),
                 'Link' => Director::absoluteURL($this->Link()),
-                'CMSEditLink' => Director::absoluteURL($this->CMSEditLink()),
+                'CMSEditLink' => Director::absoluteURL($this->CMSEditLink() ?: '/admin/site-updates'),
                 'Description' => trim($this->getDescription()),
                 'CanRunNice' => $this->CanRunNice()->NiceAndColourfull(),
                 'LastStarted' => $this->LastStarted(),
