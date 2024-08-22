@@ -359,7 +359,9 @@ trait LogTrait
 
     protected function deleteLogFile()
     {
-        unlink($this->logFilePath());
+        if(file_exists($this->logFilePath())) {
+            unlink($this->logFilePath());
+        }
     }
 
 

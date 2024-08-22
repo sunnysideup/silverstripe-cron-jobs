@@ -19,17 +19,17 @@ trait LogSuccessAndErrorsTrait
         $this->logAnythingInner($message, $type, $important, $this->getLogFilePath());
     }
 
-    protected function logSuccess(string $message, ?bool $important = false)
+    public function logSuccess(string $message, ?bool $important = false)
     {
         $this->logAnything($message, 'success', $important);
     }
 
-    protected function logError(string $message, ?bool $important = false)
+    public function logError(string $message, ?bool $important = false)
     {
         $this->logAnything($message, 'error', $important);
     }
 
-    protected function logChanged(string $message, ?bool $important = false)
+    public function logChanged(string $message, ?bool $important = false)
     {
         $this->logAnything($message, 'changed', $important);
     }
