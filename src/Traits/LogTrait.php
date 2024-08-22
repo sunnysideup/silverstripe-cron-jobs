@@ -32,7 +32,7 @@ trait LogTrait
     public function getTitle(): string
     {
         /** @var SiteUpdateRecipeBaseClass $obj */
-        $obj = $this->MyRunnerObject();
+        $obj = $this->getRunnerObject();
 
         return $obj ? $obj->getTitle() : 'Error';
     }
@@ -40,7 +40,7 @@ trait LogTrait
     public function getDescription(): string
     {
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
-        $obj = $this->MyRunnerObject();
+        $obj = $this->getRunnerObject();
 
         return $obj ? trim($obj->getDescription()) : 'Error';
     }
@@ -68,7 +68,7 @@ trait LogTrait
     public function getGroup(): string
     {
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
-        $obj = $this->MyRunnerObject();
+        $obj = $this->getRunnerObject();
 
         return $obj ? $obj->getGroup() : 'Error';
     }
@@ -76,7 +76,7 @@ trait LogTrait
     /**
      * @return null|SiteUpdateRecipeBaseClass
      */
-    public function MyRunnerObject()
+    public function getRunnerObject()
     {
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         if (class_exists((string) $this->RunnerClassName)) {
@@ -144,7 +144,7 @@ trait LogTrait
         );
 
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
-        $obj = $this->MyRunnerObject();
+        $obj = $this->getRunnerObject();
         if ($obj) {
             if($this instanceof SiteUpdate) {
                 $fields->addFieldsToTab(
@@ -222,7 +222,7 @@ trait LogTrait
                 $logField,
             ]
         );
-        $obj = $this->MyRunnerObject();
+        $obj = $this->getRunnerObject();
         $runnerClassNameNice = $obj ? $obj->getTitle() : 'Error';
         $fields->removeByName(
             'RunnerClassName',

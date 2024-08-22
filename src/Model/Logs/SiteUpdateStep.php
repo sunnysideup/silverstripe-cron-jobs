@@ -69,8 +69,7 @@ class SiteUpdateStep extends DataObject
         'Status' => 'Status',
         'AllowedNextStep.NiceAndColourfull' => 'Allow Next Step?',
         'TimeTaken' => 'Seconds',
-        'TimeNice' => 'Better Time',
-        'MemoryTaken' => 'MBs',
+        'MemoryTaken' => 'Memory (MBs)',
         'ImportantLogs.Count' => 'Logs',
     ];
 

@@ -111,9 +111,7 @@ trait BaseMethodsForRecipesAndSteps
      */
     protected function whatElseIsRunning(): DataList
     {
-        /** @var SiteUpdate|SiteUpdateStep $className */
         $className = $this->getLogClassName();
-
         $logID = (int) $this->log?->ID ?: 0;
         return $className::get()->filter(['Stopped' => false])->exclude(['ID' => $logID]);
     }
@@ -131,6 +129,12 @@ trait BaseMethodsForRecipesAndSteps
         return ClassInfo::shortName(static::class);
     }
 
+    public function CMSEditLink(): string
+    {
+        $className = $this->getLogClassName();
+        return $className::get()->first()->CMSEditLink();
+    }
+
     public function LastStarted(?bool $asTs = false): string|int
     {
         return $this->getLastStartedOrCompleted($asTs, true);
@@ -138,6 +142,11 @@ trait BaseMethodsForRecipesAndSteps
     public function LastCompleted(?bool $asTs = false): string|int
     {
         return $this->getLastStartedOrCompleted($asTs, false);
+    }
+
+    public function LastCompletedNice(?bool $asTs = false): string|int
+    {
+        return $this->LastCompleted(false);
     }
 
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
@@ -441,6 +450,7 @@ trait BaseMethodsForRecipesAndSteps
             [
                 'Title' => $this->getTitle(),
                 'Link' => Director::absoluteURL($this->Link()),
+                'CMSEditLink' => Director::absoluteURL($this->CMSEditLink()),
                 'Description' => trim($this->getDescription()),
                 'CanRunNice' => $this->CanRunNice()->NiceAndColourfull(),
                 'LastStarted' => $this->LastStarted(),

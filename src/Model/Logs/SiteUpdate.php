@@ -7,11 +7,14 @@ use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
+use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBHTMLText;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
+use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdate
@@ -80,10 +83,9 @@ class SiteUpdate extends DataObject
         'Status' => 'Status',
         'Stopped.NiceAndColourfull' => 'Stopped',
         'Title' => 'Recipe',
-        'TimeTaken' => 'Seconds',
-        'TimeNice' => 'Better Time',
-        'MemoryTaken' => 'MBs',
         'SiteUpdateSteps.Count' => 'Steps',
+        'TimeTaken' => 'Time Taken',
+        'MemoryTaken' => 'Memory (MBs)',
         'ImportantLogs.Count' => 'Logs',
     ];
 
@@ -117,6 +119,34 @@ class SiteUpdate extends DataObject
 
         // add generic fields
         $this->addGenericFields($fields);
+        $gridField = $fields->dataFieldByName('SiteUpdateSteps');
+        if($gridField) {
+
+            $gridField->getConfig()
+                ->removeComponentsByType(GridFieldDataColumns::class)
+                ->addComponent(new CustomGridFieldDataColumns());
+
+        }
+        $runnerObject = $this->getRunnerObject();
+        $allSteps = $runnerObject->SubLinks(true);
+        $steps = '<ol>';
+        foreach ($allSteps as $count => $step) {
+            $steps .=
+                '<li>
+                    <div style="display: flex;flex-direction: row;justify-content: space-between;"><div>'.$step->getTitle().' - '.$step->getDescription().'</div><div>'.$step->canRunNice()->NiceAndColourfull().'</div></div>
+                    <hr />
+                </li>';
+        }
+        $steps .= '</ol>';
+
+        $fields->addFieldToTab(
+            'Root.SiteUpdateSteps',
+            ReadonlyField::create(
+                'AllStepsHere',
+                'All Steps (and if they can run on this site)',
+                DBHTMLText::create_field('HTMLText', $steps)
+            )
+        );
 
         return $fields;
     }
