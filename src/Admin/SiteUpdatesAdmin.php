@@ -63,13 +63,13 @@ class SiteUpdatesAdmin extends ModelAdmin
             foreach($runners as $shortClassName => $className) {
                 $obj = $className::inst();
                 if($obj) {
-                    $errorSign = $obj->LastRunHadErrorsSymbol();
+                    $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
                     $fields->push(
                         LiteralField::create(
                             'SiteUpdateConfigInfo'.$shortClassName,
                             '
-                            <h2><a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().',
-                            <br />'. $errorSign . 'Last completed '.$obj->LastCompletedNice().',
+                            <h2><a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().'.
+                            <br />'. $lastRunHadErrorsSymbol . ' - Last completed: '.$obj->LastCompletedNice().',
                             <a href="'.$obj->Link().'" target="_blank">run again now</a></h2>
                             ',
                         ),
