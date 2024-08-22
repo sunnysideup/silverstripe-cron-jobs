@@ -222,7 +222,7 @@ Currently Site Updates are
     <% loop $RecipeLinks %>
     <li>
         <div class="show-on-hover">
-            <h3><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h3>
+            <h3>$LastRunHadErrorsSymbol $Title</h3>
             <% if $Description %><p>$Description</p><% end_if %>
             <div class="stat-item"><strong>Minimum number of minutes between runs:</strong> <span>$MinMinutesBetweenRunsNice</span></div>
             <div class="stat-item"><strong>Maximum number of minutes between runs:</strong> <span>$MaxMinutesBetweenRunsNice</span></div>
@@ -242,7 +242,7 @@ Currently Site Updates are
             <% loop $SubLinks %>
                 <li>
                     <div class="show-on-hover">
-                        <h4><% if $LastRunHadErrors %>❌<% else %>✓<% end_if %> $Title</h4>
+                        <h4>$LastRunHadErrorsSymbol $Title</h4>
                         <% if $Description %><p>$Description</p><% end_if %>
                         <div class="stat-item"><a href="$Link" class="button">▶ schedule now</a></div>
                         <div class="stat-item"><strong>Has had Errors:</strong> <span>$HasHadErrorsNice</span></div>

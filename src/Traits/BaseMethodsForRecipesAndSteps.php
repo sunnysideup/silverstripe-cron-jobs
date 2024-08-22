@@ -129,10 +129,10 @@ trait BaseMethodsForRecipesAndSteps
         return ClassInfo::shortName(static::class);
     }
 
-    public function CMSEditLink(): string
+    public function CMSEditLink(): ?string
     {
         $className = $this->getLogClassName();
-        return $className::get()->first()->CMSEditLink();
+        return $className::get()->first()?->CMSEditLink();
     }
 
     public function LastStarted(?bool $asTs = false): string|int
@@ -205,6 +205,11 @@ trait BaseMethodsForRecipesAndSteps
         }
 
         return false;
+    }
+
+    public function LastRunHadErrorsSymbol(): string
+    {
+        return $this->LastRunHadErrors() ? '❌' : '✓';
     }
 
     public function LastRunHadErrorsNice(): DBBoolean
@@ -456,6 +461,7 @@ trait BaseMethodsForRecipesAndSteps
                 'LastStarted' => $this->LastStarted(),
                 'LastCompleted' => $this->LastCompleted(),
                 'LastRunHadErrors' => $this->LastRunHadErrors(),
+                'LastRunHadErrorsSymbol' => $this->LastRunHadErrorsSymbol(),
                 'LastRunHadErrorsNice' => $this->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours(),
                 'HasHadErrorsNice' => $this->HasHadErrorsNice()->NiceAndColourfullInvertedColours(),
                 'NumberOfLogs' => $this->NumberOfLogs(),
