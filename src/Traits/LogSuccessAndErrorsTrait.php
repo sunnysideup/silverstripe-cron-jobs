@@ -7,6 +7,7 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObjectInterface;
+use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use Sunnysideup\Flush\FlushNowImplementor;
 
@@ -63,23 +64,30 @@ trait LogSuccessAndErrorsTrait
 
     protected function getLogFilePath(): ?string
     {
-        $log = null;
-        if($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
-            $log = $this->log;
-        } elseif($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
-            $log = $this;
-        }
+        $log = $this->getSiteUpdateLogObject();
         if($log) {
             return $log->logFilePath();
         }
         return null;
     }
 
+    protected function getSiteUpdateLogObject(): SiteUpdate|SiteUpdateStep|null
+    {
+        $log = null;
+        if($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
+            $log = $this->log;
+        } elseif($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
+            $log = $this;
+        }
+        return $log;
+    }
+
     protected function createNote(string $message, string $messageTypeForNote): void
     {
-        if($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
-            $logClassName = $this->getRelationClass('ImportantLogs');
-            $obj = $logClassName::create();
+        $log = $this->getSiteUpdateLogObject();
+        if($log) {
+            $noteClass = $this->getRelationClass('ImportantLogs');
+            $obj = $noteClass::create();
             $obj->Message = $message;
             $obj->Type = $messageTypeForNote;
             $this->ImportantLogs()->add($obj->write());
@@ -104,7 +112,7 @@ trait LogSuccessAndErrorsTrait
 
         $message = date('h:i:s') . ' | ' . $message;
 
-        if (Director::isDev() || $type !== 'changed' || $important) {
+        if (Director::isDev() || $type !== 'changed' || $important || SiteUpdateConfig::inst()->LogAllMessages) {
             FlushNowImplementor::do_flush(substr((string) $message, 0, 200), $flushType);
             $messageTypeForNote = [
                 'created' => 'Success',
@@ -112,7 +120,12 @@ trait LogSuccessAndErrorsTrait
                 'deleted' => 'Error',
             ];
             $messageTypeForNote = $messageTypeForNote[$flushType] ?? 'Warning';
-            $this->createNote($message, $messageTypeForNote);
+            if($important) {
+                $messageTypeForNote = 'Important';
+            }
+            if($important || SiteUpdateConfig::inst()->LogAllMessages) {
+                $this->createNote($message, $messageTypeForNote);
+            }
         }
         $logFilePath =  $this->getLogFilePath();
         if($logFilePath) {
