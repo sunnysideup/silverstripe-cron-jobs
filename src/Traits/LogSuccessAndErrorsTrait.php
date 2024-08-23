@@ -7,6 +7,7 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObjectInterface;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use Sunnysideup\Flush\FlushNowImplementor;
 
 /**
@@ -16,7 +17,7 @@ trait LogSuccessAndErrorsTrait
 {
     public function logAnything(string $message, ?string $type = 'changed', ?bool $important = false)
     {
-        $this->logAnythingInner($message, $type, $important, $this->getLogFilePath());
+        $this->logAnythingInner($message, $type, $important);
     }
 
     public function logSuccess(string $message, ?bool $important = false)
@@ -62,10 +63,14 @@ trait LogSuccessAndErrorsTrait
 
     protected function getLogFilePath(): ?string
     {
-        if($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
-            if($this->ID) {
-                return $this->logFilePath();
-            }
+        $log = null;
+        if($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
+            $log = $this->log;
+        } elseif($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
+            $log = $this;
+        }
+        if($log) {
+            return $log->logFilePath();
         }
         return null;
     }
@@ -109,6 +114,7 @@ trait LogSuccessAndErrorsTrait
             $messageTypeForNote = $messageTypeForNote[$flushType] ?? 'Warning';
             $this->createNote($message, $messageTypeForNote);
         }
+        $logFilePath =  $this->getLogFilePath();
         if($logFilePath) {
             $message .= PHP_EOL;
             file_put_contents($logFilePath, $message, FILE_APPEND);

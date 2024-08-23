@@ -13,12 +13,9 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\ArrayData;
 use Sunnysideup\CronJobs\Control\SiteUpdateController;
-use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 
 abstract class AnalysisBaseClass
 {
-    use LogSuccessAndErrorsTrait;
-
     use BaseMethodsForAllRunners;
 
     /**
