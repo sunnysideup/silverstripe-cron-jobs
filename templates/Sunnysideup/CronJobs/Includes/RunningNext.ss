@@ -2,13 +2,13 @@
 <h2>Expectecd to run next</h2>
 <% if $CustomRunNext %>
 <p>
-    <strong>$CustomRunNext</strong> (manually loaded to run next)
+    <strong>$CustomRunNext</strong> (manually loaded to run next).
 </p>
 <% else %>
 
 <% if $RunningNext %>
 <p>
-    $RunningNext (based on normal scheduling)
+    $RunningNext (based on normal scheduling).
 </p>
 <% else %>
     <p>
