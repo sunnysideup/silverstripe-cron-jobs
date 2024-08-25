@@ -146,7 +146,7 @@ class SiteUpdateController extends Controller
         return Director::protocolAndHost();
     }
 
-    public function CurrentlyRunning(): ArrayList
+    public static function currently_running()
     {
         $al = ArrayList::create();
         foreach ([SiteUpdate::class, SiteUpdateStep::class] as $className) {
@@ -157,6 +157,11 @@ class SiteUpdateController extends Controller
         }
 
         return $al;
+    }
+
+    public function CurrentlyRunning(): ArrayList
+    {
+        return self::currently_running();
     }
 
 

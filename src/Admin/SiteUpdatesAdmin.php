@@ -60,32 +60,36 @@ class SiteUpdatesAdmin extends ModelAdmin
             $fields = $form->Fields();
 
             $runners = WorkOutWhatToRunNext::get_recipes();
+            $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/CurrentlyRunning');
+            $htmlRight = '';
             foreach($runners as $shortClassName => $className) {
                 $obj = $className::inst();
                 if($obj) {
                     $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
-                    $fields->push(
-                        LiteralField::create(
-                            'SiteUpdateConfigInfo'.$shortClassName,
-                            '
-                            <h2><a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().'.
-                            <br />'. $lastRunHadErrorsSymbol . ' - Last completed: '.$obj->LastCompletedNice().',
-                            <a href="'.$obj->Link().'" target="_blank">run again now</a></h2>
-                            ',
-                        ),
-                    );
+                    $htmlRight .= '
+                        <h2><a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().'.
+                        <br />'. $lastRunHadErrorsSymbol . ' - Last completed: '.$obj->LastCompletedNice().',
+                        <a href="'.$obj->Link().'" target="_blank">run again now</a></h2>
+                        ';
                 }
             }
-            $fields->push(
+
+            $htmlRight .= '
+                <h2><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h2>';
+            $fields->addFieldToTab(
+                'Root.Main',
                 LiteralField::create(
-                    'SiteUpdateConfigInfoReviewLink',
-                    '
-                    <h2><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h2>
-                    ',
-                ),
+                    'CurrentlyRunning',
+                    '<div style="display: flex;">' . $htmlLeft . $htmlRight . '</div>'
+                )
             );
         }
         return $form;
+    }
+
+    public function CurrentlyRunning()
+    {
+
     }
 
 }

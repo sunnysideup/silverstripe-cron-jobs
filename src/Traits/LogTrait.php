@@ -151,7 +151,7 @@ trait LogTrait
                     'Root.WhenDoesItRun',
                     [
                         ReadonlyField::create('CanRunNice', 'Can Run?', $obj->CanRunNice()->NiceAndColourfull()),
-                        ReadonlyField::create('CurrentlyRunningNice', 'Currently Running', $obj->CurrentlyRunningNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CurrentlyRunningNice', 'Is Currently Running', $obj->IsCurrentlyRunningNice()->NiceAndColourfull()),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
                         ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Number of Minutes between Runs', $obj->MinMinutesBetweenRunsNice()),
                         ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Max Number of Minutes between Runs', $obj->MaxMinutesBetweenRunsNice()),

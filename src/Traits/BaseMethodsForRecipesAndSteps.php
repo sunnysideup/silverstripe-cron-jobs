@@ -233,7 +233,7 @@ trait BaseMethodsForRecipesAndSteps
         return DBBoolean::create_field('Boolean', $this->HasHadErrors());
     }
 
-    public function CurrentlyRunning(): bool
+    public function IsCurrentlyRunning(): bool
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list) {
@@ -245,9 +245,9 @@ trait BaseMethodsForRecipesAndSteps
         return false;
     }
 
-    public function CurrentlyRunningNice(): DBBoolean
+    public function IsCurrentlyRunningNice(): DBBoolean
     {
-        return DBBoolean::create_field('Boolean', $this->CurrentlyRunning());
+        return DBBoolean::create_field('Boolean', $this->IsCurrentlyRunning());
     }
 
     public function HoursOfTheDayNice(): string
