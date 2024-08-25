@@ -173,8 +173,8 @@
     </p>
 </div>
 
-<% include CurrentlyRunning %>
-<% include RunnningNext %>
+<% include Sunnysideup/CronJobs/Includes/CurrentlyRunning %>
+<% include Sunnysideup/CronJobs/Includes/RunningNext %>
 
 <p class="message warning">
 Currently Site Updates are

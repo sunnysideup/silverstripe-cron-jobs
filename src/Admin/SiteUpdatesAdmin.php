@@ -101,4 +101,9 @@ class SiteUpdatesAdmin extends ModelAdmin
         return SiteUpdateController::running_next();
     }
 
+    public function CustomRunNext()
+    {
+        return SiteUpdateController::custom_running_next();
+    }
+
 }

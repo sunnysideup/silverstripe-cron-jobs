@@ -18,6 +18,7 @@ use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
+use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 
 class SiteUpdateController extends Controller
@@ -169,14 +170,29 @@ class SiteUpdateController extends Controller
         return '';
     }
 
+    public static function custom_running_next(): string
+    {
+        $runNowObj = SiteUpdateRunNext::get()
+                ->sort(['ID' => 'DESC'])->first();
+        if ($runNowObj) {
+            return $runNowObj->getTitle();
+        }
+        return '';
+    }
+
     public function CurrentlyRunning(): ArrayList
     {
         return self::currently_running();
     }
 
-    public function RunningNextg(): string
+    public function RunningNext(): string
     {
         return self::running_next();
+    }
+
+    public function CustomRunNext(): string
+    {
+        return self::custom_running_next();
     }
 
 

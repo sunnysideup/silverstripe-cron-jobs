@@ -5,6 +5,8 @@ namespace Sunnysideup\CronJobs\Model\Logs\Custom;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObject;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext
@@ -66,5 +68,27 @@ class SiteUpdateRunNext extends DataObject
     public function canEdit($member = null)
     {
         return Director::isDev();
+    }
+
+    public function getTitle()
+    {
+        $object = $this->getRunnerObject();
+        return $object->getTitle();
+    }
+
+    public function getDescription()
+    {
+        $object = $this->getRunnerObject();
+        return $object->getDescription();
+    }
+
+    public function getRunnerObject()
+    {
+        $className = $this->RunnerClassName;
+        if($this->RecipeOrStep === 'Step') {
+            return $className::inst();
+        } else {
+            return $className::inst();
+        }
     }
 }
