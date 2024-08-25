@@ -308,7 +308,7 @@ trait BaseMethodsForRecipesAndSteps
             return 'immediately';
         }
         if ($minutes < 60) {
-            return $minutes . ' minutes';
+            return $minutes . ' minute'. ($minutes > 1 ? 's' : '');
         }
 
         $hours = round($minutes / 60);
@@ -316,16 +316,16 @@ trait BaseMethodsForRecipesAndSteps
 
         if ($hours < 24) {
             return $remainingMinutes > 0
-                ? "$hours hours $remainingMinutes minutes"
-                : "$hours hours";
+                ? "$hours hour". ($hours > 1 ? 's' : '')." $remainingMinutes minutes"
+                : "$hours hour" . ($hours > 1 ? 's' : '');
         }
 
         $days = round($hours / 24);
         $remainingHours = $hours % 24;
 
         return $remainingHours > 0
-            ? "$days days $remainingHours hours"
-            : "$days days ";
+            ? "$days day". ($days > 1 ? 's' : '')."  $remainingHours hours"
+            : "$days day". ($days > 1 ? 's' : '')."  ";
     }
 
     public function NumberOfLogs(): int

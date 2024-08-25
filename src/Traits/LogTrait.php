@@ -151,10 +151,15 @@ trait LogTrait
                     'Root.WhenDoesItRun',
                     [
                         ReadonlyField::create('CanRunNice', 'Can Run?', $obj->CanRunNice()->NiceAndColourfull()),
-                        ReadonlyField::create('CurrentlyRunningNice', 'Is Currently Running', $obj->IsCurrentlyRunningNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CurrentlyRunningNice', 'Is Currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfull()),
+                        ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
+                        ReadonlyField::create('getExpectedMinimumEntriesPer24Hours', 'Expected minimum runs per 24 hours', round($obj->getExpectedMinimumEntriesPer24Hours(), 3)),
+                        ReadonlyField::create('getExpectedMaximumEntriesPer24Hours', 'Expected maximum runs per 24 hours', round($obj->getExpectedMaximumEntriesPer24Hours(), 3)),
+                        ReadonlyField::create('getActualEntriesPer', 'Actuals runs in last 24 hour cycle', $obj->getActualEntriesPer()),
+                        ReadonlyField::create('getActualEntriesPer30', 'Actuals runs in last 30 days cycle', $obj->getActualEntriesPer(30)),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
-                        ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Number of Minutes between Runs', $obj->MinMinutesBetweenRunsNice()),
-                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Max Number of Minutes between Runs', $obj->MaxMinutesBetweenRunsNice()),
+                        ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Time between Runs', $obj->MinMinutesBetweenRunsNice()),
+                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Maximum Time between Runs', $obj->MaxMinutesBetweenRunsNice()),
                     ]
                 );
             }

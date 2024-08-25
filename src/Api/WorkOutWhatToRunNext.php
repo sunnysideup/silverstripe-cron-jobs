@@ -7,6 +7,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
+use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 
@@ -17,8 +18,10 @@ class WorkOutWhatToRunNext
         $classes = ClassInfo::subClassesFor(SiteUpdateRecipeBaseClass::class, false);
         $array = [];
         foreach ($classes as $class) {
-            $obj = $class::inst();
-            $array[$obj->getShortClassCode()] = $class;
+            if($class !== CustomRecipe::class) {
+                $obj = $class::inst();
+                $array[$obj->getShortClassCode()] = $class;
+            }
         }
 
         return $array;
@@ -29,7 +32,7 @@ class WorkOutWhatToRunNext
         $candidates = [];
         foreach($classes as $class) {
             $obj = $class::inst();
-            if($obj->canRunCalculated()) {
+            if($obj->canRunCalculated(false)) {
                 $candidates[$class] = $obj->overTimeSinceLastRun();
             }
         }

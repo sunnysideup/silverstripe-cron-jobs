@@ -17,6 +17,7 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
+use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 
 class SiteUpdateController extends Controller
@@ -159,9 +160,23 @@ class SiteUpdateController extends Controller
         return $al;
     }
 
+    public static function running_next(): string
+    {
+        $recipe = WorkOutWhatToRunNext::get_next_recipe_to_run();
+        if($recipe) {
+            return $recipe::inst()->getTitle();
+        }
+        return '';
+    }
+
     public function CurrentlyRunning(): ArrayList
     {
         return self::currently_running();
+    }
+
+    public function RunningNextg(): string
+    {
+        return self::running_next();
     }
 
 

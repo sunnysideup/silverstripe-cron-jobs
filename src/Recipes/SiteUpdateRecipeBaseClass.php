@@ -13,6 +13,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
+use SilverStripe\ORM\FieldType\DBBoolean;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
@@ -91,6 +92,90 @@ abstract class SiteUpdateRecipeBaseClass
         return 'Recipe';
     }
 
+    public function IsMeetingTarget(): bool
+    {
+        $expectedMin = $this->getExpectedMinimumEntriesPer24Hours();
+        $expectedMax = $this->getExpectedMaximumEntriesPer24Hours();
+        $multiplier = 1;
+        if($expectedMin < 1) {
+            // one week
+            $multiplier = $multiplier * 7;
+            $expected = $expectedMin * $multiplier;
+            if($expected < 1) {
+                // one month
+                $multiplier = $multiplier * 4.3;
+                $expected = $expectedMin * $multiplier;
+                if($expected < 1) {
+                    // six months
+                    $multiplier = $multiplier * 6;
+                    $expected = $expectedMin * $multiplier;
+                    if($expected < 1) {
+                        $multiplier = $multiplier * 2;
+                        $expected = $expectedMin * $multiplier;
+                    }
+                }
+            }
+        }
+        $expectedMax = $expectedMax * $multiplier;
+        $test = $this->getActualEntriesPer(round($multiplier));
+        return $test > $expectedMin && $test < $expectedMax;
+    }
+
+    public function IsMeetingTargetNice(): DBBoolean
+    {
+        return DBBoolean::create_field('Boolean', $this->IsMeetingTarget());
+    }
+
+
+    public function getActualEntriesPer(?int $daysBack = 1): int
+    {
+        $daysBack = max(1, $daysBack);
+        $hoursBack = $daysBack * 24;
+        $minMultiplier = 1;
+        $maxMultiplier = 2;
+        if($daysBack > 2) {
+            $minMultiplier = 0;
+            $maxMultiplier = 1;
+        }
+        $last24Hours = SiteUpdate::get()->filter([
+            'Status' => 'Completed',
+            'Created:GreaterThan' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $maxMultiplier).' hours')),
+            'Created:LessThanOrEqual' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $minMultiplier).' hours')),
+        ]);
+        return (int) $last24Hours->count();
+    }
+    public function getExpectedMinimumEntriesPer24Hours(): float
+    {
+        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMaximumEntriesPerHour');
+    }
+
+    public function getExpectedMaximumEntriesPer24Hours(): float
+    {
+        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMinimumEntriesPerHour');
+    }
+
+
+    protected function getExpectedMinimumOrMaximumEntriesPer24Hours(string $methodName)
+    {
+        $hoursOfTheDay = $this->canRunHoursOfTheDay();
+        $sum = 0;
+        for($i = 0; $i < 24; $i++) {
+            if(in_array($i, $hoursOfTheDay)) {
+                $sum += $this->$methodName();
+            }
+        }
+        return round($sum);
+    }
+
+    public function getExpectedMinimumEntriesPerHour(): float
+    {
+        return $this->maxIntervalInMinutesBetweenRuns() / 60;
+    }
+
+    public function getExpectedMaximumEntriesPerHour(): float
+    {
+        return $this->minIntervalInMinutesBetweenRuns() / 60;
+    }
 
 
 
@@ -107,7 +192,7 @@ abstract class SiteUpdateRecipeBaseClass
         return $al;
     }
 
-    public function canRunCalculated(): bool
+    public function canRunCalculated(?bool $withMessage = true): bool
     {
         // are updates running at all?
         if($this->areUpdatesRunningAtAll()) {
@@ -116,19 +201,19 @@ abstract class SiteUpdateRecipeBaseClass
                     if ($this->IsThereEnoughTimeSinceLastRun()) {
                         if ($this->IsAnythingRunning($this) === false || $this->canRunAtTheSameTimeAsOtherRecipes()) {
                             return true;
-                        } else {
+                        } elseif($withMessage) {
                             $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
                         }
-                    } else {
+                    } elseif($withMessage) {
                         $this->logAnything('Can not run ' . $this->getType() . ' because there is not enough time since last run');
                     }
-                } else {
+                } elseif($withMessage) {
                     $this->logAnything('Can not run ' . $this->getType() . ' because it is not the right time of day');
                 }
-            } else {
+            } elseif($withMessage) {
                 $this->logAnything('Can not run ' . $this->getType() . ' because canRun is FALSE');
             }
-        } else {
+        } elseif($withMessage) {
             $this->logAnything('Can not run ' . $this->getType() . ' because updated are not allowed right now is FALSE');
         }
         return false;
@@ -299,4 +384,5 @@ abstract class SiteUpdateRecipeBaseClass
     {
         return $this->runEvenIfUpdatesAreStopped() || false === (bool) SiteUpdateConfig::inst()->StopSiteUpdates;
     }
+
 }

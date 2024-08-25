@@ -10,6 +10,7 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\LiteralField;
+use SilverStripe\ORM\ArrayList;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Control\SiteUpdateController;
 use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
@@ -60,36 +61,44 @@ class SiteUpdatesAdmin extends ModelAdmin
             $fields = $form->Fields();
 
             $runners = WorkOutWhatToRunNext::get_recipes();
-            $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/CurrentlyRunning');
-            $htmlRight = '';
+            $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/Includes/CurrentlyRunning');
+            $htmlLeft .= $this->renderWith('Sunnysideup/CronJobs/Includes/RunningNext');
+            $htmlRight = '<h2>List of Site Update Recipes</h2>';
             foreach($runners as $shortClassName => $className) {
                 $obj = $className::inst();
                 if($obj) {
                     $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
                     $htmlRight .= '
-                        <h2><a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().'.
-                        <br />'. $lastRunHadErrorsSymbol . ' - Last completed: '.$obj->LastCompletedNice().',
-                        <a href="'.$obj->Link().'" target="_blank">run again now</a></h2>
+                        <h3>
+                          <a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().'.
+                          <br />'. $lastRunHadErrorsSymbol . ' - Last completed: '.$obj->LastCompletedNice().'.
+                          It is '.($obj->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets.
+                          <a href="'.$obj->Link().'" target="_blank">Run next?</a>
+                        </h3>
                         ';
                 }
             }
 
             $htmlRight .= '
-                <h2><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h2>';
-            $fields->addFieldToTab(
-                'Root.Main',
+                <h3><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h3>';
+            $fields->push(
                 LiteralField::create(
                     'CurrentlyRunning',
-                    '<div style="display: flex;">' . $htmlLeft . $htmlRight . '</div>'
+                    '<div style="display: flex;flex-direction: row;justify-content: space-between;"><div>' . $htmlLeft . '</div><div>'. $htmlRight . '</div>'
                 )
             );
         }
         return $form;
     }
 
-    public function CurrentlyRunning()
+    public function CurrentlyRunning(): ArrayList
     {
+        return SiteUpdateController::currently_running();
+    }
 
+    public function RunningNext()
+    {
+        return SiteUpdateController::running_next();
     }
 
 }

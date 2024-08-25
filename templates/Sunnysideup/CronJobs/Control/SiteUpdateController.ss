@@ -174,6 +174,7 @@
 </div>
 
 <% include CurrentlyRunning %>
+<% include RunnningNext %>
 
 <p class="message warning">
 Currently Site Updates are
