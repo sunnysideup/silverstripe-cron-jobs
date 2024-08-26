@@ -35,6 +35,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         $this->oldLogsDeleterInner(SiteUpdateNote::class);
         $this->oldLogsDeleterInner(SiteUpdateRunNext::class);
         $this->oldLogsDeleterInner(SiteUpdateStepNote::class);
+        $this->markBadSiteUpdatesAsStopped(SiteUpdateStepNote::class);
     }
 
     protected function oldLogsDeleterInner($className)
@@ -50,6 +51,24 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         if ($logs->exists()) {
             foreach ($logs as $log) {
                 $log->delete();
+            }
+        }
+    }
+
+    protected function markBadSiteUpdatesAsStopped()
+    {
+        $siteUpdates = SiteUpdate::get()->filterAny(
+            [
+                'Status' => [null, ''],
+                'Type' => [null, ''],
+                'RunnerClassName' => [null, ''],
+            ]
+        );
+        if ($siteUpdates->exists()) {
+            foreach ($siteUpdates as $siteUpdate) {
+                $siteUpdate->Stopped = true;
+                $siteUpdate->Status = 'Errors';
+                $siteUpdate->write();
             }
         }
     }
