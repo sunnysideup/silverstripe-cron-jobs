@@ -90,7 +90,7 @@ trait LogSuccessAndErrorsTrait
             $obj = $noteClass::create();
             $obj->Message = $message;
             $obj->Type = $messageTypeForNote;
-            $this->ImportantLogs()->add($obj->write());
+            $log->ImportantLogs()->add($obj->write());
         }
     }
 
