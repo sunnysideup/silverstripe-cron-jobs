@@ -86,7 +86,7 @@ trait LogSuccessAndErrorsTrait
     {
         $log = $this->getSiteUpdateLogObject();
         if($log) {
-            $noteClass = $this->getRelationClass('ImportantLogs');
+            $noteClass = $log->getRelationClass('ImportantLogs');
             $obj = $noteClass::create();
             $obj->Message = $message;
             $obj->Type = $messageTypeForNote;
