@@ -122,9 +122,9 @@ class SiteUpdate extends DataObject
         $gridField = $fields->dataFieldByName('SiteUpdateSteps');
         if($gridField) {
 
-            $gridField->getConfig()
-                ->removeComponentsByType(GridFieldDataColumns::class)
-                ->addComponent(new CustomGridFieldDataColumns());
+            // $gridField->getConfig()
+            //     ->removeComponentsByType(GridFieldDataColumns::class)
+            //     ->addComponent(new CustomGridFieldDataColumns());
 
         }
         $runnerObject = $this->getRunnerObject();
