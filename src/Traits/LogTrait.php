@@ -202,12 +202,14 @@ trait LogTrait
                 $gfNotes->getConfig()->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
             }
         }
-        $fields->addFieldsToTab(
-            'Root.RunNow',
-            [
-                CMSNicetiesLinkButton::create('RunNow', 'Run Now', $obj->Link(), true),
-            ]
-        );
+        if($obj) {
+            $fields->addFieldsToTab(
+                'Root.RunNow',
+                [
+                    CMSNicetiesLinkButton::create('RunNow', 'Run Now', $obj->Link(), true),
+                ]
+            );
+        }
         if ($this->ErrorLog) {
             $data = $this->ErrorLog;
             $source = 'Saved';
@@ -369,6 +371,13 @@ trait LogTrait
     {
         if(file_exists($this->logFilePath())) {
             unlink($this->logFilePath());
+        }
+    }
+
+    protected function deleteImportantLogs()
+    {
+        foreach($this->ImportantLogs() as $log) {
+            $log->delete();
         }
     }
 

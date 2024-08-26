@@ -54,11 +54,11 @@ abstract class SiteUpdateRecipeStepBaseClass
         return 'runstep';
     }
 
-    public function canRunCalculated(): bool
+    public function canRunCalculated(?bool $verbose = true): bool
     {
         // are updates running at all?
         if ($this->canRun()) {
-            if ($this->IsAnythingRunning($this) === false) {
+            if ($this->IsAnythingRunning($this, $verbose) === false) {
                 return true;
             } else {
                 $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');

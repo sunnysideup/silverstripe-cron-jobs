@@ -128,16 +128,20 @@ class SiteUpdate extends DataObject
 
         }
         $runnerObject = $this->getRunnerObject();
-        $allSteps = $runnerObject->SubLinks(true);
-        $steps = '<ol>';
-        foreach ($allSteps as $count => $step) {
-            $steps .=
-                '<li>
-                    <div style="display: flex;flex-direction: row;justify-content: space-between;"><div>'.$step->getTitle().' - '.$step->getDescription().'</div><div>'.$step->canRunNice()->NiceAndColourfull().'</div></div>
-                    <hr />
-                </li>';
+        if($runnerObject) {
+            $allSteps = $runnerObject->SubLinks(true);
+            $steps = '<ol>';
+            foreach ($allSteps as $count => $step) {
+                $steps .=
+                    '<li>
+                        <div style="display: flex;flex-direction: row;justify-content: space-between;"><div>'.$step->getTitle().' - '.$step->getDescription().'</div><div>'.$step->canRunNice()->NiceAndColourfull().'</div></div>
+                        <hr />
+                    </li>';
+            }
+            $steps .= '</ol>';
+        } else {
+            $steps = 'No steps found';
         }
-        $steps .= '</ol>';
 
         $fields->addFieldToTab(
             'Root.SiteUpdateSteps',
@@ -167,6 +171,14 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
+        foreach($this->SiteUpdateSteps() as $step) {
+            if($step->Status === 'Errors') {
+                $step->Status = 'Errors';
+            }
+        }
+        if(! $this->Status) {
+            $this->Status = 'Errors';
+        }
         $this->fixStartedAndStoppedOnBeforeWriteHelper();
         $this->recordErrors(SiteUpdateNote::class);
     }
@@ -194,6 +206,7 @@ class SiteUpdate extends DataObject
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();
+        $this->deleteImportantLogs();
         $this->deleteLogFile();
     }
 

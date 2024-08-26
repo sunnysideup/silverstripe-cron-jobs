@@ -153,5 +153,6 @@ class SiteUpdateStep extends DataObject
         parent::onBeforeDelete();
         $this->fixStartedAndStoppedOnBeforeWriteHelper();
         $this->deleteLogFile();
+        $this->deleteImportantLogs();
     }
 }

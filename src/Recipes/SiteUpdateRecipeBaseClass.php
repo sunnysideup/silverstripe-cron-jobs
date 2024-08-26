@@ -155,26 +155,26 @@ abstract class SiteUpdateRecipeBaseClass
     }
 
 
-    protected function getExpectedMinimumOrMaximumEntriesPer24Hours(string $methodName)
+    protected function getExpectedMinimumOrMaximumEntriesPer24Hours(string $methodName): float
     {
         $hoursOfTheDay = $this->canRunHoursOfTheDay();
         $sum = 0;
         for($i = 0; $i < 24; $i++) {
-            if(in_array($i, $hoursOfTheDay)) {
+            if(in_array($i, $hoursOfTheDay) || count($hoursOfTheDay) === 0) {
                 $sum += $this->$methodName();
             }
         }
-        return round($sum);
+        return $sum;
     }
 
     public function getExpectedMinimumEntriesPerHour(): float
     {
-        return $this->maxIntervalInMinutesBetweenRuns() / 60;
+        return 60 / $this->maxIntervalInMinutesBetweenRuns();
     }
 
     public function getExpectedMaximumEntriesPerHour(): float
     {
-        return $this->minIntervalInMinutesBetweenRuns() / 60;
+        return 60 / $this->minIntervalInMinutesBetweenRuns();
     }
 
 
@@ -192,28 +192,28 @@ abstract class SiteUpdateRecipeBaseClass
         return $al;
     }
 
-    public function canRunCalculated(?bool $withMessage = true): bool
+    public function canRunCalculated(?bool $verbose = true): bool
     {
         // are updates running at all?
         if($this->areUpdatesRunningAtAll()) {
             if ($this->canRun()) {
                 if ($this->CanRunAtThisHour()) {
                     if ($this->IsThereEnoughTimeSinceLastRun()) {
-                        if ($this->IsAnythingRunning($this) === false || $this->canRunAtTheSameTimeAsOtherRecipes()) {
+                        if ($this->IsAnythingRunning($this, $verbose) === false || $this->canRunAtTheSameTimeAsOtherRecipes()) {
                             return true;
-                        } elseif($withMessage) {
+                        } elseif($verbose) {
                             $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
                         }
-                    } elseif($withMessage) {
+                    } elseif($verbose) {
                         $this->logAnything('Can not run ' . $this->getType() . ' because there is not enough time since last run');
                     }
-                } elseif($withMessage) {
+                } elseif($verbose) {
                     $this->logAnything('Can not run ' . $this->getType() . ' because it is not the right time of day');
                 }
-            } elseif($withMessage) {
+            } elseif($verbose) {
                 $this->logAnything('Can not run ' . $this->getType() . ' because canRun is FALSE');
             }
-        } elseif($withMessage) {
+        } elseif($verbose) {
             $this->logAnything('Can not run ' . $this->getType() . ' because updated are not allowed right now is FALSE');
         }
         return false;
