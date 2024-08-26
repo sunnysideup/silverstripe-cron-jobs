@@ -31,9 +31,9 @@ class SiteUpdateRunNext extends DataObject
     ];
 
     private static $summary_fields = [
-        'Created.Ago' => 'Lodged',
         'RecipeOrStep' => 'Type',
         'Title' => 'Title',
+        'Created.Ago' => 'Lodged',
     ];
 
     private static $searchable_fields = [
