@@ -4,6 +4,7 @@ namespace Sunnysideup\CronJobs\Model\Logs\Custom;
 
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
+use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
@@ -16,9 +17,6 @@ use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
  */
 class SiteUpdateRunNext extends DataObject
 {
-    use LogTrait;
-
-
     private static $table_name = 'SiteUpdateRunNext';
 
     private static $singular_name = 'Manually Run Next';
@@ -60,14 +58,22 @@ class SiteUpdateRunNext extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-        $this->addGenericFields($fields);
-
+        $fields->replaceField(
+            'RunnerClassName',
+            ReadonlyField::create('Title', 'Title')
+        );
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                ReadonlyField::create('Description', 'Description'),
+            ]
+        );
         return $fields;
     }
 
     public function canEdit($member = null)
     {
-        return Director::isDev();
+        return false;
     }
 
     public function getTitle()
@@ -91,4 +97,5 @@ class SiteUpdateRunNext extends DataObject
             return $className::inst();
         }
     }
+
 }
