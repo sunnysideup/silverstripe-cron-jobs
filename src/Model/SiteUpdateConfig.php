@@ -25,6 +25,7 @@ class SiteUpdateConfig extends DataObject
     private static $db = [
         'Title' => 'Varchar(255)',
         'StopSiteUpdates' => 'Boolean',
+        'LogAllMessagesInDatabase' => 'Boolean',
     ];
 
     private static $defaults = [

@@ -111,20 +111,17 @@ trait LogSuccessAndErrorsTrait
         $flushType = $flushTypes[$type] ?? 'changed';
 
         $message = date('h:i:s') . ' | ' . $message;
-
-        if (Director::isDev() || $type !== 'changed' || $important || SiteUpdateConfig::inst()->LogAllMessages) {
+        $logAllMessages = SiteUpdateConfig::inst()->LogAllMessagesInDatabase;
+        if (Director::isDev() || $type !== 'changed' || $important || $logAllMessages) {
             FlushNowImplementor::do_flush(substr((string) $message, 0, 200), $flushType);
             $messageTypeForNote = [
                 'created' => 'Success',
                 'changed' => 'Warning',
-                'deleted' => 'Error',
+                'deleted' => 'ERROR',
             ];
             $messageTypeForNote = $messageTypeForNote[$flushType] ?? 'Warning';
-            if($important) {
-                $messageTypeForNote = 'Important';
-            }
-            if($important || SiteUpdateConfig::inst()->LogAllMessages) {
-                $this->createNote($message, $messageTypeForNote);
+            if($important || $logAllMessages) {
+                $this->createNote($message, $messageTypeForNote, $important);
             }
         }
         $logFilePath =  $this->getLogFilePath();

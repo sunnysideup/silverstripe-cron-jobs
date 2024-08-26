@@ -30,7 +30,8 @@ class SiteUpdateNote extends DataObject
     private static $plural_name = 'Recipe Errors';
 
     private static $db = [
-        'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
+        'Type' => 'Enum("Success,Warning,Important,ERROR","ERROR")',
+        'Important' => 'Boolean',
         'Title' => 'Varchar(50)',
         'Message' => 'Text',
     ];
