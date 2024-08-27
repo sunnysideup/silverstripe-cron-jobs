@@ -36,6 +36,7 @@ class SiteUpdateRun extends BuildTask
      */
     public function run($request)
     {
+        error_reporting(E_ERROR | E_PARSE);
         $forceRun = true;
         // recipe already set ...
         if(! $this->recipe) {

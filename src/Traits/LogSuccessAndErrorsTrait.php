@@ -82,13 +82,14 @@ trait LogSuccessAndErrorsTrait
         return $log;
     }
 
-    protected function createNote(string $message, string $messageTypeForNote): void
+    protected function createNote(string $message, string $messageTypeForNote, ?bool $important = false): void
     {
         $log = $this->getSiteUpdateLogObject();
         if($log) {
             $noteClass = $log->getRelationClass('ImportantLogs');
             $obj = $noteClass::create();
             $obj->Message = $message;
+            $obj->Important = $important;
             $obj->Type = $messageTypeForNote;
             $log->ImportantLogs()->add($obj->write());
         }

@@ -31,6 +31,7 @@ class SiteUpdateStepNote extends DataObject
     private static $db = [
         'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
         'Title' => 'Varchar(50)',
+        'Important' => 'Boolean',
         'Message' => 'Text',
     ];
 
