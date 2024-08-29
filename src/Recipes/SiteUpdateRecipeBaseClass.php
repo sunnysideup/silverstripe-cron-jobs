@@ -146,12 +146,12 @@ abstract class SiteUpdateRecipeBaseClass
     }
     public function getExpectedMinimumEntriesPer24Hours(): float
     {
-        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMaximumEntriesPerHour');
+        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMinimumEntriesPerHour');
     }
 
     public function getExpectedMaximumEntriesPer24Hours(): float
     {
-        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMinimumEntriesPerHour');
+        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMaximumEntriesPerHour');
     }
 
 
@@ -291,10 +291,8 @@ abstract class SiteUpdateRecipeBaseClass
         }
 
         $this->stopLog($errors, $status, $notes);
-        $this->logHeader('End Recipe ' . $this->getType());
+        $this->logHeader('End ' . $this->getTitle());
     }
-
-
 
     public function fatalHandler(): void
     {
@@ -306,13 +304,12 @@ abstract class SiteUpdateRecipeBaseClass
         $error = error_get_last();
 
         if ($error !== null) {
-            $errno   = $error['type'];
-            $errfile = $error['file'];
-            $errline = $error['line'];
-            $errstr  = $error['message'];
+            $errno   = $error['type'] ?? 0;
+            $errfile = $error['file'] ?? 'unknown file';
+            $errline = $error['line'] ?? 0;
+            $errstr  = $error['message'] ?? 'shutdown';
             $errorFormatted = "Error [$errno]: $errstr in $errfile on line $errline";
             $this->stopLog(1, 'Errors', $errorFormatted);
-
         }
     }
 

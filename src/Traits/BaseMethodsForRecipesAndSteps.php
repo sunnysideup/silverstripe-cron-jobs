@@ -407,7 +407,7 @@ trait BaseMethodsForRecipesAndSteps
         if ($this->log && $this->log->exists()) {
             if (!$this->log->Stopped) {
                 $this->log->Stopped = true;
-                $this->log->Status = $status;
+                $this->log->Status = $status ?: 'Errors';
                 $this->log->Errors = $errors;
                 $this->log->Notes = $notes;
                 $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
