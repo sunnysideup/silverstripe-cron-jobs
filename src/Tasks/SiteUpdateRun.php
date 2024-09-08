@@ -39,37 +39,38 @@ class SiteUpdateRun extends BuildTask
         error_reporting(E_ERROR | E_PARSE);
         $forceRun = true;
         // recipe already set ...
-        if(! $this->recipe) {
+        if (! $this->recipe) {
             // get variable
             $this->recipe = (string) $request->getVar('recipe');
         }
-        if(!$this->recipe) {
+        if (!$this->recipe) {
             // check if a run next is listed...
             $runNowObj = SiteUpdateRunNext::get()
                 ->sort(['ID' => 'DESC'])->first();
             if ($runNowObj) {
-                if($runNowObj->RecipeOrStep === 'Step') {
+                if ($runNowObj->RecipeOrStep === 'Step') {
                     $this->recipe = CustomRecipe::class;
                 } else {
                     $this->recipe = $runNowObj->RunnerClassName;
                     $runNowObj->delete();
                 }
-            } elseif(! $this->recipe) {
+            } elseif (! $this->recipe) {
                 // check out what should run next
                 $forceRun = false;
-                $this->recipe = WorkOutWhatToRunNext::get_next_recipe_to_run();
+                $this->recipe = WorkOutWhatToRunNext::get_next_recipe_to_run(true);
             }
         }
-        if($this->recipe) {
+        if ($this->recipe) {
             if (!class_exists($this->recipe)) {
                 DB::alteration_message('Could not find Recipe, using CustomRecipe!', 'deleted');
                 $this->recipe = CustomRecipe::class;
             }
             $obj = $this->recipe::inst();
             if ($obj) {
-                if($forceRun) {
+                if ($forceRun) {
                     $obj->setIgnoreLastRanAndTimeOfDay(true);
                 }
+                echo '--------';
                 $obj->run($request);
             } else {
                 user_error('Could not inst() class ' . $this->recipe);

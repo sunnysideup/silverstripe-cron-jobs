@@ -79,16 +79,16 @@ trait BaseMethodsForRecipesAndSteps
      *
      * @param SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj
      */
-    protected function IsAnythingRunning(null|SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj = null, ?bool $verbose = true): bool
+    protected function IsAnythingRunning(?bool $verbose = true): bool
     {
         $whatElseIsRunning = $this->whatElseIsRunning();
         if ($whatElseIsRunning->exists()) {
             $whatElseIsRunningArray = [];
-            foreach ($whatElseIsRunning as $otherOne) {
-                $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
-            }
-            if ($obj && $verbose) {
-                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
+            if ($verbose) {
+                foreach ($whatElseIsRunning as $otherOne) {
+                    $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
+                }
+                $this->logAnything(implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
             }
             // check again
             return true;

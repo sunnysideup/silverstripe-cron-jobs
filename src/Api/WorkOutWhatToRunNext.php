@@ -18,7 +18,7 @@ class WorkOutWhatToRunNext
         $classes = ClassInfo::subClassesFor(SiteUpdateRecipeBaseClass::class, false);
         $array = [];
         foreach ($classes as $class) {
-            if($class !== CustomRecipe::class) {
+            if ($class !== CustomRecipe::class) {
                 $obj = $class::inst();
                 $array[$obj->getShortClassCode()] = $class;
             }
@@ -26,19 +26,19 @@ class WorkOutWhatToRunNext
 
         return $array;
     }
-    public static function get_next_recipe_to_run(): ?string
+    public static function get_next_recipe_to_run(?bool $verbose = false): ?string
     {
         $classes = self::get_recipes();
         $candidates = [];
-        foreach($classes as $class) {
+        foreach ($classes as $class) {
             $obj = $class::inst();
-            if($obj->canRunCalculated(false)) {
+            if ($obj->canRunCalculated($verbose)) {
                 $candidates[$class] = $obj->overTimeSinceLastRun();
             }
         }
         // if any of them are over then return task that is over by the most
         // else return the last candidate.
-        if(! empty($candidates)) {
+        if (! empty($candidates)) {
             asort($candidates);
             $candidateKeys = array_keys($candidates);
             return array_pop($candidateKeys);

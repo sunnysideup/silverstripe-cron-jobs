@@ -240,11 +240,11 @@ abstract class SiteUpdateRecipeBaseClass
 
         $lastRunTs = $this->LastCompleted(true);
         $nowTs = time();
-        $diff = round(($nowTs - $lastRunTs) / 60);
+        $diffInMinutes = round(($nowTs - $lastRunTs) / 60);
         // echo "diff: $diff\n";
         // echo "lastRunTs: $lastRunTs\n";
         // echo "now: $now\n";
-        if ($diff > $this->minIntervalInMinutesBetweenRuns() * 60) {
+        if ($diffInMinutes > $this->minIntervalInMinutesBetweenRuns()) {
             return true;
         }
         return false;
@@ -266,13 +266,13 @@ abstract class SiteUpdateRecipeBaseClass
     {
         if ($verbose) {
             $this->logAnything(
-                'Anything else running ? '. ($this->IsAnythingRunning($this, true) ? 'YES' : 'NO').'. '.
+                '-- Anything else running ? '. ($this->IsAnythingRunning($verbose) ? 'YES' : 'NO').'. '.
                 'Can run at the same time as other recipes ? '. ($this->canRunAtTheSameTimeAsOtherRecipes() ? 'YES' : 'NO').'. '.
                 'Another version is currently running ? '. ($this->AnotherVersionIsCurrentlyRunning() ? 'YES' : 'NO').'.'
             );
 
         }
-        if ($this->IsAnythingRunning($this, false) === false) {
+        if ($this->IsAnythingRunning(false) === false) {
             return true;
         }
 

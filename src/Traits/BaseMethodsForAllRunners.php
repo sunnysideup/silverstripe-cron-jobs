@@ -50,6 +50,6 @@ trait BaseMethodsForAllRunners
     {
         $string = ClassInfo::shortName(static::class);
 
-        return preg_replace('#(?<!\ )[A-Z]#', ' $0', $string);
+        return trim(preg_replace('#(?<!\ )[A-Z]#', ' $0', $string));
     }
 }
