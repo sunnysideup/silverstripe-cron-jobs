@@ -3,7 +3,6 @@
 namespace Sunnysideup\CronJobs\Model\Logs;
 
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
-
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
@@ -17,6 +16,7 @@ use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
  * @property string $Notes
  * @property bool $Stopped
  * @property string $Type
+ * @property bool $HasErrors
  * @property int $Errors
  * @property string $Status
  * @property bool $AllowedNextStep
@@ -45,8 +45,9 @@ class SiteUpdateStep extends DataObject
         'Notes' => 'Text',
         'Stopped' => 'Boolean',
         'Type' => 'Varchar(255)',
+        'HasErrors' => 'Boolean',
         'Errors' => 'Int',
-        'Status' => 'Enum("Started,Errors,NotCompleted,Completed,Skipped","Started")',
+        'Status' => 'Enum("Started,NotCompleted,Completed,Skipped","Started")',
         'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
@@ -138,20 +139,12 @@ class SiteUpdateStep extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->recordErrors(SiteUpdateStepNote::class, 'SiteUpdateStepID');
-        if($this->Status === 'Errors') {
-            $parent = $this->SiteUpdate();
-            if($parent && $parent->exists()) {
-                $parent->Status = $this->Status;
-                $parent->write();
-            }
-        }
+        $this->recordErrorsOnBeforeWrite(SiteUpdateStepNote::class, 'SiteUpdateStepID');
     }
 
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();
-        $this->fixStartedAndStoppedOnBeforeWriteHelper();
         $this->deleteLogFile();
         $this->deleteImportantLogs();
     }

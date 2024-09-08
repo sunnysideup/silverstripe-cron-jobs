@@ -58,11 +58,7 @@ abstract class SiteUpdateRecipeStepBaseClass
     {
         // are updates running at all?
         if ($this->canRun()) {
-            if ($this->IsAnythingRunning($this, $verbose) === false) {
-                return true;
-            } else {
-                $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
-            }
+            return true;
         } else {
             $this->logAnything('Can not run ' . $this->getType() . ' because canRun returned FALSE');
         }

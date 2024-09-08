@@ -107,10 +107,10 @@ trait LogTrait
 
     public function getShortClassCode(): string
     {
-        if(! $this->RunnerClassName) {
+        if (! $this->RunnerClassName) {
             return 'error';
         }
-        if(! class_exists($this->RunnerClassName)) {
+        if (! class_exists($this->RunnerClassName)) {
             return 'error';
         }
         return ClassInfo::shortName($this->RunnerClassName);
@@ -126,7 +126,6 @@ trait LogTrait
             'Errors',
             'TimeTaken',
             'MemoryTaken',
-            'ErrorLog',
             'SiteUpdateID',
         ];
         $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
@@ -146,7 +145,7 @@ trait LogTrait
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->getRunnerObject();
         if ($obj) {
-            if($this instanceof SiteUpdate) {
+            if ($this instanceof SiteUpdate) {
                 $fields->addFieldsToTab(
                     'Root.WhenDoesItRun',
                     [
@@ -187,7 +186,6 @@ trait LogTrait
                     ReadonlyField::create('HasHadErrorsNice', 'Has had Errors', $obj->HasHadErrorsNice()->NiceAndColourfullInvertedColours()),
                     ReadonlyField::create('LastRunHadErrorsNice', 'Last Run had Errors', $obj->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours()),
                     ReadonlyField::create('Errors', 'Error Count'),
-                    ReadonlyField::create('ErrorLog', 'Error Log'),
                 ],
                 'ImportantLogs'
             );
@@ -196,13 +194,13 @@ trait LogTrait
             'ImportantLogs',
             'SiteUpdateSteps',
         ];
-        foreach($removeOptionsFields as $removeOptionsField) {
+        foreach ($removeOptionsFields as $removeOptionsField) {
             $gfNotes = $fields->dataFieldByName($removeOptionsField);
             if ($gfNotes) {
                 $gfNotes->getConfig()->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
             }
         }
-        if($obj) {
+        if ($obj) {
             $fields->addFieldsToTab(
                 'Root.RunNow',
                 [
@@ -210,13 +208,8 @@ trait LogTrait
                 ]
             );
         }
-        if ($this->ErrorLog) {
-            $data = $this->ErrorLog;
-            $source = 'Saved';
-        } else {
-            $data = $this->getLogContent();
-            $source = basename($this->logFilePath());
-        }
+        $data = $this->getLogContent();
+        $source = basename($this->logFilePath());
 
         $logField = LiteralField::create(
             'Logs',
@@ -239,7 +232,7 @@ trait LogTrait
 
     protected function secondsToTime(int $inputSeconds)
     {
-        if($inputSeconds < 1) {
+        if ($inputSeconds < 1) {
             return '< 1 second';
         }
         $secondsInAMinute = 60;
@@ -280,43 +273,51 @@ trait LogTrait
     }
 
 
-    protected function getErrors(): ?string
+
+    public function recordErrorsOnBeforeWrite(?string  $recordClassName = SiteUpdate::class, ?string $relFieldName = 'SiteUpdateID')
     {
-        $contents = $this->getLogContent();
+        if (!$this->Stopped && $this->Status === 'Started') {
+            return null;
+        }
         $logError = false;
-        if ($this->hasErrorInLog($contents)) {
+        $errorContents = $this->getLogContent();
+        $reasons = [];
+        if ($this->Errors > 0) {
+            $reasons[] = 'Errors Recorded';
+            $this->HasErrors = true;
+        }
+        if ($this->hasErrorInLog($errorContents)) {
+            $reasons[] = 'Has Error in Log';
             $logError = true;
         }
-
-        if ('NotCompleted' === $this->Status) {
-            $logError = true;
-        }
-
         if ($this->Stopped && 'Started' === $this->Status) {
+            $reasons[] = 'Mismatch in Stopped and Status (Stopped and Started)';
             $logError = true;
         }
-        if($logError) {
-            $this->ErrorLog = $contents;
-            $this->Status = 'Errors';
-            return $contents;
+        if (!$this->Stopped && $this->Status !== 'Started') {
+            $reasons[] = 'Mismatch in Stopped and Status (not Stopped and not Started)';
+            $logError = true;
         }
-        return null;
-    }
-
-    public function recordErrors(string $recordClassName = SiteUpdate::class, $relFieldName = 'SiteUpdateID')
-    {
-        $errors = $this->getErrors();
-        if ($errors) {
-            $this->ErrorLog = $errors;
-            $this->Status = 'Errors';
+        if ('NotCompleted' === $this->Status) {
+            $reasons[] = 'Not completed';
+            $logError = true;
+        }
+        if ($recordClassName::get()->filter(['Type' => 'ERROR', $relFieldName => $this->ID, 'Important' => true,])->exists()) {
+            $reasons[] = 'Important error in error log';
+            $logError = true;
+        }
+        if ($logError) {
+            $this->Stopped = true;
+            $this->HasErrors = true;
             // $this->write();
             // No need to write as this is called from onBeforeWrite!
             $error = $recordClassName::create();
-            $error->Type = 'HAS ERROR IN LOG';
-            $error->Message = $errors;
+            $error->Type = 'ERROR';
+            $error->Message = implode(', ', $reasons). PHP_EOL. PHP_EOL .$errorContents;
             $error->$relFieldName = $this->ID;
             $error->write();
         }
+
     }
 
     public function logFilePath(): string
@@ -330,10 +331,10 @@ trait LogTrait
 
     public function deleteAllFilesInFolder(?string $directory = '')
     {
-        if(! $directory) {
+        if (! $directory) {
             $directory = SiteUpdateConfig::folder_path();
         }
-        if(file_exists($directory)) {
+        if (file_exists($directory)) {
             if (!is_dir($directory)) {
                 throw new InvalidArgumentException('The provided path is not a directory: '.$directory);
             }
@@ -369,14 +370,14 @@ trait LogTrait
 
     protected function deleteLogFile()
     {
-        if(file_exists($this->logFilePath())) {
+        if (file_exists($this->logFilePath())) {
             unlink($this->logFilePath());
         }
     }
 
     protected function deleteImportantLogs()
     {
-        foreach($this->ImportantLogs() as $log) {
+        foreach ($this->ImportantLogs() as $log) {
             $log->delete();
         }
     }
@@ -385,7 +386,7 @@ trait LogTrait
     protected function hasErrorInLog(string $contents): bool
     {
         $needles = ['[Emergency]', '[Error]', '[CRITICAL]', '[ALERT]', '[ERROR]'];
-        foreach($needles as $needle) {
+        foreach ($needles as $needle) {
             if (strpos($contents, $needle) !== false) {
                 return true;
             }
@@ -393,15 +394,5 @@ trait LogTrait
         return false;
     }
 
-    protected function fixStartedAndStoppedOnBeforeWriteHelper()
-    {
-        if($this->Stopped && $this->Status === 'Started') {
-            $this->Status = 'NotCompleted';
-        }
-        // it may already have an error, but not be stopped yet.
-        // if($this->Status !== 'Started') {
-        //     $this->Stopped = true;
-        // }
-    }
 
 }

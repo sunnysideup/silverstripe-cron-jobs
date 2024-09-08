@@ -30,7 +30,7 @@ class SiteUpdateNote extends DataObject
     private static $plural_name = 'Recipe Errors';
 
     private static $db = [
-        'Type' => 'Enum("Success,Warning,Important,ERROR","ERROR")',
+        'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
         'Important' => 'Boolean',
         'Title' => 'Varchar(50)',
         'Message' => 'Text',
@@ -46,14 +46,6 @@ class SiteUpdateNote extends DataObject
         'Type' => 'Type',
         'Title' => 'Subject',
     ];
-    protected function onAfterWrite()
-    {
-        parent::onAfterWrite();
-        if($this->Type === 'ERROR') {
-            $this->SiteUpdate()->Status = 'ERROR';
-            $this->SiteUpdate()->write();
-        }
-    }
 
 
     public function ParentRel(): string
