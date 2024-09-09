@@ -84,6 +84,9 @@ trait BaseMethodsForRecipesAndSteps
      */
     protected function IsAnythingRunning(null|SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj = null, ?bool $verbose = true): bool
     {
+        if(Director::is_cli()) {
+            $verbose = true;
+        }
         $whatElseIsRunning = $this->whatElseIsRunning();
         if ($whatElseIsRunning->exists()) {
             $whatElseIsRunningArray = [];
