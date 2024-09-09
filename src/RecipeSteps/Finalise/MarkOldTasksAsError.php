@@ -67,7 +67,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         if ($siteUpdates->exists()) {
             foreach ($siteUpdates as $siteUpdate) {
                 $siteUpdate->Stopped = true;
-                $siteUpdate->Status = 'Errors';
+                $siteUpdate->Status = 'NotCompleted';
                 $siteUpdate->write();
             }
         }

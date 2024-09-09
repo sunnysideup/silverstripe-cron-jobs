@@ -4,8 +4,6 @@ namespace Sunnysideup\CronJobs\Traits;
 
 use InvalidArgumentException;
 use RuntimeException;
-
-use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
@@ -21,7 +19,6 @@ use SilverStripe\ORM\FieldType\DBBoolean;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
-use Sunnysideup\CronJobs\Control\SiteUpdateController;
 
 trait BaseMethodsForRecipesAndSteps
 {
@@ -35,7 +32,7 @@ trait BaseMethodsForRecipesAndSteps
     {
         if ($this->log) {
             if (false === $this->log->Stopped) {
-                $this->stopLog(1, 'Errors', 'Did not complete.');
+                $this->stopLog(1, 'NotCompleted', 'Did not complete, as on destruction, it was not Stopped.');
             }
         }
     }
@@ -82,7 +79,7 @@ trait BaseMethodsForRecipesAndSteps
      *
      * @param SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj
      */
-    protected function IsAnythingRunning(null|SiteUpdateRecipeStepBaseClass|SiteUpdateRecipeBaseClass $obj = null, ?bool $verbose = true): bool
+    protected function IsAnythingRunning(?bool $verbose = true): bool
     {
         if(Director::is_cli()) {
             $verbose = true;
@@ -90,11 +87,11 @@ trait BaseMethodsForRecipesAndSteps
         $whatElseIsRunning = $this->whatElseIsRunning();
         if ($whatElseIsRunning->exists()) {
             $whatElseIsRunningArray = [];
-            foreach ($whatElseIsRunning as $otherOne) {
-                $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
-            }
-            if($obj && $verbose) {
-                $this->logAnything($obj->getTitle() . ' is on hold --- ' . implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
+            if ($verbose) {
+                foreach ($whatElseIsRunning as $otherOne) {
+                    $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
+                }
+                $this->logAnything(implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
             }
             // check again
             return true;
@@ -155,22 +152,22 @@ trait BaseMethodsForRecipesAndSteps
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list && $list->exists()) {
-            if($startedRatherThanCompleted === false) {
+            if ($startedRatherThanCompleted === false) {
                 $list = $list?->exclude(['Status' => 'Started']);
             }
             $field = 'LastEdited';
-            if($startedRatherThanCompleted) {
+            if ($startedRatherThanCompleted) {
                 $field = 'Created';
             }
             $obj = $list->sort('ID', 'DESC')->first();
-            if($obj) {
-                if($asTs) {
+            if ($obj) {
+                if ($asTs) {
                     return $obj ? strtotime($obj->$field) : 0;
                 }
                 return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
             }
         }
-        if($asTs) {
+        if ($asTs) {
             return 0;
         } else {
             return 'Never Ran Successfully';
@@ -203,7 +200,7 @@ trait BaseMethodsForRecipesAndSteps
     {
         $obj = $this->LastCompletedLog();
         if ($obj) {
-            return $obj->Status === 'Errors';
+            return $obj->Errors > 0;
         }
 
         return false;
@@ -224,7 +221,7 @@ trait BaseMethodsForRecipesAndSteps
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list) {
             return $list
-                ->filter(['Status' => ['Errors', 'NotCompleted']])
+                ->filter(['Status' => ['NotCompleted']])
                 ->exists();
         }
 
@@ -236,28 +233,40 @@ trait BaseMethodsForRecipesAndSteps
         return DBBoolean::create_field('Boolean', $this->HasHadErrors());
     }
 
-    public function IsCurrentlyRunning(): bool
+    public function AnotherVersionIsCurrentlyRunning(): bool
+    {
+        return $this->IsCurrentlyRunning(true);
+    }
+
+    public function AnotherVersionIsCurrentlyRunningNice(): DBBoolean
+    {
+        return DBBoolean::create_field('Boolean', $this->AnotherVersionIsCurrentlyRunning());
+    }
+
+    public function IsCurrentlyRunning(?bool $excludeMe = false): bool
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
-        if ($list) {
-            return $list
-                ->filter(['Status' => 'Started'])
-                ->exists();
+        if ($list && $list->exists()) {
+            $filter = ['Status' => 'Started'];
+            if ($excludeMe && $this->log?->ID) {
+                $filter = $filter + ['ID' => $this->log->ID];
+            }
+            return $list->filter($filter)->exists();
         }
 
         return false;
     }
 
-    public function IsCurrentlyRunningNice(): DBBoolean
+    public function IsCurrentlyRunningNice(?bool $excludeMe = false): DBBoolean
     {
         return DBBoolean::create_field('Boolean', $this->IsCurrentlyRunning());
     }
 
     public function HoursOfTheDayNice(): string
     {
-        if($this instanceof SiteUpdateRecipeBaseClass) {
+        if ($this instanceof SiteUpdateRecipeBaseClass) {
             $array = $this->canRunHoursOfTheDay();
-            if(empty($array)) {
+            if (empty($array)) {
                 return 'any time';
             }
             return $this->summariseHours($array);
@@ -290,7 +299,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function MinMinutesBetweenRunsNice(): string
     {
-        if($this instanceof SiteUpdateRecipeBaseClass) {
+        if ($this instanceof SiteUpdateRecipeBaseClass) {
             return $this->minutesToTime($this->minIntervalInMinutesBetweenRuns());
         }
 
@@ -299,7 +308,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function MaxMinutesBetweenRunsNice(): string
     {
-        if($this instanceof SiteUpdateRecipeBaseClass) {
+        if ($this instanceof SiteUpdateRecipeBaseClass) {
             return $this->minutesToTime($this->maxIntervalInMinutesBetweenRuns());
         }
         return 'n/a';
@@ -307,7 +316,7 @@ trait BaseMethodsForRecipesAndSteps
 
     protected function minutesToTime(int $minutes): string
     {
-        if($minutes < 1) {
+        if ($minutes < 1) {
             return 'immediately';
         }
         if ($minutes < 60) {
@@ -397,8 +406,11 @@ trait BaseMethodsForRecipesAndSteps
         if ($siteUpdateId) {
             $this->log->SiteUpdateID = $siteUpdateId;
             $this->mySiteUpdateID = (int) $siteUpdateId;
-        } elseif ($this instanceof SiteUpdate) {
+        } elseif ($this->log instanceof SiteUpdate) {
             $this->mySiteUpdateID = (int) $this->log->ID;
+            $this->log->NumberOfStepsExpectecToRun = count($this->getSteps());
+        } else {
+            user_error('No SiteUpdateID provided and this is not a SiteUpdate class.', E_USER_ERROR);
         }
         $id = $this->log->write();
         return $id;
@@ -410,7 +422,7 @@ trait BaseMethodsForRecipesAndSteps
         if ($this->log && $this->log->exists()) {
             if (!$this->log->Stopped) {
                 $this->log->Stopped = true;
-                $this->log->Status = $status ?: 'Errors';
+                $this->log->Status = $status;
                 $this->log->Errors = $errors;
                 $this->log->Notes = $notes;
                 $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
@@ -444,9 +456,9 @@ trait BaseMethodsForRecipesAndSteps
 
     public function getKeyVarsAsArrayData(): ArrayData
     {
-        if($this instanceof SiteUpdateRecipeBaseClass) {
+        if ($this instanceof SiteUpdateRecipeBaseClass) {
             $subLinksAsArrayList = new ArrayList();
-            foreach($this->SubLinks(true) as $subLink) {
+            foreach ($this->SubLinks(true) as $subLink) {
                 $subLinksAsArrayList->push($subLink->getKeyVarsAsArrayData());
             }
         } else {

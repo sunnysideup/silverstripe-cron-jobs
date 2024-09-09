@@ -80,7 +80,7 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
         return true;
     }
 
-    protected function getSteps(): array
+    public function getSteps(): array
     {
         $array = $this->getBaseStepList()
             ->column('RunnerClassName')

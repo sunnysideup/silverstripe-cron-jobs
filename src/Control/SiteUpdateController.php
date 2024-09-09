@@ -39,12 +39,12 @@ class SiteUpdateController extends Controller
     private static $emergency_array = [
         [
             'Title' => 'Reset Updates (start again)',
-            'Link' => 'dev/tasks/site-update-reset',
+            'Link' => '/dev/tasks/site-update-reset',
             'Description' => 'Mark as completed any updates that are currently running so that new ones can run.',
         ],
         [
             'Title' => 'Clear Cache: flush cache and check database',
-            'Link' => 'dev/build/?flush=1',
+            'Link' => '/dev/build/?flush=1',
             'Description' => 'Flush any caches to update what the website shows (e.g. images).',
         ],
         [
@@ -111,9 +111,6 @@ class SiteUpdateController extends Controller
         $array = $this->config()->get('emergency_array');
         $doSet = new ArrayList();
         foreach ($array as $key => $item) {
-            if(isset($item['Link'])) {
-                $item['Link'] = self::my_link($item['Link']);
-            }
             $doSet->push(
                 new ArrayData(
                     [
@@ -164,7 +161,7 @@ class SiteUpdateController extends Controller
     public static function running_next(): string
     {
         $recipe = WorkOutWhatToRunNext::get_next_recipe_to_run();
-        if($recipe) {
+        if ($recipe) {
             return $recipe::inst()->getTitle();
         }
         return '';

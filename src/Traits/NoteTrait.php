@@ -54,15 +54,5 @@ trait NoteTrait
         $this->Title = substr((string) $this->Message, 0, 49);
     }
 
-    protected function onAfterWrite()
-    {
-        parent::onAfterWrite();
-        if($this->Type === 'ERROR') {
-            $parentRel = $this->ParentRel();
-            $this->$parentRel()->Status = 'Errors';
-            $this->$parentRel()->write();
-        }
-    }
-
 
 }

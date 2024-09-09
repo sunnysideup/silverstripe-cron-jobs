@@ -27,8 +27,8 @@ class SiteUpdatesAdmin extends ModelAdmin
         SiteUpdateConfig::class,
         SiteUpdateRunNext::class,
         SiteUpdate::class,
-        SiteUpdateNote::class,
         SiteUpdateStep::class,
+        SiteUpdateNote::class,
         SiteUpdateStepNote::class,
     ];
 
@@ -45,7 +45,7 @@ class SiteUpdatesAdmin extends ModelAdmin
     public function getEditForm($id = null, $fields = null)
     {
         $form = parent::getEditForm($id, $fields);
-        if($this->modelClass === SiteUpdate::class || $this->modelClass === SiteUpdateStep::class) {
+        if ($this->modelClass === SiteUpdate::class || $this->modelClass === SiteUpdateStep::class) {
             $gridField = $form->Fields()->fieldByName($this->sanitiseClassName($this->modelClass));
 
             $config = $gridField->getConfig();
@@ -57,16 +57,16 @@ class SiteUpdatesAdmin extends ModelAdmin
             $config->addComponent(new CustomGridFieldDataColumns());
 
         }
-        if($this->modelClass === SiteUpdateConfig::class) {
+        if ($this->modelClass === SiteUpdateConfig::class) {
             $fields = $form->Fields();
 
             $runners = WorkOutWhatToRunNext::get_recipes();
             $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/Includes/CurrentlyRunning');
             $htmlLeft .= $this->renderWith('Sunnysideup/CronJobs/Includes/RunningNext');
             $htmlRight = '<h2>List of Site Update Recipes</h2>';
-            foreach($runners as $shortClassName => $className) {
+            foreach ($runners as $shortClassName => $className) {
                 $obj = $className::inst();
-                if($obj) {
+                if ($obj) {
                     $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
                     $htmlRight .= '
                         <h3>

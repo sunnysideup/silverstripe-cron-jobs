@@ -24,9 +24,9 @@ use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
  * @property string $Status
  * @property string $Type
  * @property int $Errors
+ * @property int $TotalStepsErrors
  * @property int $TimeTaken
  * @property int $MemoryTaken
- * @property string $ErrorLog
  * @property string $RunnerClassName
  * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateSteps()
  * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote[] ImportantLogs()
@@ -48,12 +48,14 @@ class SiteUpdate extends DataObject
     private static $db = [
         'Notes' => 'Text',
         'Stopped' => 'Boolean',
-        'Status' => 'Enum("Started,Errors,NotCompleted,Completed,Skipped,Shortened","Started")',
+        'Status' => 'Enum("Started,NotCompleted,Completed,Skipped,Shortened","Started")',
         'Type' => 'Varchar(255)',
+        'HasErrors' => 'Boolean',
         'Errors' => 'Int',
+        'TotalStepsErrors' => 'Int',
+        'NumberOfStepsExpectecToRun' => 'Int',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
-        'ErrorLog' => 'Text',
         'RunnerClassName' => 'Varchar(255)',
     ];
 
@@ -111,6 +113,7 @@ class SiteUpdate extends DataObject
         'Description' => 'Varchar',
         'Minutes' => 'Varchar',
         'TimeNice' => 'Varchar',
+        'PercentageComplete' => 'Percentage',
     ];
 
     public function getCMSFields()
@@ -119,8 +122,15 @@ class SiteUpdate extends DataObject
 
         // add generic fields
         $this->addGenericFields($fields);
+        $fields->addFieldToTab(
+            'Root.ImportantLogs',
+            ReadonlyField::create(
+                'TotalStepsErrors',
+                'Total Errors in Steps',
+            )
+        );
         $gridField = $fields->dataFieldByName('SiteUpdateSteps');
-        if($gridField) {
+        if ($gridField) {
 
             // $gridField->getConfig()
             //     ->removeComponentsByType(GridFieldDataColumns::class)
@@ -128,7 +138,7 @@ class SiteUpdate extends DataObject
 
         }
         $runnerObject = $this->getRunnerObject();
-        if($runnerObject) {
+        if ($runnerObject) {
             $allSteps = $runnerObject->SubLinks(true);
             $steps = '<ol>';
             foreach ($allSteps as $count => $step) {
@@ -143,13 +153,26 @@ class SiteUpdate extends DataObject
             $steps = 'No steps found';
         }
 
-        $fields->addFieldToTab(
+        $fields->addFieldsToTab(
             'Root.SiteUpdateSteps',
-            ReadonlyField::create(
-                'AllStepsHere',
-                'All Steps (and if they can run on this site)',
-                DBHTMLText::create_field('HTMLText', $steps)
-            )
+            [
+                ReadonlyField::create(
+                    'NumberOfStepsExpectecToRun',
+                    'Number of Steps Expected to Run',
+                    $this->NumberOfStepsExpectecToRun
+                ),
+                ReadonlyField::create(
+                    'PercentageCompleteNice',
+                    'Precentage Complete',
+                    (round($this->getPercentageComplete(), 2) * 100) . '%'
+                ),
+                ReadonlyField::create(
+                    'AllStepsHere',
+                    'All Steps (and if they can run on this site)',
+                    DBHTMLText::create_field('HTMLText', $steps)
+                ),
+
+            ]
         );
 
         return $fields;
@@ -171,16 +194,14 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        foreach($this->SiteUpdateSteps() as $step) {
-            if($step->Status === 'Errors') {
-                $step->Status = 'Errors';
-            }
+        $this->TotalStepsErrors = 0;
+        foreach ($this->SiteUpdateSteps()->filter('HasErrors', true) as $step) {
+            $this->TotalStepsErrors += $step->Errors;
         }
-        if(! $this->Status) {
-            $this->Status = 'Errors';
+        if (! $this->Status) {
+            $this->Status = $this->Stopped ? 'NotCompleted' : 'Started';
         }
-        $this->fixStartedAndStoppedOnBeforeWriteHelper();
-        $this->recordErrors(SiteUpdateNote::class);
+        $this->recordErrorsOnBeforeWrite(SiteUpdateNote::class);
     }
 
     protected function onAfterWrite()
@@ -208,6 +229,29 @@ class SiteUpdate extends DataObject
         parent::onBeforeDelete();
         $this->deleteImportantLogs();
         $this->deleteLogFile();
+    }
+
+    public function getProposedSteps(): array
+    {
+        $runnerObject = $this->getRunnerObject();
+        return $runnerObject ? $runnerObject->getSteps() : [];
+    }
+
+    public function getPercentageComplete(): float
+    {
+        if ($this->NumberOfStepsExpectecToRun === 0) {
+            $proposedSteps = count($this->getProposedSteps());
+            $this->NumberOfStepsExpectecToRun = $proposedSteps;
+        }
+        if ($this->NumberOfStepsExpectecToRun === 0) {
+            return 0;
+        }
+        return $this->getNumberOfStepsRan() / $this->NumberOfStepsExpectecToRun;
+    }
+
+    public function getNumberOfStepsRan(): int
+    {
+        return $this->SiteUpdateSteps()->filter(['Status' => 'Completed'])->count();
     }
 
 
