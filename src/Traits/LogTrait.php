@@ -34,7 +34,7 @@ trait LogTrait
         /** @var SiteUpdateRecipeBaseClass $obj */
         $obj = $this->getRunnerObject();
 
-        return $obj ? $obj->getTitle() : 'Error';
+        return $obj ? $obj->getTitle() : 'Error - No Title';
     }
 
     public function getDescription(): string
@@ -42,7 +42,7 @@ trait LogTrait
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->getRunnerObject();
 
-        return $obj ? trim($obj->getDescription()) : 'Error';
+        return $obj ? trim($obj->getDescription()) : 'Error - No Description';
     }
 
     public function Minutes(): string
@@ -70,7 +70,7 @@ trait LogTrait
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->getRunnerObject();
 
-        return $obj ? $obj->getGroup() : 'Error';
+        return $obj ? $obj->getGroup() : 'Error - No Group';
     }
 
     /**
@@ -223,7 +223,6 @@ trait LogTrait
             ]
         );
         $obj = $this->getRunnerObject();
-        $runnerClassNameNice = $obj ? $obj->getTitle() : 'Error';
         $fields->removeByName(
             'RunnerClassName',
         );

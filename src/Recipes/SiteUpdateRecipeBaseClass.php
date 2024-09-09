@@ -51,12 +51,12 @@ abstract class SiteUpdateRecipeBaseClass
     /**
      * @var int
      */
-    private static $max_execution_minutes_recipes = 180;
+    private static $max_execution_minutes_recipes = 240;
 
     /**
      * @var int
      */
-    private static $max_execution_minutes_steps = 60;
+    private static $max_execution_minutes_steps = 120;
 
     private static array $always_run_at_the_start_steps = [
         MarkOldTasksAsError::class,
@@ -68,10 +68,13 @@ abstract class SiteUpdateRecipeBaseClass
 
     protected bool $ignoreTimeOfDay = false;
 
-    public function setIgnoreLastRanAndTimeOfDay(): static
+    protected bool $ignoreWhatElseIsRunning = false;
+
+    public function setIgnoreAll(): static
     {
         $this->setIgnoreLastRan();
         $this->setIgnoreTimeOfDay();
+        $this->setIgnoreWhatElseIsRunning();
         return $this;
     }
 
@@ -84,6 +87,12 @@ abstract class SiteUpdateRecipeBaseClass
     public function setIgnoreTimeOfDay(): static
     {
         $this->ignoreTimeOfDay = true;
+        return $this;
+    }
+
+    public function setIgnoreWhatElseIsRunning(): static
+    {
+        $this->ignoreWhatElseIsRunning = true;
         return $this;
     }
 
@@ -274,9 +283,8 @@ abstract class SiteUpdateRecipeBaseClass
         }
         if ($this->IsAnythingRunning(false) === false) {
             return true;
-        }
-
-        if ($this->canRunAtTheSameTimeAsOtherRecipes()) {
+        } elseif ($this->canRunAtTheSameTimeAsOtherRecipes() || $this->ignoreWhatElseIsRunning) {
+            // two of the same should never run
             return $this->AnotherVersionIsCurrentlyRunning() === false;
         }
 
@@ -291,9 +299,9 @@ abstract class SiteUpdateRecipeBaseClass
         $errors = 0;
         $status = 'Completed';
         $notes = '';
-        WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long($this->getForceRun());
-        $updateID = $this->startLog();
+        WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long();
         if ($this->canRunCalculated()) {
+            $updateID = $this->startLog();
             $steps = $this->getSteps();
             foreach ($steps as $className) {
                 $stepRunner = $this->runOneStep($className, $updateID);
@@ -307,11 +315,9 @@ abstract class SiteUpdateRecipeBaseClass
                     break;
                 }
             }
-        } else {
-            $status = 'Skipped';
+            $this->stopLog($errors, $status, $notes);
         }
 
-        $this->stopLog($errors, $status, $notes);
         $this->logHeader('End ' . $this->getTitle());
     }
 

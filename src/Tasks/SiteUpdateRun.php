@@ -37,10 +37,11 @@ class SiteUpdateRun extends BuildTask
     public function run($request)
     {
         error_reporting(E_ERROR | E_PARSE);
-        $forceRun = true;
+        $forceRun = false;
         // recipe already set ...
         if (! $this->recipe) {
             // get variable
+            $forceRun = true;
             $this->recipe = (string) $request->getVar('recipe');
         }
         if (!$this->recipe) {
@@ -54,9 +55,9 @@ class SiteUpdateRun extends BuildTask
                     $this->recipe = $runNowObj->RunnerClassName;
                     $runNowObj->delete();
                 }
+                $forceRun = true;
             } elseif (! $this->recipe) {
                 // check out what should run next
-                $forceRun = false;
                 $this->recipe = WorkOutWhatToRunNext::get_next_recipe_to_run(true);
             }
         }
@@ -68,7 +69,7 @@ class SiteUpdateRun extends BuildTask
             $obj = $this->recipe::inst();
             if ($obj) {
                 if ($forceRun) {
-                    $obj->setIgnoreLastRanAndTimeOfDay(true);
+                    $obj->setIgnoreAll(true);
                 }
                 $obj->run($request);
             } else {
