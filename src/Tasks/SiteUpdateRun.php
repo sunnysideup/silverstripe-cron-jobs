@@ -70,7 +70,6 @@ class SiteUpdateRun extends BuildTask
                 if ($forceRun) {
                     $obj->setIgnoreLastRanAndTimeOfDay(true);
                 }
-                echo '--------';
                 $obj->run($request);
             } else {
                 user_error('Could not inst() class ' . $this->recipe);
