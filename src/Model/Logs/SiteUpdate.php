@@ -195,6 +195,7 @@ class SiteUpdate extends DataObject
     {
         parent::onBeforeWrite();
         $this->TotalStepsErrors = 0;
+        /** @var SiteUpdateStep $step */
         foreach ($this->SiteUpdateSteps()->filter('HasErrors', true) as $step) {
             $this->TotalStepsErrors += $step->Errors;
         }

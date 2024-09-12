@@ -9,7 +9,6 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
-use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 
 class WorkOutWhatToRunNext
 {
@@ -26,6 +25,7 @@ class WorkOutWhatToRunNext
 
         return $array;
     }
+
     public static function get_next_recipe_to_run(?bool $verbose = false): ?string
     {
         $classes = self::get_recipes();

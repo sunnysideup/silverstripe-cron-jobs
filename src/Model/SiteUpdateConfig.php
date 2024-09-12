@@ -2,17 +2,11 @@
 
 namespace Sunnysideup\CronJobs\Model;
 
-use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
-use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
-use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
-use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
-use Sunnysideup\HierarchicalListField\HierarchicalListField;
+use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 
 class SiteUpdateConfig extends DataObject
 {
@@ -48,15 +42,15 @@ class SiteUpdateConfig extends DataObject
 
     public static function inst(): SiteUpdateConfig
     {
-        if(! self::$me) {
+        if (! self::$me) {
             self::$me = SiteUpdateConfig::get()->first();
-            if(! self::$me) {
+            if (! self::$me) {
                 self::$me = SiteUpdateConfig::create();
                 self::$me->write();
             }
         }
         $folderPath = static::folder_path();
-        if(! file_exists($folderPath)) {
+        if (! file_exists($folderPath)) {
             try {
                 mkdir($folderPath);
             } catch (\Exception $e) {
@@ -80,7 +74,7 @@ class SiteUpdateConfig extends DataObject
     {
         $fields = parent::getCMSFields();
 
-        if(! $this->folderPathIsWritable()) {
+        if (! $this->folderPathIsWritable()) {
             $fields->addFieldToTab(
                 'Root.Main',
                 LiteralField::create(
@@ -88,6 +82,16 @@ class SiteUpdateConfig extends DataObject
                     '<p class="message error">The folder ' . static::folder_path() . ' is not writable. Please make it writable.</p>'
                 )
             );
+        }
+        $stopped = $fields->dataFieldByName('xx');
+        if ($stopped) {
+            $alwaysRun = [];
+            foreach (WorkOutWhatToRunNext::get_recipes() as $recipe) {
+                if ($recipe->runEvenIfUpdatesAreStopped()) {
+                    $alwaysRun[] = $recipe->getTitle();
+                }
+            }
+            $stopped->setDescription('The following update recipes always run: ' . implode(', ', $alwaysRun) .'.');
         }
         return $fields;
     }
@@ -100,7 +104,7 @@ class SiteUpdateConfig extends DataObject
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        if(! $this->Title) {
+        if (! $this->Title) {
             $defaults = $this->Config()->get('defaults');
             $this->Title = $defaults['Title'] ?? 'Default Site Update Configuration';
         }
