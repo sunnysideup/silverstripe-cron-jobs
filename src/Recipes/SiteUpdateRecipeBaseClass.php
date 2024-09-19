@@ -178,12 +178,20 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function getExpectedMinimumEntriesPerHour(): float
     {
-        return 60 / $this->maxIntervalInMinutesBetweenRuns();
+        $max = $this->maxIntervalInMinutesBetweenRuns();
+        if ($max === 0) {
+            return 0;
+        }
+        return 60 / $max;
     }
 
     public function getExpectedMaximumEntriesPerHour(): float
     {
-        return 60 / $this->minIntervalInMinutesBetweenRuns();
+        $min = $this->minIntervalInMinutesBetweenRuns();
+        if ($min === 0) {
+            return 0;
+        }
+        return 60 / $min;
     }
 
 
