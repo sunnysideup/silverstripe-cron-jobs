@@ -73,7 +73,7 @@ class SiteUpdateConfig extends DataObject
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
-
+        $fields->removeByName('Title');
         if (! $this->folderPathIsWritable()) {
             $fields->addFieldToTab(
                 'Root.Main',
