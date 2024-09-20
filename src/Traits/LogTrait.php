@@ -135,11 +135,13 @@ trait LogTrait
             [
                 ReadonlyField::create('Title', 'Name'),
                 ReadonlyField::create('Description', 'Description'),
+                ReadonlyField::create('Type', 'type'),
                 ReadonlyField::create('Created', 'Started')
                     ->setDescription($this->dbObject('Created')->Ago()),
                 ReadonlyField::create('LastEdited', 'Last Active')
                     ->setDescription($this->dbObject('LastEdited')->Ago()),
-            ]
+            ],
+            'Stopped'
         );
 
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
@@ -170,8 +172,8 @@ trait LogTrait
                     ReadonlyField::create('LastCompleted', 'Last Completed', $obj->LastCompleted()),
                     HeaderField::create('TimeUse', 'Time Use (in seconds)'),
                     ReadonlyField::create('TimeTakenNice', 'Time Taken', $this->getTimeNice()),
-                    ReadonlyField::create('AverageTimeTakenNice', 'Average Time Taken', $obj->AverageTimeTaken()),
-                    ReadonlyField::create('MaxTimeTakenNice', 'Max Time Taken', $obj->MaxTimeTaken()),
+                    ReadonlyField::create('AverageTimeTakenNice', 'Average Time Taken', $obj->AverageTimeTakenNice()),
+                    ReadonlyField::create('MaxTimeTakenNice', 'Max Time Taken', $obj->MaxTimeTakenNice()),
                     HeaderField::create('MemoryUse', 'Memory Use (in megabytes)'),
                     $fields->dataFieldByName('MemoryTaken'),
                     ReadonlyField::create('AverageMemoryTaken', 'Average Memory Taken', $obj->AverageMemoryTaken()),

@@ -70,10 +70,11 @@ class SiteUpdatesAdmin extends ModelAdmin
                     $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
                     $htmlRight .= '
                         <h3>
-                          <a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>: '.$obj->getDescription().'.
-                          <br />'. $lastRunHadErrorsSymbol . ' - Last completed: '.$obj->LastCompletedNice().'.
-                          It is '.($obj->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets.
-                          <a href="'.$obj->Link().'" target="_blank">Run next?</a>
+                          <a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>:
+                          '.$obj->getDescription().'.
+                          <br />'. $lastRunHadErrorsSymbol . 'Last completed: '.$obj->LastCompletedNice().'.
+                          <br />It is '.($obj->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets.
+                          <br /><a href="'.$obj->Link().'" target="_blank">Schedule now to run next</a>
                         </h3>
                         ';
                 }

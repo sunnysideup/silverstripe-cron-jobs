@@ -216,8 +216,8 @@ Currently Site Updates are
             <div class="stat-item"><strong>Number of Logs:</strong> <span>$NumberOfLogs</span></div>
             <div class="stat-item"><strong>Last Started:</strong> <span>$LastStarted</span></div>
             <div class="stat-item"><strong>Last Completed:</strong> <span>$LastCompleted</span></div>
-            <div class="stat-item"><strong>Average Time Taken:</strong> <span>$AverageTimeTaken seconds</span></div>
-            <div class="stat-item"><strong>Max Time Taken:</strong> <span>$MaxTimeTaken seconds</span></div>
+            <div class="stat-item"><strong>Average Time Taken:</strong> <span>$AverageTimeTakenNice seconds</span></div>
+            <div class="stat-item"><strong>Max Time Taken:</strong> <span>$MaxTimeTakenNice seconds</span></div>
             <div class="stat-item"><strong>Average Memory Taken:</strong> <span>$AverageMemoryTaken megabytes</span></div>
             <div class="stat-item"><strong>Max Memory Taken:</strong> <span>$MaxMemoryTaken megabytes</span></div>
         </div>
@@ -234,8 +234,8 @@ Currently Site Updates are
                         <div class="stat-item"><strong>Number of Logs:</strong> <span>$NumberOfLogs</span></div>
                         <div class="stat-item"><strong>Last Started:</strong> <span>$LastStarted</span></div>
                         <div class="stat-item"><strong>Last Completed:</strong> <span>$LastCompleted</span></div>
-                        <div class="stat-item"><strong>Average Time Taken:</strong> <span>$AverageTimeTaken seconds</span></div>
-                        <div class="stat-item"><strong>Max Time Taken:</strong> <span>$MaxTimeTaken seconds</span></div>
+                        <div class="stat-item"><strong>Average Time Taken:</strong> <span>$AverageTimeTakenNice seconds</span></div>
+                        <div class="stat-item"><strong>Max Time Taken:</strong> <span>$MaxTimeTakenNice seconds</span></div>
                         <div class="stat-item"><strong>Average Memory Taken:</strong> <span>$AverageMemoryTaken megabytes</span></div>
                         <div class="stat-item"><strong>Max Memory Taken:</strong> <span>$MaxMemoryTaken megabytes</span></div>
                     </div>

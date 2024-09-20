@@ -19,6 +19,7 @@ use SilverStripe\ORM\FieldType\DBBoolean;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
+use Sunnysideup\CronJobs\Api\Converters;
 
 trait BaseMethodsForRecipesAndSteps
 {
@@ -81,7 +82,7 @@ trait BaseMethodsForRecipesAndSteps
      */
     protected function IsAnythingRunning(?bool $verbose = true): bool
     {
-        if(Director::is_cli()) {
+        if (Director::is_cli()) {
             $verbose = true;
         }
         $whatElseIsRunning = $this->whatElseIsRunning();
@@ -300,7 +301,7 @@ trait BaseMethodsForRecipesAndSteps
     public function MinMinutesBetweenRunsNice(): string
     {
         if ($this instanceof SiteUpdateRecipeBaseClass) {
-            return $this->minutesToTime($this->minIntervalInMinutesBetweenRuns());
+            return Injector::inst()->get(Converters::class)->MinutesToTime($this->minIntervalInMinutesBetweenRuns());
         }
 
         return 'n/a';
@@ -309,36 +310,12 @@ trait BaseMethodsForRecipesAndSteps
     public function MaxMinutesBetweenRunsNice(): string
     {
         if ($this instanceof SiteUpdateRecipeBaseClass) {
-            return $this->minutesToTime($this->maxIntervalInMinutesBetweenRuns());
+            return Injector::inst()->get(Converters::class)->MinutesToTime($this->maxIntervalInMinutesBetweenRuns());
         }
         return 'n/a';
     }
 
-    protected function minutesToTime(int $minutes): string
-    {
-        if ($minutes < 1) {
-            return 'immediately';
-        }
-        if ($minutes < 60) {
-            return $minutes . ' minute'. ($minutes > 1 ? 's' : '');
-        }
 
-        $hours = round($minutes / 60);
-        $remainingMinutes = $minutes % 60;
-
-        if ($hours < 24) {
-            return $remainingMinutes > 0
-                ? "$hours hour". ($hours > 1 ? 's' : '')." $remainingMinutes minutes"
-                : "$hours hour" . ($hours > 1 ? 's' : '');
-        }
-
-        $days = round($hours / 24);
-        $remainingHours = $hours % 24;
-
-        return $remainingHours > 0
-            ? "$days day". ($days > 1 ? 's' : '')."  $remainingHours hours"
-            : "$days day". ($days > 1 ? 's' : '')."  ";
-    }
 
     public function NumberOfLogs(): int
     {
@@ -348,6 +325,11 @@ trait BaseMethodsForRecipesAndSteps
     public function AverageTimeTaken(): int
     {
         return $this->aggregateTaken('avg', 'TimeTaken');
+    }
+
+    public function AverageTimeTakenNice(): string
+    {
+        return Injector::inst()->get(Converters::class)->SecondsToTime($this->AverageTimeTaken());
     }
 
     public function AverageMemoryTaken(): int
@@ -360,6 +342,13 @@ trait BaseMethodsForRecipesAndSteps
     {
         return $this->aggregateTaken('max', 'TimeTaken');
     }
+
+
+    public function MaxTimeTakenNice(): string
+    {
+        return Injector::inst()->get(Converters::class)->SecondsToTime($this->MaxTimeTaken());
+    }
+
 
     public function MaxMemoryTaken(): int
     {
@@ -479,13 +468,13 @@ trait BaseMethodsForRecipesAndSteps
                 'LastRunHadErrorsNice' => $this->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours(),
                 'HasHadErrorsNice' => $this->HasHadErrorsNice()->NiceAndColourfullInvertedColours(),
                 'NumberOfLogs' => $this->NumberOfLogs(),
-                'AverageTimeTaken' => $this->AverageTimeTaken(),
+                'AverageTimeTakenNice' => $this->AverageTimeTakenNice(),
+                'MaxTimeTakenNice' => $this->MaxTimeTakenNice(),
                 'AverageMemoryTaken' => $this->AverageMemoryTaken(),
+                'MaxMemoryTaken' => $this->MaxMemoryTaken(),
                 'HoursOfTheDayNice' => $this->HoursOfTheDayNice(),
                 'MinMinutesBetweenRunsNice' => $this->MinMinutesBetweenRunsNice(),
                 'MaxMinutesBetweenRunsNice' => $this->MaxMinutesBetweenRunsNice(),
-                'MaxTimeTaken' => $this->MaxTimeTaken(),
-                'MaxMemoryTaken' => $this->MaxMemoryTaken(),
                 'SubLinks' => $subLinksAsArrayList,
             ]
         );

@@ -2,12 +2,16 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs;
 
+use GuzzleHttp\Psr7\Header;
 use SilverStripe\Control\Controller;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
+use SilverStripe\Forms\HeaderField;
+use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataList;
@@ -140,15 +144,20 @@ class SiteUpdate extends DataObject
         $runnerObject = $this->getRunnerObject();
         if ($runnerObject) {
             $allSteps = $runnerObject->SubLinks(true);
-            $steps = '<ol>';
+            $steps = '<ul>';
+            $number = 0;
             foreach ($allSteps as $count => $step) {
+                $style = $step->canRun() ? '' : 'text-decoration: line-through;';
+                $number = $step->canRun() ? $number + 1 : $number;
                 $steps .=
                     '<li>
-                        <div style="display: flex;flex-direction: row;justify-content: space-between;"><div>'.$step->getTitle().' - '.$step->getDescription().'</div><div>'.$step->canRunNice()->NiceAndColourfull().'</div></div>
+                    <div style="display: flex;flex-direction: row;justify-content: space-between; '.$style.'">
+                            <div><strong>'.$number.'. '.$step->getTitle().'</strong><br>'.$step->getDescription().'</div>
+                        </div>
                         <hr />
                     </li>';
             }
-            $steps .= '</ol>';
+            $steps .= '</ul>';
         } else {
             $steps = 'No steps found';
         }
@@ -156,21 +165,24 @@ class SiteUpdate extends DataObject
         $fields->addFieldsToTab(
             'Root.SiteUpdateSteps',
             [
+                HeaderField::create(
+                    'ExpectedSteps',
+                    'What is expected to happen'
+                ),
                 ReadonlyField::create(
                     'NumberOfStepsExpectecToRun',
-                    'Number of Steps Expected to Run',
-                    $this->NumberOfStepsExpectecToRun
+                    'Count',
                 ),
                 ReadonlyField::create(
                     'PercentageCompleteNice',
                     'Precentage Complete',
                     (round($this->getPercentageComplete(), 2) * 100) . '%'
                 ),
-                ReadonlyField::create(
+                HTMLEditorField::create(
                     'AllStepsHere',
-                    'All Steps (and if they can run on this site)',
+                    'All Steps',
                     DBHTMLText::create_field('HTMLText', $steps)
-                ),
+                )->performDisabledTransformation(),
 
             ]
         );
@@ -235,7 +247,14 @@ class SiteUpdate extends DataObject
     public function getProposedSteps(): array
     {
         $runnerObject = $this->getRunnerObject();
-        return $runnerObject ? $runnerObject->getSteps() : [];
+        $steps = $runnerObject ? $runnerObject->getSteps() : [];
+        foreach ($steps as $key => $step) {
+            $singleton = Injector::inst()->get($step);
+            if ($singleton->canRun() !== true) {
+                unset($steps[$key]);
+            }
+        }
+        return $steps;
     }
 
     public function getPercentageComplete(): float

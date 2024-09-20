@@ -101,6 +101,10 @@ abstract class SiteUpdateRecipeBaseClass
         return 'Recipe';
     }
 
+    /**
+     * to do - this does not work if olders logs are deleted!
+     * @return bool
+     */
     public function IsMeetingTarget(): bool
     {
         $expectedMin = $this->getExpectedMinimumEntriesPer24Hours();
@@ -136,17 +140,17 @@ abstract class SiteUpdateRecipeBaseClass
     }
 
 
-    public function getActualEntriesPer(?int $daysBack = 1): int
+    public function getActualEntriesPer(?int $daysCovered = 1): int
     {
-        $daysBack = max(1, $daysBack);
-        $hoursBack = $daysBack * 24;
+        $daysCovered = max(1, $daysCovered);
+        $hoursBack = $daysCovered * 24;
         $minMultiplier = 1;
         $maxMultiplier = 2;
-        if ($daysBack > 2) {
+        if ($daysCovered > 2) {
             $minMultiplier = 0;
             $maxMultiplier = 1;
         }
-        $last24Hours = SiteUpdate::get()->filter([
+        $last24Hours = $this->listOfLogsForThisRecipeOrStep()->filter([
             'Status' => 'Completed',
             'Created:GreaterThan' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $maxMultiplier).' hours')),
             'Created:LessThanOrEqual' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $minMultiplier).' hours')),
