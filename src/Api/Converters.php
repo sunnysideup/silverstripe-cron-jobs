@@ -26,7 +26,7 @@ class Converters
             }
         }
 
-        return $result ? implode(', ', $result) : 'immediately';
+        return $result ? implode(', ', $result) : 'n/a';
     }
 
     private function formatTimeUnit(int $value, string $unit): string
