@@ -317,14 +317,18 @@ abstract class SiteUpdateRecipeBaseClass
             $steps = $this->getSteps();
             foreach ($steps as $className) {
                 $stepRunner = $this->runOneStep($className, $updateID);
-                if ($stepRunner && !$stepRunner->allowNextStepToRun()) {
-                    $errors = 1;
-                    $status = 'Shortened';
-                    $notes = 'This update recipe stopped early because a step prevented the next step from running.';
-                    $log = $stepRunner->getLog();
-                    $log->AllowedNextStep = false;
-                    $log->write();
-                    break;
+                if ($stepRunner) {
+                    if ($stepRunner->allowNextStepToRun() !== true) {
+                        $errors = 1;
+                        $status = 'Shortened';
+                        $notes = 'This update recipe stopped early because a step prevented the next step from running.';
+                        $log = $stepRunner->getLog();
+                        $log->AllowedNextStep = false;
+                        $log->write();
+                        break;
+                    } else {
+                        $this->recordTimeAndMemory();
+                    }
                 }
             }
             $this->stopLog($errors, $status, $notes);
@@ -332,6 +336,7 @@ abstract class SiteUpdateRecipeBaseClass
 
         $this->logHeader('End ' . $this->getTitle());
     }
+
 
     public function fatalHandler(): void
     {
@@ -349,6 +354,8 @@ abstract class SiteUpdateRecipeBaseClass
             $errstr  = $error['message'] ?? 'shutdown';
             $errorFormatted = "Error [$errno]: $errstr in $errfile on line $errline";
             $this->stopLog(1, 'NotCompleted', $errorFormatted);
+        } else {
+            $this->stopLog(1, 'NotCompleted', 'Unknown error');
         }
     }
 
@@ -368,7 +375,7 @@ abstract class SiteUpdateRecipeBaseClass
 
                 return $obj;
             }
-
+            $this->logAnything('Now allowed to run: ' . $className . ' as a step');
             return null;
         }
 

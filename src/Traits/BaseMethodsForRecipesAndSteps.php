@@ -405,17 +405,29 @@ trait BaseMethodsForRecipesAndSteps
         return $id;
     }
 
+
+    public function recordTimeAndMemory(): ?int
+    {
+        $returnID = null;
+        if ($this->log && $this->log->exists()) {
+            $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
+            $this->log->TimeTaken = round(microtime(true) - $this->timeAtStart);
+            $returnID = $this->log->write();
+        }
+        return $returnID;
+    }
+
+
     public function stopLog(?int $errors = 0, ?string $status = 'Completed', ?string $notes = ''): ?int
     {
         $returnID = null;
         if ($this->log && $this->log->exists()) {
+            $this->recordTimeAndMemory();
             if (!$this->log->Stopped) {
                 $this->log->Stopped = true;
                 $this->log->Status = $status;
                 $this->log->Errors = $errors;
                 $this->log->Notes = $notes;
-                $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
-                $this->log->TimeTaken = round(microtime(true) - $this->timeAtStart);
                 $returnID = $this->log->write();
             }
         }

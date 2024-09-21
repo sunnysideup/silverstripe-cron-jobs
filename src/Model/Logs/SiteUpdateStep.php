@@ -86,9 +86,10 @@ class SiteUpdateStep extends DataObject
     ];
 
     private static $searchable_fields = [
+        'Type' => 'PartialMatchFilter',
         'Stopped' => 'ExactMatchFilter',
         'Status' => 'ExactMatchFilter',
-        'Type' => 'PartialMatchFilter',
+        'HasErrors' => 'ExactMatchFilter',
         'Notes' => 'PartialMatchFilter',
         'AllowedNextStep' => 'ExactMatchFilter',
     ];

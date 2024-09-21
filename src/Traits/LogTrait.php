@@ -119,12 +119,12 @@ trait LogTrait
     protected function addGenericFields($fields)
     {
 
+
         $readonlyFields = [
             'AllowedNextStep',
             'Status',
             'Type',
             'Errors',
-            'TimeTaken',
             'MemoryTaken',
             'SiteUpdateID',
         ];
@@ -135,32 +135,37 @@ trait LogTrait
             [
                 ReadonlyField::create('Title', 'Name'),
                 ReadonlyField::create('Description', 'Description'),
-                ReadonlyField::create('Type', 'type'),
+                ReadonlyField::create('Type', 'Type'),
                 ReadonlyField::create('Created', 'Started')
                     ->setDescription($this->dbObject('Created')->Ago()),
-                ReadonlyField::create('LastEdited', 'Last Active')
+                ReadonlyField::create('LastEdited', 'Last active')
                     ->setDescription($this->dbObject('LastEdited')->Ago()),
+                $fields->dataFieldByName('Status'),
             ],
             'Stopped'
         );
 
+        $fields->dataFieldByName('Stopped')->setDescription('If required,you can tick this box to allow other recipes to run.');
+
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->getRunnerObject();
         if ($obj) {
+            $fields->removeByName('TimeTaken');
+            $fields->removeByName('HasErrors');
             if ($this instanceof SiteUpdate) {
                 $fields->addFieldsToTab(
                     'Root.WhenDoesItRun',
                     [
-                        ReadonlyField::create('CanRunNice', 'Can Run?', $obj->CanRunNice()->NiceAndColourfull()),
-                        ReadonlyField::create('CurrentlyRunningNice', 'Is Currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CanRunNice', 'Can run right now?', $obj->CanRunNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CurrentlyRunningNice', 'An instance is currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfull()),
                         ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
                         ReadonlyField::create('getExpectedMinimumEntriesPer24Hours', 'Expected minimum runs per 24 hours', round($obj->getExpectedMinimumEntriesPer24Hours(), 3)),
                         ReadonlyField::create('getExpectedMaximumEntriesPer24Hours', 'Expected maximum runs per 24 hours', round($obj->getExpectedMaximumEntriesPer24Hours(), 3)),
                         ReadonlyField::create('getActualEntriesPer', 'Actuals runs in last 24 hour cycle', $obj->getActualEntriesPer()),
                         ReadonlyField::create('getActualEntriesPer30', 'Actuals runs in last 30 days cycle', $obj->getActualEntriesPer(30)),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
-                        ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum Time between Runs', $obj->MinMinutesBetweenRunsNice()),
-                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Maximum Time between Runs', $obj->MaxMinutesBetweenRunsNice()),
+                        ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum time between runs', $obj->MinMinutesBetweenRunsNice()),
+                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Maximum time between runs', $obj->MaxMinutesBetweenRunsNice()),
                     ]
                 );
             }
@@ -168,26 +173,29 @@ trait LogTrait
                 'Root.Stats',
                 [
                     // $fields->dataFieldByName('TimeNice'),
-                    ReadonlyField::create('LastStarted', 'Last Started', $obj->LastStarted()),
-                    ReadonlyField::create('LastCompleted', 'Last Completed', $obj->LastCompleted()),
-                    HeaderField::create('TimeUse', 'Time Use (in seconds)'),
-                    ReadonlyField::create('TimeTakenNice', 'Time Taken', $this->getTimeNice()),
-                    ReadonlyField::create('AverageTimeTakenNice', 'Average Time Taken', $obj->AverageTimeTakenNice()),
-                    ReadonlyField::create('MaxTimeTakenNice', 'Max Time Taken', $obj->MaxTimeTakenNice()),
+                    HeaderField::create('MostRecentRunInfo', 'Most recent run'),
+                    ReadonlyField::create('LastStarted', 'Started', $obj->LastStarted()),
+                    ReadonlyField::create('LastCompleted', 'Completed', $obj->LastCompleted()),
+                    HeaderField::create('ErrorCounts', 'Errors'),
+                    ReadonlyField::create('HasHadErrorsNice', 'Has had errors in any run?', $obj->HasHadErrorsNice()->NiceAndColourfullInvertedColours()),
+                    ReadonlyField::create('LastRunHadErrorsNice', 'Most recent run had errors', $obj->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours()),
+                    HeaderField::create('TimeUse', 'Time Use'),
+                    ReadonlyField::create('AverageTimeTakenNice', 'Average time taken - any run', $obj->AverageTimeTakenNice()),
+                    ReadonlyField::create('MaxTimeTakenNice', 'Max time taken - any run', $obj->MaxTimeTakenNice()),
                     HeaderField::create('MemoryUse', 'Memory Use (in megabytes)'),
-                    $fields->dataFieldByName('MemoryTaken'),
-                    ReadonlyField::create('AverageMemoryTaken', 'Average Memory Taken', $obj->AverageMemoryTaken()),
-                    ReadonlyField::create('MaxMemoryTaken', 'Max Memory Taken', $obj->MaxMemoryTaken()),
+                    ReadonlyField::create('AverageMemoryTaken', 'Average memory taken - any run', $obj->AverageMemoryTaken()),
+                    ReadonlyField::create('MaxMemoryTaken', 'Max memory taken - any run', $obj->MaxMemoryTaken()),
 
                 ],
             );
             $fields->addFieldsToTab(
                 'Root.ImportantLogs',
                 [
+                    ReadonlyField::create('HasErrorsNice', 'This run had errors?', $this->dbObject('HasErrors')->NiceAndColourfullInvertedColours()),
+                    ReadonlyField::create('Errors', 'Error count'),
                     ReadonlyField::create('Notes', 'Notes / Errors'),
-                    ReadonlyField::create('HasHadErrorsNice', 'Has had Errors', $obj->HasHadErrorsNice()->NiceAndColourfullInvertedColours()),
-                    ReadonlyField::create('LastRunHadErrorsNice', 'Last Run had Errors', $obj->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours()),
-                    ReadonlyField::create('Errors', 'Error Count'),
+                    ReadonlyField::create('TimeTakenNice', 'Time taken for this run', $this->getTimeNice()),
+                    $fields->dataFieldByName('MemoryTaken')->setTitle('Memory taken for this run'),
                 ],
                 'ImportantLogs'
             );

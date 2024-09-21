@@ -71,13 +71,13 @@ class SiteUpdate extends DataObject
 
 
     private static $field_labels = [
-        'Title' => 'Update Recipe',
+        'Title' => 'Update recipe name',
         'Stopped' => 'Stopped',
         'Created' => 'Started',
         'Description' => 'Description',
         'Status' => 'Status',
-        'TimeTaken' => 'Seconds Used',
-        'MemoryTaken' => 'Megabytes Used',
+        'TimeTaken' => 'Seconds used',
+        'MemoryTaken' => 'Megabytes used',
         'SiteUpdateSteps' => 'Steps',
         'ImportantLogs' => 'Important Logs',
     ];
@@ -106,6 +106,7 @@ class SiteUpdate extends DataObject
         'Stopped' => 'ExactMatchFilter',
         'Type' => 'PartialMatchFilter',
         'Status' => 'ExactMatchFilter',
+        'HasErrors' => 'ExactMatchFilter',
     ];
 
     private static $default_sort = [
@@ -130,8 +131,9 @@ class SiteUpdate extends DataObject
             'Root.ImportantLogs',
             ReadonlyField::create(
                 'TotalStepsErrors',
-                'Total Errors in Steps',
-            )
+                'Errors in individual steps',
+            ),
+            'ImportantLogs'
         );
         $gridField = $fields->dataFieldByName('SiteUpdateSteps');
         if ($gridField) {
@@ -163,24 +165,30 @@ class SiteUpdate extends DataObject
         }
 
         $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                ReadonlyField::create(
+                    'PercentageCompleteNice',
+                    'Precentage complete',
+                    (round($this->getPercentageComplete(), 2) * 100) . '%'
+                ),
+            ]
+        );
+
+        $fields->addFieldsToTab(
             'Root.SiteUpdateSteps',
             [
                 HeaderField::create(
                     'ExpectedSteps',
-                    'What is expected to happen'
+                    'What is expected to happen in this recipe?'
                 ),
                 ReadonlyField::create(
                     'NumberOfStepsExpectecToRun',
-                    'Count',
-                ),
-                ReadonlyField::create(
-                    'PercentageCompleteNice',
-                    'Precentage Complete',
-                    (round($this->getPercentageComplete(), 2) * 100) . '%'
+                    'Number of steps expected to run',
                 ),
                 HTMLEditorField::create(
                     'AllStepsHere',
-                    'All Steps',
+                    'Steps expected to run',
                     DBHTMLText::create_field('HTMLText', $steps)
                 )->performDisabledTransformation(),
 
