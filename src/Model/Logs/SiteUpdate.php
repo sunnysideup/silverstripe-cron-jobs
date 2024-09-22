@@ -150,12 +150,13 @@ class SiteUpdate extends DataObject
             $steps = '<ul>';
             $number = 0;
             foreach ($allSteps as $count => $step) {
-                $style = $step->canRun() ? '' : 'text-decoration: line-through;';
-                $number = $step->canRun() ? $number + 1 : $number;
+                if ($step->canRun() === false) {
+                    continue;
+                }
                 $steps .=
                     '<li>
-                    <div style="display: flex;flex-direction: row;justify-content: space-between; '.$style.'">
-                            <div><strong>'.$number.'. '.$step->getTitle().'</strong><br>'.$step->getDescription().'</div>
+                    <div style="display: flex;flex-direction: row;justify-content: space-between; ">
+                            <div><strong>'.($count + 1).'. '.$step->getTitle().'</strong><br>'.$step->getDescription().'</div>
                         </div>
                         <hr />
                     </li>';
