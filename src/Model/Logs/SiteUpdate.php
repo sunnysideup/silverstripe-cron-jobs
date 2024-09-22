@@ -110,6 +110,7 @@ class SiteUpdate extends DataObject
     ];
 
     private static $default_sort = [
+        'Stopped' => 'ASC',
         'ID' => 'DESC',
     ];
 
