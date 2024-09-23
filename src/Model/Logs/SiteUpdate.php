@@ -88,6 +88,7 @@ class SiteUpdate extends DataObject
         'Created.Ago' => 'Started',
         'Status' => 'Status',
         'Stopped.NiceAndColourfull' => 'Stopped',
+        'HasErrors.NiceAndColourfullInvertedColours' => 'Stopped',
         'Title' => 'Recipe',
         'SiteUpdateSteps.Count' => 'Steps',
         'TimeTaken' => 'Time Taken',
