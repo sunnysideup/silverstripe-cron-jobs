@@ -153,10 +153,11 @@ class SiteUpdate extends DataObject
                 if ($step->canRun() === false) {
                     continue;
                 }
+                $number++;
                 $steps .=
                     '<li>
                     <div style="display: flex;flex-direction: row;justify-content: space-between; ">
-                            <div><strong>'.($count + 1).'. '.$step->getTitle().'</strong><br>'.$step->getDescription().'</div>
+                            <div><strong>'.($number).'. '.$step->getTitle().'</strong><br>'.$step->getDescription().'</div>
                         </div>
                         <hr />
                     </li>';
@@ -270,8 +271,8 @@ class SiteUpdate extends DataObject
     public function getPercentageComplete(): float
     {
         if ($this->NumberOfStepsExpectecToRun === 0) {
-            $proposedSteps = count($this->getProposedSteps());
-            $this->NumberOfStepsExpectecToRun = $proposedSteps;
+            $proposedStepsCount = count($this->getProposedSteps());
+            $this->NumberOfStepsExpectecToRun = $proposedStepsCount;
         }
         if ($this->NumberOfStepsExpectecToRun === 0) {
             return 0;
