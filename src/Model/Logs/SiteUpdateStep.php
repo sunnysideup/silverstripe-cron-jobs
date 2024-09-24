@@ -71,7 +71,7 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep.NiceAndColourfull' => 'Allow Next Step?',
         'TimeTaken' => 'Seconds',
         'MemoryTaken' => 'Memory (MBs)',
-        'ImportantLogs.Count' => 'Logs',
+        'HasErrors.NiceAndColourfullInvertedColours' => 'Errors',
     ];
 
     private static $field_labels = [

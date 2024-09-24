@@ -88,12 +88,11 @@ class SiteUpdate extends DataObject
         'Created.Ago' => 'Started',
         'Status' => 'Status',
         'Stopped.NiceAndColourfull' => 'Stopped',
-        'HasErrors.NiceAndColourfullInvertedColours' => 'Errors',
         'Title' => 'Recipe',
         'SiteUpdateSteps.Count' => 'Steps',
         'TimeTaken' => 'Time Taken',
         'MemoryTaken' => 'Memory (MBs)',
-        'ImportantLogs.Count' => 'Logs',
+        'HasErrors.NiceAndColourfullInvertedColours' => 'Errors',
     ];
 
     private static $indexes = [
