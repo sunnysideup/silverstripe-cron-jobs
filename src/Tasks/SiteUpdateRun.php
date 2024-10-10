@@ -40,9 +40,11 @@ class SiteUpdateRun extends BuildTask
         $forceRun = false;
         // recipe already set ...
         if (! $this->recipe) {
-            // get variable
-            $forceRun = true;
-            $this->recipe = (string) $request->getVar('recipe');
+            if ($request->getVar('recipe')) {
+                // get variable
+                $forceRun = true;
+                $this->recipe = (string) $request->getVar('recipe');
+            }
         }
         if (!$this->recipe) {
             // check if a run next is listed...
