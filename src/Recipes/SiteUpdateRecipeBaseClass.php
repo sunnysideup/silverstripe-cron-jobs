@@ -375,7 +375,7 @@ abstract class SiteUpdateRecipeBaseClass
 
                 return $obj;
             }
-            $this->logAnything('Now allowed to run: ' . $className . ' as a step');
+            $this->logAnything('Not allowed to run: ' . $className . ' as a step');
             return null;
         }
 
