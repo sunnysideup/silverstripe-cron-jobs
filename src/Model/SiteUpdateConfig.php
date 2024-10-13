@@ -83,12 +83,12 @@ class SiteUpdateConfig extends DataObject
                 )
             );
         }
-        $stopped = $fields->dataFieldByName('xx');
+        $stopped = $fields->dataFieldByName('StopSiteUpdates');
         if ($stopped) {
             $alwaysRun = [];
-            foreach (WorkOutWhatToRunNext::get_recipes() as $recipe) {
-                if ($recipe->runEvenIfUpdatesAreStopped()) {
-                    $alwaysRun[] = $recipe->getTitle();
+            foreach (WorkOutWhatToRunNext::get_recipes() as $obj) {
+                if ($obj->runEvenIfUpdatesAreStopped()) {
+                    $alwaysRun[] = $obj->getTitle();
                 }
             }
             $stopped->setDescription('The following update recipes always run: ' . implode(', ', $alwaysRun) .'.');

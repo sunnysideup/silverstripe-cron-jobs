@@ -25,11 +25,11 @@ class SiteUpdatesAdmin extends ModelAdmin
 {
     private static $managed_models = [
         SiteUpdateConfig::class,
-        SiteUpdateRunNext::class,
         SiteUpdate::class,
         SiteUpdateStep::class,
         SiteUpdateNote::class,
         SiteUpdateStepNote::class,
+        SiteUpdateRunNext::class,
     ];
 
     private static $url_segment = 'site-updates';
@@ -64,20 +64,17 @@ class SiteUpdatesAdmin extends ModelAdmin
             $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/Includes/CurrentlyRunning');
             $htmlLeft .= $this->renderWith('Sunnysideup/CronJobs/Includes/RunningNext');
             $htmlRight = '<h2>List of Site Update Recipes</h2>';
-            foreach ($runners as $shortClassName => $className) {
-                $obj = $className::inst();
-                if ($obj) {
-                    $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
-                    $htmlRight .= '
-                        <h3>
-                          <a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>:
-                          '.$obj->getDescription().'.
-                          <br />'. $lastRunHadErrorsSymbol . 'Last completed: '.$obj->LastCompletedNice().'.
-                          <br />It is '.($obj->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets.
-                          <br /><a href="'.$obj->Link().'" target="_blank">Schedule now to run next</a>
-                        </h3>
-                        ';
-                }
+            foreach ($runners as $obj) {
+                $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
+                $htmlRight .= '
+                    <h3>
+                        <a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>:
+                        '.$obj->getDescription().'.
+                        <br />'. $lastRunHadErrorsSymbol . 'Last completed: '.$obj->LastCompletedNice().'.
+                        <br />It is '.($obj->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets.
+                        <br /><a href="'.$obj->Link().'" target="_blank">Schedule now to run next</a>
+                    </h3>
+                    ';
             }
 
             $htmlRight .= '

@@ -9,6 +9,7 @@ use SilverStripe\Control\Director;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
+use Sunnysideup\CronJobs\Forms\SiteUpdateStepDropdownField;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep
@@ -86,7 +87,10 @@ class SiteUpdateStep extends DataObject
     ];
 
     private static $searchable_fields = [
-        'Type' => 'PartialMatchFilter',
+        'RunnerClassName' => [
+            'field' => SiteUpdateStepDropdownField::class,
+            'filter' => 'ExactMatchFilter',
+        ],
         'Stopped' => 'ExactMatchFilter',
         'Status' => 'ExactMatchFilter',
         'HasErrors' => 'ExactMatchFilter',

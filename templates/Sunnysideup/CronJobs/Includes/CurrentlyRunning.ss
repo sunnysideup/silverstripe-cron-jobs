@@ -2,7 +2,7 @@
 <h2>Currently Running</h2>
 <% if $CurrentlyRunning %>
 <p>
-    <a href='/admin/site-updates'>Review list of updates:</a>
+    <a href='/admin/site-updates/Sunnysideup-CronJobs-Model-Logs-SiteUpdate'>Review list of updates:</a>
 </p>
 
 <ul>

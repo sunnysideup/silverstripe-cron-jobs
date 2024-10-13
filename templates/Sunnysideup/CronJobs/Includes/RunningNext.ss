@@ -2,7 +2,9 @@
 <h2>Expectecd to run next</h2>
 <% if $CustomRunNext %>
 <p>
-    <strong>$CustomRunNext</strong> (manually loaded to run next).
+    <a href="/admin/site-updates/Sunnysideup-CronJobs-Model-Logs-Custom-SiteUpdateRunNext">
+        <strong>$CustomRunNext</strong> (manually loaded to run next).
+    </a>
 </p>
 <% else %>
 

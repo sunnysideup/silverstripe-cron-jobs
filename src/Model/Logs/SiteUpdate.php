@@ -19,6 +19,8 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
+use Sunnysideup\CronJobs\Forms\SiteUpdateDropdown;
+use Sunnysideup\CronJobs\Forms\SiteUpdateDropdownField;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdate
@@ -103,8 +105,11 @@ class SiteUpdate extends DataObject
     ];
 
     private static $searchable_fields = [
+        'RunnerClassName' => [
+            'field' => SiteUpdateDropdownField::class,
+            'filter' => 'ExactMatchFilter',
+        ],
         'Stopped' => 'ExactMatchFilter',
-        'Type' => 'PartialMatchFilter',
         'Status' => 'ExactMatchFilter',
         'HasErrors' => 'ExactMatchFilter',
     ];

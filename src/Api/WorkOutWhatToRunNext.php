@@ -9,18 +9,30 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 class WorkOutWhatToRunNext
 {
-    public static function get_recipes(): array
+    public static function get_recipes(?bool $includeCustom = false): array
     {
         $classes = ClassInfo::subClassesFor(SiteUpdateRecipeBaseClass::class, false);
         $array = [];
         foreach ($classes as $class) {
-            if ($class !== CustomRecipe::class) {
+            if ($class !== CustomRecipe::class || $includeCustom) {
                 $obj = $class::inst();
-                $array[$obj->getShortClassCode()] = $class;
+                $array[$class] = $obj;
             }
+        }
+
+        return $array;
+    }
+    public static function get_recipe_steps(): array
+    {
+        $classes = ClassInfo::subClassesFor(SiteUpdateRecipeStepBaseClass::class, false);
+        $array = [];
+        foreach ($classes as $class) {
+            $obj = $class::inst();
+            $array[$class] = $obj;
         }
 
         return $array;
@@ -30,10 +42,10 @@ class WorkOutWhatToRunNext
     {
         $classes = self::get_recipes();
         $candidates = [];
-        foreach ($classes as $class) {
-            $obj = $class::inst();
+
+        foreach ($classes as $obj) {
             if ($obj->canRunCalculated($verbose)) {
-                $candidates[$class] = $obj->overTimeSinceLastRun();
+                $candidates[$obj->ClassName] = $obj->overTimeSinceLastRun();
             }
         }
         // if any of them are over then return task that is over by the most
