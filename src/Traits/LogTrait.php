@@ -157,7 +157,7 @@ trait LogTrait
                     'Root.WhenDoesItRun',
                     [
                         ReadonlyField::create('CanRunNice', 'Can run right now?', $obj->CanRunNice()->NiceAndColourfull()),
-                        ReadonlyField::create('CurrentlyRunningNice', 'An instance is currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CurrentlyRunningNice', 'An instance is currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfullInvertedColours()),
                         ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
                         ReadonlyField::create('getExpectedMinimumEntriesPer24Hours', 'Expected minimum runs per 24 hours', round($obj->getExpectedMinimumEntriesPer24Hours(), 3)),
                         ReadonlyField::create('getExpectedMaximumEntriesPer24Hours', 'Expected maximum runs per 24 hours', round($obj->getExpectedMaximumEntriesPer24Hours(), 3)),

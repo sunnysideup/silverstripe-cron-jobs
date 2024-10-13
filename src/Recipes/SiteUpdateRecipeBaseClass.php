@@ -152,6 +152,7 @@ abstract class SiteUpdateRecipeBaseClass
         }
         $last24Hours = $this->listOfLogsForThisRecipeOrStep()->filter([
             'Status' => 'Completed',
+            'HasErrors' => false,
             'Created:GreaterThan' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $maxMultiplier).' hours')),
             'Created:LessThanOrEqual' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $minMultiplier).' hours')),
         ]);
