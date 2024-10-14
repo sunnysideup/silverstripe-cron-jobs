@@ -282,7 +282,7 @@ abstract class SiteUpdateRecipeBaseClass
         $diff = round(($nowTs - $lastRunTs) / 60);
         $over = $diff > $this->maxIntervalInMinutesBetweenRuns();
         if ($over > 0) {
-            return $over;
+            return $diff;
         }
         return 0;
     }
