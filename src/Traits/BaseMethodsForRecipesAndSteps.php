@@ -248,7 +248,7 @@ trait BaseMethodsForRecipesAndSteps
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list && $list->exists()) {
-            $filter = ['Status' => 'Started'];
+            $filter = ['Stopped' => false];
             if ($excludeMe && $this->log?->ID) {
                 $filter = $filter + ['ID' => $this->log->ID];
             }

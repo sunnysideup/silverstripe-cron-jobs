@@ -35,7 +35,8 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         $this->oldLogsDeleterInner(SiteUpdateNote::class);
         $this->oldLogsDeleterInner(SiteUpdateRunNext::class);
         $this->oldLogsDeleterInner(SiteUpdateStepNote::class);
-        $this->markBadSiteUpdatesAsStopped(SiteUpdateStepNote::class);
+        $this->markBadSiteUpdatesAsStopped();
+        $this->markStoppedUpdatesAsNotCompleted();
     }
 
     protected function oldLogsDeleterInner($className)
@@ -69,6 +70,24 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
                 $siteUpdate->Stopped = true;
                 $siteUpdate->Status = 'NotCompleted';
                 $siteUpdate->write();
+            }
+        }
+    }
+
+    protected function markStoppedUpdatesAsNotCompleted()
+    {
+        foreach ([SiteUpdate::class, SiteUpdateStep::class] as $className) {
+            $siteUpdates = $className::get()->filter(
+                [
+                    'Status' => 'Started',
+                    'Stopped' => true,
+                ]
+            );
+            if ($siteUpdates->exists()) {
+                foreach ($siteUpdates as $siteUpdate) {
+                    $siteUpdate->Status = 'NotCompleted';
+                    $siteUpdate->write();
+                }
             }
         }
     }
