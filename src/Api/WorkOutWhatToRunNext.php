@@ -55,6 +55,9 @@ class WorkOutWhatToRunNext
             $candidateKeys = array_keys($candidates);
             return array_pop($candidateKeys);
         }
+        if ($verbose) {
+            echo 'No recipes to run';
+        }
         return null;
     }
 
