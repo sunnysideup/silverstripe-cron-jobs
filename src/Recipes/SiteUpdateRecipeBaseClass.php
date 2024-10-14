@@ -107,6 +107,9 @@ abstract class SiteUpdateRecipeBaseClass
      */
     public function IsMeetingTarget(): bool
     {
+        if ($this->overTimeSinceLastRun() > 0) {
+            return false;
+        }
         $expectedMin = $this->getExpectedMinimumEntriesPer24Hours();
         $expectedMax = $this->getExpectedMaximumEntriesPer24Hours();
         $multiplier = 1;
