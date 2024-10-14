@@ -146,7 +146,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function LastCompletedNice(?bool $asTs = false): string|int
     {
-        return $this->LastCompleted(false);
+        return 'Last completed '.$this->LastCompleted(false);
     }
 
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
@@ -175,7 +175,7 @@ trait BaseMethodsForRecipesAndSteps
         }
     }
 
-    protected function listOfLogsForThisRecipeOrStep(): ?DataList
+    public function listOfLogsForThisRecipeOrStep(): ?DataList
     {
         $className = $this->getLogClassName();
         if ($className && class_exists($className)) {
@@ -222,7 +222,7 @@ trait BaseMethodsForRecipesAndSteps
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list) {
             return $list
-                ->filter(['Status' => ['NotCompleted']])
+                ->filter(['HasErrors' => true])
                 ->exists();
         }
 

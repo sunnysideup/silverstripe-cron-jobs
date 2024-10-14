@@ -18,9 +18,11 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
+use Sunnysideup\CronJobs\Api\SiteUpdatesToGraph;
 use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdown;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdownField;
+use Sunnysideup\CronJobs\View\Graph;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdate
@@ -200,6 +202,21 @@ class SiteUpdate extends DataObject
                     DBHTMLText::create_field('HTMLText', $steps)
                 )->performDisabledTransformation(),
 
+            ]
+        );
+        $graph = Injector::inst()->get(Graph::class);
+        $startDate = SiteUpdateStep::get()->min('Created');
+        $endDate = SiteUpdateStep::get()->max('Created');
+        $graph->setStartDate($startDate);
+        $graph->setEndDate($endDate);
+        $graph->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject()));
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                LiteralField::create(
+                    'SiteUpdateSteps',
+                    $graph->render()
+                ),
             ]
         );
 

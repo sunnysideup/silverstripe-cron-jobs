@@ -11,11 +11,13 @@ use SilverStripe\Admin\ModelAdmin;
 use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\ArrayList;
+use Sunnysideup\CronJobs\Api\SiteUpdatesToGraph;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Control\SiteUpdateController;
 use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
+use Sunnysideup\CronJobs\View\Graph;
 
 /**
  * Class \Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin
@@ -60,29 +62,25 @@ class SiteUpdatesAdmin extends ModelAdmin
         if ($this->modelClass === SiteUpdateConfig::class) {
             $fields = $form->Fields();
 
-            $runners = WorkOutWhatToRunNext::get_recipes();
             $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/Includes/CurrentlyRunning');
             $htmlLeft .= $this->renderWith('Sunnysideup/CronJobs/Includes/RunningNext');
             $htmlRight = '<h2>List of Site Update Recipes</h2>';
-            foreach ($runners as $obj) {
-                $lastRunHadErrorsSymbol = $obj->LastRunHadErrorsSymbol();
-                $htmlRight .= '
-                    <h3>
-                        <a href="'.$obj->CMSEditLink().'" target="_blank">'.$obj->getTitle().'</a>:
-                        '.$obj->getDescription().'.
-                        <br />'. $lastRunHadErrorsSymbol . 'Last completed: '.$obj->LastCompletedNice().'.
-                        <br />It is '.($obj->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets.
-                        <br /><a href="'.$obj->Link().'" target="_blank">Schedule now to run next</a>
-                    </h3>
-                    ';
-            }
 
+            $graph = Injector::inst()->get(Graph::class);
+            $graph->setStartDate(strtotime('-48 hours'));
+            $graph->setEndDate('now');
+            $graph->setSets(SiteUpdatesToGraph::create()->SiteUpdatesToGraphData());
+            $htmlRight .= $graph->render();
             $htmlRight .= '
                 <h3><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h3>';
+
             $fields->push(
                 LiteralField::create(
                     'CurrentlyRunning',
-                    '<div style="display: flex;flex-direction: row;justify-content: space-between;"><div>' . $htmlLeft . '</div><div>'. $htmlRight . '</div>'
+                    '<div style="display: flex;flex-direction: row;justify-content: space-between;">
+                        <div style="width: 200px">' . $htmlLeft . '</div>
+                        <div style="min-width: 1200px; overflow-x: auto;">'. $htmlRight . '</div>
+                    </div>'
                 )
             );
         }
