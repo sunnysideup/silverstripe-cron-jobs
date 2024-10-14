@@ -212,7 +212,8 @@ Currently Site Updates are
             <div class="stat-item"><strong>Maximum number of minutes between runs:</strong> <span>$MaxMinutesBetweenRunsNice</span></div>
             <div class="stat-item"><a href="$Link" class="button">▶ schedule now</a></div>
             <div class="stat-item"><strong>Has had Errors:</strong> <span>$HasHadErrorsNice</span></div>
-            <div class="stat-item"><strong>Can Run:</strong> <span>$CanRunNice</span></div>
+            <div class="stat-item"><strong>Can Run at All:</strong> <span>$CanRunNice</span></div>
+            <div class="stat-item"><strong>Can Run Now:</strong> <span>$CanRunCalculated</span></div>
             <div class="stat-item"><strong>Number of Logs:</strong> <span>$NumberOfLogs</span></div>
             <div class="stat-item"><strong>Last Started:</strong> <span>$LastStarted</span></div>
             <div class="stat-item"><strong>Last Completed:</strong> <span>$LastCompleted</span></div>
@@ -230,7 +231,8 @@ Currently Site Updates are
                         <% if $Description %><p>$Description</p><% end_if %>
                         <div class="stat-item"><a href="$Link" class="button">▶ schedule now</a></div>
                         <div class="stat-item"><strong>Has had Errors:</strong> <span>$HasHadErrorsNice</span></div>
-                        <div class="stat-item"><strong>Can Run:</strong> <span>$CanRunNice</span></div>
+                        <div class="stat-item"><strong>Can Run at All:</strong> <span>$CanRunNice</span></div>
+                        <div class="stat-item"><strong>Can Run Now:</strong> <span>$CanRunCalculated</span></div>
                         <div class="stat-item"><strong>Number of Logs:</strong> <span>$NumberOfLogs</span></div>
                         <div class="stat-item"><strong>Last Started:</strong> <span>$LastStarted</span></div>
                         <div class="stat-item"><strong>Last Completed:</strong> <span>$LastCompleted</span></div>
