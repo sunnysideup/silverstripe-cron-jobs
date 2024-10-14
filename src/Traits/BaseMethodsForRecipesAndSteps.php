@@ -443,6 +443,11 @@ trait BaseMethodsForRecipesAndSteps
         return DBBoolean::create_field('Boolean', $this->CanRun());
     }
 
+    public function CanRunCalculatedNice(): DBBoolean
+    {
+        return DBBoolean::create_field('Boolean', $this->CanRunCalculated(false));
+    }
+
     public static function my_child_links(): ArrayList
     {
         $array = ClassInfo::subclassesFor(static::class, false);
@@ -473,6 +478,7 @@ trait BaseMethodsForRecipesAndSteps
                 'CMSEditLink' => Director::absoluteURL($this->CMSEditLink() ?: '/admin/site-updates'),
                 'Description' => trim($this->getDescription()),
                 'CanRunNice' => $this->CanRunNice()->NiceAndColourfull(),
+                'CanRunCalculated' => $this->CanRunCalculatedNice()->NiceAndColourfull(),
                 'LastStarted' => $this->LastStarted(),
                 'LastCompleted' => $this->LastCompleted(),
                 'LastRunHadErrors' => $this->LastRunHadErrors(),
