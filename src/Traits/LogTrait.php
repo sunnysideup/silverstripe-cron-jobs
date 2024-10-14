@@ -156,9 +156,14 @@ trait LogTrait
                 $fields->addFieldsToTab(
                     'Root.WhenDoesItRun',
                     [
-                        ReadonlyField::create('CanRunNice', 'Can run right now?', $obj->CanRunNice()->NiceAndColourfull()),
+                        HeaderField::create('MostRecentRunInfo', 'Most recent run'),
+                        ReadonlyField::create('LastStarted', 'Started', $obj->LastStarted()),
+                        ReadonlyField::create('LastCompleted', 'Completed', $obj->LastCompleted()),
+                        ReadonlyField::create('CanRunNice', 'Can run at all?', $obj->CanRunNice()->NiceAndColourfull()),
+                        ReadonlyField::create('CanRunCalculatedNice', 'Can run right now?', $obj->CanRunCalculatedNice()->NiceAndColourfull()),
                         ReadonlyField::create('CurrentlyRunningNice', 'An instance is currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfullInvertedColours()),
                         ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
+                        ReadonlyField::create('OverDueMinutes', 'Minutes overdue to run again?', $obj->overTimeSinceLastRun()),
                         ReadonlyField::create('getExpectedMinimumEntriesPer24Hours', 'Expected minimum runs per 24 hours', round($obj->getExpectedMinimumEntriesPer24Hours(), 3)),
                         ReadonlyField::create('getExpectedMaximumEntriesPer24Hours', 'Expected maximum runs per 24 hours', round($obj->getExpectedMaximumEntriesPer24Hours(), 3)),
                         ReadonlyField::create('getActualEntriesPer', 'Actuals runs in last 24 hour cycle', $obj->getActualEntriesPer()),
@@ -173,9 +178,6 @@ trait LogTrait
                 'Root.Stats',
                 [
                     // $fields->dataFieldByName('TimeNice'),
-                    HeaderField::create('MostRecentRunInfo', 'Most recent run'),
-                    ReadonlyField::create('LastStarted', 'Started', $obj->LastStarted()),
-                    ReadonlyField::create('LastCompleted', 'Completed', $obj->LastCompleted()),
                     HeaderField::create('ErrorCounts', 'Errors'),
                     ReadonlyField::create('HasHadErrorsNice', 'Has had errors in any run?', $obj->HasHadErrorsNice()->NiceAndColourfullInvertedColours()),
                     ReadonlyField::create('LastRunHadErrorsNice', 'Most recent run had errors', $obj->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours()),
