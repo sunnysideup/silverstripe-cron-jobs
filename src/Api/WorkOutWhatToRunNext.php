@@ -43,9 +43,13 @@ class WorkOutWhatToRunNext
         $classes = self::get_recipes();
         $candidates = [];
 
-        foreach ($classes as $obj) {
+        foreach ($classes as $class => $obj) {
             if ($obj->canRunCalculated($verbose)) {
-                $candidates[$obj->ClassName] = $obj->overTimeSinceLastRun();
+                $candidates[$class] = $obj->overTimeSinceLastRun();
+            } else {
+                if ($verbose) {
+                    echo 'Skipping ' . $obj->getTitle() . ' as it cannot run';
+                }
             }
         }
         // if any of them are over then return task that is over by the most
