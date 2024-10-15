@@ -10,7 +10,7 @@ class SiteUpdatesToGraph
     use Injectable;
     use Configurable;
 
-    public function SiteUpdatesToGraphData(): array
+    public function SiteUpdatesToGraphData(?string $dateFilter = null): array
     {
         $data = [];
         foreach (WorkOutWhatToRunNext::get_recipes() as $recipe) {
@@ -27,18 +27,21 @@ class SiteUpdatesToGraph
             $title .= '<a href="'.$recipe->Link().'" target="_blank">Schedule now.</a>';
             $data[] = [
                 'Title' => $title,
-                'Times' => $this->SiteUpdateToGraphData($recipe),
+                'Times' => $this->SiteUpdateToGraphData($recipe, $dateFilter),
             ];
         }
 
         return $data;
     }
 
-    public function SiteUpdateToGraphData($recipe): array
+    public function SiteUpdateToGraphData($recipe, ?string $dateFilter = null): array
     {
         $data = [];
         $logs = $recipe->listOfLogsForThisRecipeOrStep();
         $logs = $logs->filter(['Stopped' => true]);
+        if ($dateFilter) {
+            $logs = $logs->filter(['Created:GreaterThanOrEqual' => date('Y-m-d H:i:s', strtotime($dateFilter))]);
+        }
         foreach ($logs as $log) {
             $data[] = [
                 'StartDateTime' => $log->Created,
