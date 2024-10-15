@@ -67,7 +67,7 @@ class SiteUpdatesAdmin extends ModelAdmin
             $htmlRight = '<h2>List of Site Update Recipes</h2>';
 
             $graph = Injector::inst()->get(Graph::class);
-            $graph->setStartDate(strtotime('-48 hours'));
+            $graph->setStartDate(strtotime('-24 hours'));
             $graph->setEndDate('now');
             $graph->setSets(SiteUpdatesToGraph::create()->SiteUpdatesToGraphData());
             $htmlRight .= $graph->render();
@@ -77,9 +77,9 @@ class SiteUpdatesAdmin extends ModelAdmin
             $fields->push(
                 LiteralField::create(
                     'CurrentlyRunning',
-                    '<div style="display: flex;flex-direction: row;justify-content: space-between;">
-                        <div style="width: 200px">' . $htmlLeft . '</div>
-                        <div style="min-width: 1200px; overflow-x: auto;">'. $htmlRight . '</div>
+                    '<div style="display: flex; flex-direction: row; justify-content: space-between; flex-wrap: wrap;">
+                        <div style="min-width: 200px">' . $htmlLeft . '</div>
+                        <div style="min-width: 1440px; overflow-x: auto;">'. $htmlRight . '</div>
                     </div>'
                 )
             );
