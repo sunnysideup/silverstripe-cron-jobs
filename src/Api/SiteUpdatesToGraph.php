@@ -16,13 +16,13 @@ class SiteUpdatesToGraph
         foreach (WorkOutWhatToRunNext::get_recipes() as $recipe) {
             $lastRunHadErrorsSymbol = $recipe->LastRunHadErrorsSymbol();
             if ($recipe->CMSEditLink()) {
-                $title = $recipe->getTitle().': '.$recipe->getDescription().'.  No current records. ';
-            } else {
                 $title = '
                 <a href="'.$recipe->CMSEditLink().'" target="_blank">'.$recipe->getTitle().'</a>: ' .
                 $recipe->getDescription().'. ' .
-                 $lastRunHadErrorsSymbol . ''.$recipe->LastCompletedNice().'. '.
+                $lastRunHadErrorsSymbol . ''.$recipe->LastCompletedNice().'. '.
                 'It is '.($recipe->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets. ';
+            } else {
+                $title = $recipe->getTitle().': '.$recipe->getDescription().'.  No current records. ';
             }
             $title .= '<a href="'.$recipe->Link().'" target="_blank">Schedule now.</a>';
             $data[] = [
@@ -44,6 +44,7 @@ class SiteUpdatesToGraph
                 'StartDateTime' => $log->Created,
                 'DurationInMinutes' => $log->TimeTaken / 60,
                 'Class' => $log->HasErrors ? 'cron-job-graph-bad' : 'cron-job-graph-good',
+                'Title' => $log->CreatedNice() . ' - ' . $log->TimeTakenNice()
             ];
         }
 
