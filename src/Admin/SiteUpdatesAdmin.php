@@ -64,7 +64,7 @@ class SiteUpdatesAdmin extends ModelAdmin
 
             $htmlLeft = $this->renderWith('Sunnysideup/CronJobs/Includes/CurrentlyRunning');
             $htmlLeft .= $this->renderWith('Sunnysideup/CronJobs/Includes/RunningNext');
-            $htmlRight = '<h2>List of Site Update Recipes</h2>';
+            $htmlRight = '<h2>History</h2>';
 
             $htmlRight .= Injector::inst()->get(Graph::class)
                 ->setStartDate(strtotime('-24 hours'))
