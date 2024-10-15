@@ -22,16 +22,26 @@ class Graph extends ViewableData
 
     protected int $startDate;
     protected int $endDate;
+    protected string $title;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->sets = [];
+        $this->startDate = strtotime($this->Config()->get('default_start_date'));
+        $this->endDate = strtotime($this->Config()->get('default_end_date'));
+    }
 
     public function render(): string
     {
-        if (!isset($this->startDate)) {
-            $this->startDate = strtotime($this->config()->get('default_start_date'));
-        }
-        if (!isset($this->endDate)) {
-            $this->endDate = strtotime($this->config()->get('default_end_date'));
-        }
         return $this->renderWith(static::class);
+    }
+
+    public function setTitle(string $title): self
+    {
+        $this->title = $title;
+
+        return $this;
     }
 
     /**
@@ -180,6 +190,9 @@ class Graph extends ViewableData
 
     public function Title(): string
     {
+        if (isset($this->title)) {
+            return $this->title;
+        }
         return 'Activity between ' . date('d-m-Y, H:i', $this->startDate) . ' AND ' . date('d-m-Y, H:i', $this->endDate);
     }
 }
