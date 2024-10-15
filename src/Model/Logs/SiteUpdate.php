@@ -204,18 +204,27 @@ class SiteUpdate extends DataObject
 
             ]
         );
-        $graph = Injector::inst()->get(Graph::class);
         $startDate = SiteUpdateStep::get()->min('Created');
         $endDate = SiteUpdateStep::get()->max('Created');
-        $graph->setStartDate($startDate);
-        $graph->setEndDate($endDate);
-        $graph->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject()));
         $fields->addFieldsToTab(
             'Root.Main',
             [
                 LiteralField::create(
-                    'SiteUpdateSteps',
-                    $graph->render()
+                    'ActivityGraphAllTime',
+                    Injector::inst()->get(Graph::class)
+                        ->setStartDate($startDate)
+                        ->setEndDate($endDate)
+                        ->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject()))
+                        ->render()
+                ),
+                LiteralField::create(
+                    'ActivityGraph24Hours',
+                    Injector::inst()->get(Graph::class)
+                        ->setStartDate('-24 hours')
+                        ->setEndDate('now')
+                        ->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject(), '-24 hours'))
+                        ->setTitle('Activity in the last 24 hours')
+                        ->render()
                 ),
             ]
         );
