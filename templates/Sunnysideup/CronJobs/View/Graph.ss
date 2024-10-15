@@ -21,10 +21,8 @@
         border-radius: 5px;
     }
     .cron-job-graph-graph {
-        width: 100%;
         position: relative;
-        min-width: 1440px!important;
-        overflow-x: auto;
+        overflow-x: visible;
     }
     .cron-job-graph-graph .cron-job-graph-title {
         font-weight: bold;
@@ -43,7 +41,6 @@
 
     .cron-job-graph-graph .cron-job-graph-content {
         background-color: #fff;
-        padding: 2px 7px ;
         overflow: hidden;
     }
     .cron-job-graph-graph .cron-job-graph-content,
