@@ -133,9 +133,9 @@ class Graph extends ViewableData
             $heighPerSetInPercent = ($heighPerSet / $totalHeight) * 100;
             foreach ($times as $time) {
                 $start = $time['StartDateTime'];
-                $duration = $time['DurationInMinutes'];
+                $duration = $time['DurationInMinutes'] * 60;
                 $class = $time['Class'];
-                $title = $time['Title'];
+                $attributeTitle = $time['Title'];
                 $absoluteStart = strtotime($start);
                 $absoluteEnd = $absoluteStart + $duration;
                 if ($absoluteStart < $this->startDate) {
@@ -150,13 +150,13 @@ class Graph extends ViewableData
                 $width = (($relativeEnd - $relativeStart) / $span) * 100;
                 $al->push(
                     ArrayData::create([
-                        'Top' => $top,
-                        'Left' => $left,
-                        'Width' => $width,
-                        'Height' => $heighPerSetInPercent,
+                        'Top' => round($top, 5),
+                        'Left' => round($left, 5),
+                        'Width' => round($width, 5),
+                        'Height' => round($heighPerSetInPercent * 0.7, 5),
                         'Class' => $class,
                         'Content' => null,
-                        'Title' => Convert::raw2att($title),
+                        'Title' => Convert::raw2att($attributeTitle),
                     ])
                 );
             }

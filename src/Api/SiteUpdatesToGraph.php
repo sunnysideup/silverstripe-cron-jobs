@@ -46,8 +46,8 @@ class SiteUpdatesToGraph
             $data[] = [
                 'StartDateTime' => $log->Created,
                 'DurationInMinutes' => $log->TimeTaken / 60,
-                'Class' => $log->HasErrors ? 'cron-job-graph-bad' : 'cron-job-graph-good',
-                'Title' => $log->Created . ' - ' . $log->getTimeNice()
+                'Class' => ($log->HasErrors ? 'cron-job-graph-bad' : 'cron-job-graph-good').' cron-job-graph-item',
+                'Title' => $log->getCreatedNice() . ' - ' . $log->getTimeNice()
             ];
         }
 

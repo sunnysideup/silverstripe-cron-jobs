@@ -65,6 +65,11 @@ trait LogTrait
         return $this->secondsToTime($this->TimeTaken);
     }
 
+    public function getCreatedNice(): string
+    {
+        return date('d M H:i', strtotime($this->Created));
+    }
+
     public function getGroup(): string
     {
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */

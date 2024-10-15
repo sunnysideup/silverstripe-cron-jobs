@@ -211,19 +211,29 @@ class SiteUpdate extends DataObject
             [
                 LiteralField::create(
                     'ActivityGraphAllTime',
-                    Injector::inst()->get(Graph::class)
+                    Injector::inst()->create(Graph::class)
                         ->setStartDate($startDate)
                         ->setEndDate($endDate)
                         ->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject()))
+                        ->setTitle('Activity over time')
                         ->render()
                 ),
                 LiteralField::create(
                     'ActivityGraph24Hours',
-                    Injector::inst()->get(Graph::class)
+                    Injector::inst()->create(Graph::class)
                         ->setStartDate('-24 hours')
                         ->setEndDate('now')
                         ->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject(), '-24 hours'))
                         ->setTitle('Activity in the last 24 hours')
+                        ->render()
+                ),
+                LiteralField::create(
+                    'ActivityGraphLastThreeHours',
+                    Injector::inst()->create(Graph::class)
+                        ->setStartDate('-3 hours')
+                        ->setEndDate('now')
+                        ->addSet($this->getTitle(), SiteUpdatesToGraph::create()->SiteUpdateToGraphData($this->getRunnerObject(), '-24 hours'))
+                        ->setTitle('Activity in the last 3 hours')
                         ->render()
                 ),
             ]
