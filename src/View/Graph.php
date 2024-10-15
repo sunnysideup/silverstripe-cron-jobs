@@ -3,6 +3,7 @@
 namespace Sunnysideup\CronJobs\View;
 
 use Respect\Validation\Rules\Unique;
+use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -39,17 +40,17 @@ class Graph extends ViewableData
      *     [
      *         'Title' => 'MyTitle A',
      *         'Times' => [
-     *             ['StartDateTime' => '2020-01-01 00:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
-     *             ['StartDateTime' => '2020-01-01 10:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
-     *             ['StartDateTime' => '2020-01-01 20:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
+     *             ['StartDateTime' => '2020-01-01 00:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
+     *             ['StartDateTime' => '2020-01-01 10:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
+     *             ['StartDateTime' => '2020-01-01 20:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
      *         ],
      *     ],
      *     [
      *         'Title' => 'MyTitle B',
      *         'Times' => [
-     *             ['StartDateTime' => '2020-01-01 00:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
-     *             ['StartDateTime' => '2020-01-01 10:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
-     *             ['StartDateTime' => '2020-01-01 20:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
+     *             ['StartDateTime' => '2020-01-01 00:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
+     *             ['StartDateTime' => '2020-01-01 10:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
+     *             ['StartDateTime' => '2020-01-01 20:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
      *         ],
      *     ],
      * ```
@@ -67,9 +68,9 @@ class Graph extends ViewableData
     /**
      * A set needs to be provided like this:
      * ```php
-     *             ['StartDateTime' => '2020-01-01 00:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
-     *             ['StartDateTime' => '2020-01-01 10:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
-     *             ['StartDateTime' => '2020-01-01 20:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000',]
+     *             ['StartDateTime' => '2020-01-01 00:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
+     *             ['StartDateTime' => '2020-01-01 10:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
+     *             ['StartDateTime' => '2020-01-01 20:00:00', 'DurationInMinutes' => 3600, 'Colour => '#ff0000', 'Title' => 'Hello Mouse Over',],
      * ```
      * @param string $title
      * @param array $set
@@ -124,6 +125,7 @@ class Graph extends ViewableData
                 $start = $time['StartDateTime'];
                 $duration = $time['DurationInMinutes'];
                 $class = $time['Class'];
+                $title = $time['Title'];
                 $absoluteStart = strtotime($start);
                 $absoluteEnd = $absoluteStart + $duration;
                 if ($absoluteStart < $this->startDate) {
@@ -144,6 +146,7 @@ class Graph extends ViewableData
                         'Height' => $heighPerSetInPercent,
                         'Class' => $class,
                         'Content' => null,
+                        'Title' => Convert::raw2att($title),
                     ])
                 );
             }
@@ -155,6 +158,7 @@ class Graph extends ViewableData
                     'Height' => $heighPerSetInPercent,
                     'Class' => 'cron-job-graph-title',
                     'Content' => $title instanceof DBHTMLText ? $title : DBHTMLText::create_field('HTMLText', $title),
+                    'Title' => null,
                 ])
             );
             $height += $heighPerSet + $topBottomMargin;
