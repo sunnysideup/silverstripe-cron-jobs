@@ -153,7 +153,7 @@ class Graph extends ViewableData
                         'Top' => round($top, 5),
                         'Left' => round($left, 5),
                         'Width' => round($width, 5),
-                        'Height' => round($heighPerSetInPercent * 0.7, 5),
+                        'Height' => round($heighPerSetInPercent * 0.6, 5),
                         'Class' => $class,
                         'Content' => null,
                         'Title' => Convert::raw2att($attributeTitle),
