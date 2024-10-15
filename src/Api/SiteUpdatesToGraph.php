@@ -47,7 +47,7 @@ class SiteUpdatesToGraph
                 'StartDateTime' => $log->Created,
                 'DurationInMinutes' => $log->TimeTaken / 60,
                 'Class' => $log->HasErrors ? 'cron-job-graph-bad' : 'cron-job-graph-good',
-                'Title' => $log->CreatedNice() . ' - ' . $log->TimeTakenNice()
+                'Title' => $log->Created . ' - ' . $log->getTimeNice()
             ];
         }
 
