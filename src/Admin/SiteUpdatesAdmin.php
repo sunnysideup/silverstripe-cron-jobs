@@ -66,11 +66,12 @@ class SiteUpdatesAdmin extends ModelAdmin
             $htmlLeft .= $this->renderWith('Sunnysideup/CronJobs/Includes/RunningNext');
             $htmlRight = '<h2>List of Site Update Recipes</h2>';
 
-            $graph = Injector::inst()->get(Graph::class);
-            $graph->setStartDate(strtotime('-24 hours'));
-            $graph->setEndDate('now');
-            $graph->setSets(SiteUpdatesToGraph::create()->SiteUpdatesToGraphData());
-            $htmlRight .= $graph->render();
+            $htmlRight .= Injector::inst()->get(Graph::class)
+                ->setStartDate(strtotime('-24 hours'))
+                ->setEndDate('now')
+                ->setTitle('Activity in the last 24 hours')
+                ->setSets(SiteUpdatesToGraph::create()->SiteUpdatesToGraphData('-24 hours'))
+                ->render();
             $htmlRight .= '
                 <h3><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h3>';
 
