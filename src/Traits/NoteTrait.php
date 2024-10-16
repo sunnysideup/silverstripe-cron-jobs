@@ -9,8 +9,17 @@ use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
 trait NoteTrait
 {
     private static $default_sort = [
-            'ID' => 'DESC',
-        ];
+        'ID' => 'DESC',
+    ];
+
+    private static $casting = [
+        'Title' => 'Varchar',
+    ];
+
+    public function getTitle()
+    {
+        return substr((string) $this->Message, 0, 49) . '...';
+    }
 
     public function canCreate($member = null, $context = [])
     {
@@ -36,6 +45,8 @@ trait NoteTrait
                 ReadonlyField::create('Created', 'When did this error occur?'),
             ]
         );
+        $fields->removeByName('Title');
+        $fields->dataFieldByName('Important')->setTitle('Is this an key error?');
 
         //...
 
@@ -51,7 +62,6 @@ trait NoteTrait
     {
         parent::onBeforeWrite();
         $this->Message = strip_tags((string) $this->Message);
-        $this->Title = substr((string) $this->Message, 0, 49);
     }
 
 
