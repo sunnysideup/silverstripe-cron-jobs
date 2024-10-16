@@ -19,6 +19,7 @@
         border: 1px solid #ccc;
         background-color: #fff;
         border-radius: 5px;
+        overflow: hidden;
     }
     .cron-job-graph-graph {
         position: relative;
