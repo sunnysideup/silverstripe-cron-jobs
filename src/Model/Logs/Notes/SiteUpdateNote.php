@@ -11,7 +11,7 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Traits\NoteTrait;
 
 /**
- * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStepNote
+ * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateNote
  *
  * @property string $Type
  * @property string $Title
@@ -25,14 +25,13 @@ class SiteUpdateNote extends DataObject
 
     private static $table_name = 'SiteUpdateNote';
 
-    private static $singular_name = 'Recipe Error';
+    private static $singular_name = 'Recipe Note';
 
-    private static $plural_name = 'Recipe Errors';
+    private static $plural_name = 'Recipe Notes';
 
     private static $db = [
         'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
         'Important' => 'Boolean',
-        'Title' => 'Varchar(50)',
         'Message' => 'Text',
     ];
 
@@ -47,10 +46,11 @@ class SiteUpdateNote extends DataObject
         'Title' => 'Subject',
     ];
 
-
     public function ParentRel(): string
     {
         return 'SiteUpdate';
     }
+
+
 
 }
