@@ -24,13 +24,12 @@ class SiteUpdateStepNote extends DataObject
 
     private static $table_name = 'SiteUpdateStepNote';
 
-    private static $singular_name = 'Step Error';
+    private static $singular_name = 'Step Note';
 
-    private static $plural_name = 'Step Errors';
+    private static $plural_name = 'Step Notes';
 
     private static $db = [
         'Type' => 'Enum("Success,Warning,ERROR","ERROR")',
-        'Title' => 'Varchar(50)',
         'Important' => 'Boolean',
         'Message' => 'Text',
     ];
