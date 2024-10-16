@@ -80,7 +80,7 @@ class SiteUpdatesAdmin extends ModelAdmin
                     'CurrentlyRunning',
                     '<div style="display: flex; flex-direction: row; justify-content: space-between; flex-wrap: wrap;">
                         <div style="min-width: 200px">' . $htmlLeft . '</div>
-                        <div style="min-width: 1440px; overflow-x: auto;">'. $htmlRight . '</div>
+                        <div style="min-width: 1440px; width: 100%; overflow-x: auto;">'. $htmlRight . '</div>
                     </div>'
                 )
             );
