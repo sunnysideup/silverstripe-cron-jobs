@@ -156,7 +156,7 @@ class SiteUpdate extends DataObject
             $allSteps = $runnerObject->SubLinks(true);
             $steps = '<ul>';
             $number = 0;
-            foreach ($allSteps as $count => $step) {
+            foreach ($allSteps as $step) {
                 if ($step->canRun() === false) {
                     continue;
                 }
