@@ -73,6 +73,11 @@ class SiteUpdateRunNext extends DataObject
         return $fields;
     }
 
+    public function canCreate($member = null, $context = [])
+    {
+        return false;
+    }
+
     public function canEdit($member = null)
     {
         return false;
@@ -81,23 +86,28 @@ class SiteUpdateRunNext extends DataObject
     public function getTitle()
     {
         $object = $this->getRunnerObject();
+        if (! $object) {
+            return 'ERROR: RunnerClassName not found';
+        }
         return $object->getTitle();
     }
 
     public function getDescription()
     {
         $object = $this->getRunnerObject();
+        if (! $object) {
+            return 'ERROR: RunnerClassName not found';
+        }
         return $object->getDescription();
     }
 
     public function getRunnerObject()
     {
         $className = $this->RunnerClassName;
-        if($this->RecipeOrStep === 'Step') {
-            return $className::inst();
-        } else {
+        if ($className && class_exists((string) $className)) {
             return $className::inst();
         }
+        return null;
     }
 
     public function CMSEditLink(): string

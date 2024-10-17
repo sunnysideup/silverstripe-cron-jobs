@@ -41,7 +41,7 @@ abstract class SiteUpdateRecipeBaseClass
 
     abstract public function maxIntervalInMinutesBetweenRuns(): int;
 
-    abstract protected function runEvenIfUpdatesAreStopped(): bool;
+    abstract public function runEvenIfUpdatesAreStopped(): bool;
     /**
      * @var mixed[]
      */

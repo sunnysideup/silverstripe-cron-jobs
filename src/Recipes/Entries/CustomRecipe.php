@@ -75,7 +75,7 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
         return true;
     }
 
-    protected function runEvenIfUpdatesAreStopped(): bool
+    public function runEvenIfUpdatesAreStopped(): bool
     {
         return true;
     }

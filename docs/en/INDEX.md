@@ -60,7 +60,7 @@ class MySiteUpdateRecipe extends SiteUpdateRecipeBaseClass
         return 60;
     }
 
-    protected function runEvenIfUpdatesAreStopped(): bool
+    public function runEvenIfUpdatesAreStopped(): bool
     {
         return false;
     }
