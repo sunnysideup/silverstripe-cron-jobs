@@ -42,13 +42,11 @@ trait BaseMethodsForRecipesAndSteps
     {
         $obj = self::inst();
         $recipeOrStep = 'Step';
-        $isRecipe = false;
 
         if ($obj instanceof SiteUpdateRecipeStepBaseClass) {
             // all set
         } elseif ($obj instanceof SiteUpdateRecipeBaseClass) {
             $recipeOrStep = 'Recipe';
-            $isRecipe = true;
         }
 
         $obj = SiteUpdateRunNext::create([
@@ -56,21 +54,6 @@ trait BaseMethodsForRecipesAndSteps
             'RunnerClassName' => get_class($obj),
         ]);
         $obj->write();
-
-        $runItNow = '';
-        if (false === $isRecipe) {
-            $runItNow = 'Or run it now by browsing to: <a href="/dev/tasks/site-update-run">dev/tasks/site-update-run</a>.<br />';
-        }
-
-        return
-            '<strong>' . $obj->getTitle() . '</strong> will run soon.<br />
-            To run it straight away, please run (on the command line): <br />
-            <pre>
-            vendor/bin/sake dev/tasks/site-update-run
-            </pre>
-            ' . $runItNow . '
-            <br />To stop it, please delete: <a href="' . $obj->CMSEditLink() . '">the update record</a>.
-        ';
     }
 
 
