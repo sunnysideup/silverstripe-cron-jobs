@@ -79,16 +79,14 @@ class SiteUpdateController extends Controller
 
     public function runstep($request)
     {
-        $this->content = $this->runClassFromRequest($request);
-
-        return [];
+        $this->runClassFromRequest($request);
+        return $this->redirectBack();
     }
 
     public function runrecipe($request)
     {
         $this->content = $this->runClassFromRequest($request);
-
-        return [];
+        return $this->redirectBack();
     }
 
     public function stopsiteupdates($request)
@@ -160,7 +158,7 @@ class SiteUpdateController extends Controller
 
     public static function running_next(): string
     {
-        $recipe = WorkOutWhatToRunNext::get_next_recipe_to_run();
+        $recipe = WorkOutWhatToRunNext::get_next_recipe_to_run(false);
         if ($recipe) {
             return $recipe::inst()->getTitle();
         }
