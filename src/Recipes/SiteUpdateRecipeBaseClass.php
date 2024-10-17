@@ -207,7 +207,7 @@ abstract class SiteUpdateRecipeBaseClass
     public function SubLinks(?bool $all = false): ?ArrayList
     {
         $al = ArrayList::create();
-        foreach (static::STEPS as $className) {
+        foreach ($this->getSteps() as $className) {
             $obj = Injector::inst()->get($className);
             if ($obj->canRun() || $all) {
                 $al->push($obj);
