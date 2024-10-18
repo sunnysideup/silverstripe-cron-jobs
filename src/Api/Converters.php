@@ -10,8 +10,10 @@ class Converters
     public function SecondsToTime(int $seconds): string
     {
         $timeUnits = [
-            'day' => 86400, // 24 * 60 * 60
-            'hour' => 3600, // 60 * 60
+            'month' => 86400 * 30.5,
+            'week' => 86400 * 7,
+            'day' => 86400,
+            'hour' => 3600,
             'minute' => 60,
             'second' => 1
         ];

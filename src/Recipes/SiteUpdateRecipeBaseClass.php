@@ -3,6 +3,7 @@
 namespace Sunnysideup\CronJobs\Recipes;
 
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Convert;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
@@ -14,6 +15,7 @@ use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBBoolean;
+use Sunnysideup\CronJobs\Api\Converters;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
@@ -35,6 +37,7 @@ abstract class SiteUpdateRecipeBaseClass
     abstract public function canRun(): bool;
 
     abstract public function canRunHoursOfTheDay(): array;
+
     abstract public function canRunAtTheSameTimeAsOtherRecipes(): bool;
 
     abstract public function minIntervalInMinutesBetweenRuns(): int;
@@ -113,24 +116,10 @@ abstract class SiteUpdateRecipeBaseClass
         $expectedMin = $this->getExpectedMinimumEntriesPer24Hours();
         $expectedMax = $this->getExpectedMaximumEntriesPer24Hours();
         $multiplier = 1;
-        if ($expectedMin < 1) {
+        while ($expectedMin > 0 && $expectedMin < 1) {
             // one week
-            $multiplier = $multiplier * 7;
-            $expected = $expectedMin * $multiplier;
-            if ($expected < 1) {
-                // one month
-                $multiplier = $multiplier * 4.3;
-                $expected = $expectedMin * $multiplier;
-                if ($expected < 1) {
-                    // six months
-                    $multiplier = $multiplier * 6;
-                    $expected = $expectedMin * $multiplier;
-                    if ($expected < 1) {
-                        $multiplier = $multiplier * 2;
-                        $expected = $expectedMin * $multiplier;
-                    }
-                }
-            }
+            $multiplier++;
+            $expectedMin = $expectedMin * $multiplier;
         }
         $expectedMax = $expectedMax * $multiplier;
         $test = $this->getActualEntriesPer(round($multiplier));
@@ -163,43 +152,86 @@ abstract class SiteUpdateRecipeBaseClass
     }
     public function getExpectedMinimumEntriesPer24Hours(): float
     {
-        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMinimumEntriesPerHour');
+        // note that we turn min and max around here!
+        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('min');
     }
 
     public function getExpectedMaximumEntriesPer24Hours(): float
     {
-        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('getExpectedMaximumEntriesPerHour');
+        return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('max');
     }
 
+    protected $expectedMinimumOrMaximumEntriesPer24HoursCache = [];
 
-    protected function getExpectedMinimumOrMaximumEntriesPer24Hours(string $methodName): float
+    protected function getExpectedMinimumOrMaximumEntriesPer24Hours(string $minOrMax): float
     {
-        $hoursOfTheDay = $this->canRunHoursOfTheDay();
-        $sum = 0;
-        for ($i = 0; $i < 24; $i++) {
-            if (in_array($i, $hoursOfTheDay) || count($hoursOfTheDay) === 0) {
-                $sum += $this->$methodName();
+        if (empty($this->expectedMinimumOrMaximumEntriesPer24HoursCache)) {
+            $hoursOfTheDay = $this->canRunHoursOfTheDay();
+
+            // Sort the allowed hours to process them in order
+            sort($hoursOfTheDay);
+
+            if (empty($hoursOfTheDay)) {
+                // If no specific hours are defined, assume the job can run anytime
+                $hoursOfTheDay = range(0, 23); // Full 24 hours
             }
+
+
+            // Get the interval in hours between runs from the respective methods
+            $minHoursBetweenRuns = $this->getExpectedMinimumHoursBetweenRuns();
+            $maxHoursBetweenRuns = $this->getExpectedMaximumHoursBetweenRuns();
+            // Initialize counters for min and max runs
+            $minRuns = 0;
+            $maxRuns = 0;
+            $testHour = 0;
+            $runTimeMin = 0;
+            $runTimeMax = 0;
+
+            // Iterate through a 24-hour period to determine potential run times
+            while ($minRuns < 1 || $testHour < 24) {
+                if (in_array($testHour, $hoursOfTheDay)) {
+                    $endOfTestHour = $testHour + 1;
+                    while ($runTimeMin < $endOfTestHour) {
+                        if ($runTimeMin >= $testHour) {
+                            $minRuns++;
+                        }
+                        $runTimeMin += $maxHoursBetweenRuns;
+                    }
+
+                    while ($runTimeMax < $endOfTestHour) {
+                        if ($runTimeMax >= $testHour) {
+                            $maxRuns++;
+                        }
+                        $runTimeMax += $minHoursBetweenRuns;
+                    }
+                }
+                $testHour++;
+            }
+
+            // Normalize the runs to a per-24-hour scale (since we're iterating through each hour as a starting point)
+            // return $testHour;
+            $divider = $testHour / 24;
+            $minRuns = $minRuns / $divider;
+            $maxRuns = $maxRuns / $divider;
+
+            $this->expectedMinimumOrMaximumEntriesPer24HoursCache = [
+                'min' => $minRuns,
+                'max' => $maxRuns,
+            ];
         }
-        return $sum;
+
+        return $this->expectedMinimumOrMaximumEntriesPer24HoursCache[$minOrMax];
+
     }
 
-    public function getExpectedMinimumEntriesPerHour(): float
+    public function getExpectedMinimumHoursBetweenRuns(): float
     {
-        $max = $this->maxIntervalInMinutesBetweenRuns();
-        if ($max === 0) {
-            return 0;
-        }
-        return 60 / $max;
+        return $this->minIntervalInMinutesBetweenRuns() / 60;
     }
 
-    public function getExpectedMaximumEntriesPerHour(): float
+    public function getExpectedMaximumHoursBetweenRuns(): float
     {
-        $min = $this->minIntervalInMinutesBetweenRuns();
-        if ($min === 0) {
-            return 0;
-        }
-        return 60 / $min;
+        return $this->maxIntervalInMinutesBetweenRuns() / 60;
     }
 
 
@@ -275,6 +307,10 @@ abstract class SiteUpdateRecipeBaseClass
         return false;
     }
 
+    public function overTimeSinceLastRunNice(): string
+    {
+        return $this->secondsToTime($this->overTimeSinceLastRun() * 60);
+    }
     public function overTimeSinceLastRun(): int
     {
         $lastRunTs = $this->LastCompleted(true);
@@ -435,6 +471,11 @@ abstract class SiteUpdateRecipeBaseClass
     protected function areUpdatesRunningAtAll(): bool
     {
         return $this->runEvenIfUpdatesAreStopped() || false === (bool) SiteUpdateConfig::inst()->StopSiteUpdates;
+    }
+
+    protected function secondsToTime(int $seconds): string
+    {
+        return Injector::inst()->get(Converters::class)->secondsToTime($seconds);
     }
 
 }

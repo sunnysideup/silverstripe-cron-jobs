@@ -37,7 +37,7 @@
         background-color: var(--success, #008a00);
     }
     .cron-job-graph-graph .cron-job-graph-bad {
-        background-color: var(--danger, #da273b;);
+        background-color: var(--danger, #da273b);
     }
 
     .cron-job-graph-graph .cron-job-graph-content {

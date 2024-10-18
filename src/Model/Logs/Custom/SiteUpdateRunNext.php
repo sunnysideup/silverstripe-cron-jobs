@@ -70,6 +70,12 @@ class SiteUpdateRunNext extends DataObject
                 ReadonlyField::create('Description', 'Description'),
             ]
         );
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                ReadonlyField::create('CreatedNice', 'Lodged', $this->dbObject('Created')->Ago()),
+            ]
+        );
         return $fields;
     }
 

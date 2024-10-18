@@ -164,7 +164,7 @@ class Graph extends ViewableData
                 ArrayData::create([
                     'Top' => $top,
                     'Left' => 0,
-                    'Width' => 100,
+                    'Width' => 100.1,
                     'Height' => $heighPerSetInPercent,
                     'Class' => 'cron-job-graph-title',
                     'Content' => $title instanceof DBHTMLText ? $title : DBHTMLText::create_field('HTMLText', $title),
