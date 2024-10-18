@@ -123,7 +123,7 @@ abstract class SiteUpdateRecipeBaseClass
         }
         $expectedMax = $expectedMax * $multiplier;
         $test = $this->getActualEntriesPer(round($multiplier));
-        return $test > $expectedMin && $test < $expectedMax;
+        return $test >= $expectedMin;
     }
 
     public function IsMeetingTargetNice(): DBBoolean
