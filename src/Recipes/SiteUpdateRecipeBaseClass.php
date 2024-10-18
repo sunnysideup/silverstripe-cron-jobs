@@ -180,9 +180,10 @@ abstract class SiteUpdateRecipeBaseClass
             // Get the interval in hours between runs from the respective methods
             $minHoursBetweenRuns = $this->getExpectedMinimumHoursBetweenRuns();
             $maxHoursBetweenRuns = $this->getExpectedMaximumHoursBetweenRuns();
-            // Initialize counters for min and max runs
-            $minRuns = 0;
-            $maxRuns = 0;
+            // max to min on purpose.
+            $minRuns = $maxHoursBetweenRuns;
+            // min to max on purpose.
+            $maxRuns = $minHoursBetweenRuns;
             $testHour = 0;
             $runTimeMin = 0;
             $runTimeMax = 0;
@@ -195,6 +196,7 @@ abstract class SiteUpdateRecipeBaseClass
                         if ($runTimeMin >= $testHour) {
                             $minRuns++;
                         }
+                        // max to min on purpose.
                         $runTimeMin += $maxHoursBetweenRuns;
                     }
 
@@ -202,6 +204,7 @@ abstract class SiteUpdateRecipeBaseClass
                         if ($runTimeMax >= $testHour) {
                             $maxRuns++;
                         }
+                        // min to max on purpose.
                         $runTimeMax += $minHoursBetweenRuns;
                     }
                 }
