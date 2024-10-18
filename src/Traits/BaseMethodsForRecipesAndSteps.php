@@ -192,8 +192,9 @@ trait BaseMethodsForRecipesAndSteps
 
     public function LastRunHadErrorsSymbol(): string
     {
-        return $this->LastRunHadErrors() ? '❌' : '✓';
+        return $this->getSymbolForBoolean(!$this->LastRunHadErrors());
     }
+
 
     public function LastRunHadErrorsNice(): DBBoolean
     {
@@ -210,6 +211,16 @@ trait BaseMethodsForRecipesAndSteps
         }
 
         return false;
+    }
+
+    public function IsMeetingTargetSymbol(): string
+    {
+        return $this->getSymbolForBoolean($this->IsMeetingTarget());
+    }
+
+    protected function getSymbolForBoolean(bool $boolean): string
+    {
+        return $boolean ? '✓' : '❌';
     }
 
     public function HasHadErrorsNice(): DBBoolean

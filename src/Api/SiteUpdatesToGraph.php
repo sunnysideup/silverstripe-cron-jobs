@@ -14,13 +14,12 @@ class SiteUpdatesToGraph
     {
         $data = [];
         foreach (WorkOutWhatToRunNext::get_recipes() as $recipe) {
-            $lastRunHadErrorsSymbol = $recipe->LastRunHadErrorsSymbol();
             if ($recipe->CMSEditLink()) {
                 $title = '
                 <a href="'.$recipe->CMSEditLink().'" target="_blank">'.$recipe->getTitle().'</a>: ' .
                 $recipe->getDescription().'. ' .
-                $lastRunHadErrorsSymbol . ''.$recipe->LastCompletedNice().'. '.
-                'It is '.($recipe->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets. ';
+                $recipe->LastRunHadErrorsSymbol() . ' '.$recipe->LastCompletedNice().'. '.
+                $recipe->IsMeetingTargetSymbol() . ' It is '.($recipe->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets. ';
             } else {
                 $title = $recipe->getTitle().': '.$recipe->getDescription().'.  No current records. ';
             }
