@@ -260,7 +260,7 @@ trait BaseMethodsForRecipesAndSteps
     public function HoursOfTheDayNice(): string
     {
         if ($this instanceof SiteUpdateRecipeBaseClass) {
-            $array = $this->canRunHoursOfTheDay();
+            $array = $this->canRunHoursOfTheDayClean();
             if (empty($array)) {
                 return 'any time';
             }
