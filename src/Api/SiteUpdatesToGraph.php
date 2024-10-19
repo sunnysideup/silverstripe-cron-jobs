@@ -19,7 +19,8 @@ class SiteUpdatesToGraph
                 <a href="'.$recipe->CMSEditLink().'" target="_blank">'.$recipe->getTitle().'</a>: ' .
                 $recipe->getDescription().'. ' .
                 $recipe->LastRunHadErrorsSymbol() . ' '.$recipe->LastCompletedNice().'. '.
-                $recipe->IsMeetingTargetSymbol() . ' It is '.($recipe->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets. ';
+                $recipe->IsMeetingTargetSymbol() . ' It is '.($recipe->IsMeetingTarget() ? '' : ' NOT ').' meeting its schedule targets. '.
+                $recipe->IsOverTimeSinceLastRunSymbol() . ' It is '.($recipe->IsOverTimeSinceLastRun() ? 'overtime' : ' not overtime').' since last run. ';
             } else {
                 $title = $recipe->getTitle().': '.$recipe->getDescription().'.  No current records. ';
             }
