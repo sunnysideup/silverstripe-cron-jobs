@@ -50,6 +50,17 @@ abstract class SiteUpdateRecipeBaseClass
      */
     protected const STEPS = [];
 
+    public function canRunHoursOfTheDayClean(?bool $fill = false): array
+    {
+        $hoursOfTheDay = $this->canRunHoursOfTheDay();
+        sort($hoursOfTheDay, SORT_NUMERIC);
+
+        if (empty($hoursOfTheDay) && $fill) {
+            // If no specific hours are defined, assume the job can run anytime
+            $hoursOfTheDay = range(0, 23); // Full 24 hours
+        }
+        return $hoursOfTheDay;
+    }
 
     /**
      * @var int
@@ -110,15 +121,12 @@ abstract class SiteUpdateRecipeBaseClass
      */
     public function IsMeetingTarget(): bool
     {
-        if ($this->overTimeSinceLastRun() > 0) {
-            return false;
-        }
         $expectedMin = $this->getExpectedMinimumEntriesPer24Hours();
         $expectedMax = $this->getExpectedMaximumEntriesPer24Hours();
         $expectedMinAdded = 0;
         $expectedMaxAdded = 0;
         $days = 1;
-        while ($expectedMin > 0 && $expectedMinAdded < 3) {
+        while ($days < 10) {
             // one week
             $expectedMinAdded += $expectedMin;
             $expectedMaxAdded += $expectedMax;
@@ -171,15 +179,10 @@ abstract class SiteUpdateRecipeBaseClass
     protected function getExpectedMinimumOrMaximumEntriesPer24Hours(string $minOrMax): float
     {
         if (empty($this->expectedMinimumOrMaximumEntriesPer24HoursCache)) {
-            $hoursOfTheDay = $this->canRunHoursOfTheDay();
+            $hoursOfTheDay = $this->canRunHoursOfTheDayClean(true);
 
             // Sort the allowed hours to process them in order
-            sort($hoursOfTheDay, SORT_NUMERIC);
 
-            if (empty($hoursOfTheDay)) {
-                // If no specific hours are defined, assume the job can run anytime
-                $hoursOfTheDay = range(0, 23); // Full 24 hours
-            }
 
 
             // Get the interval in hours between runs from the respective methods
@@ -316,8 +319,8 @@ abstract class SiteUpdateRecipeBaseClass
         if ($this->ignoreTimeOfDay) {
             return true;
         }
-        $hourOfDay = date('H');
-        $hoursOfTheDay = $this->canRunHoursOfTheDay();
+        $hourOfDay = $this->getCurrentHour();
+        $hoursOfTheDay = $this->canRunHoursOfTheDayClean();
         if (empty($hoursOfTheDay) || in_array($hourOfDay, $hoursOfTheDay)) {
             return true;
         }
@@ -346,14 +349,32 @@ abstract class SiteUpdateRecipeBaseClass
     {
         return $this->secondsToTime($this->overTimeSinceLastRun() * 60);
     }
+    public function IsoverTimeSinceLastRun(): bool
+    {
+        return $this->overTimeSinceLastRun() > 0;
+    }
+
+    public function IsOverTimeSinceLastRunSymbol(): string
+    {
+        return $this->getSymbolForBoolean(! $this->IsoverTimeSinceLastRun());
+    }
+
+    public function getCurrentHour(): int
+    {
+        return (int) date('G');
+    }
+
     public function overTimeSinceLastRun(): int
     {
-        $lastRunTs = $this->LastCompleted(true);
-        $nowTs = time();
-        $diff = round(($nowTs - $lastRunTs) / 60);
-        $over = $diff > $this->maxIntervalInMinutesBetweenRuns();
-        if ($over > 0) {
-            return $diff;
+        $canRunHoursOfTheDay = $this->canRunHoursOfTheDayClean();
+        if (in_array($this->getCurrentHour(), $canRunHoursOfTheDay) || empty($canRunHoursOfTheDay)) {
+            $lastRunTs = $this->LastCompleted(true);
+            $nowTs = time();
+            $diff = round(($nowTs - $lastRunTs) / 60);
+            $over = $diff > $this->maxIntervalInMinutesBetweenRuns();
+            if ($over > 0) {
+                return $diff;
+            }
         }
         return 0;
     }
