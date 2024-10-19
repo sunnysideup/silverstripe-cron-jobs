@@ -115,15 +115,20 @@ abstract class SiteUpdateRecipeBaseClass
         }
         $expectedMin = $this->getExpectedMinimumEntriesPer24Hours();
         $expectedMax = $this->getExpectedMaximumEntriesPer24Hours();
-        $multiplier = 1;
-        while ($expectedMin > 0 && $expectedMin < 1) {
+        $expectedMinAdded = 0;
+        $expectedMaxAdded = 0;
+        $days = 1;
+        while ($expectedMin > 0 && $expectedMinAdded < 3) {
             // one week
-            $multiplier++;
-            $expectedMin = $expectedMin * $multiplier;
+            $expectedMinAdded += $expectedMin;
+            $expectedMaxAdded += $expectedMax;
+            $days++;
+            $test = $this->getActualEntriesPer(round($days));
+            if ($test >= $expectedMinAdded) {
+                return true;
+            }
         }
-        $expectedMax = $expectedMax * $multiplier;
-        $test = $this->getActualEntriesPer(round($multiplier));
-        return $test >= $expectedMin;
+        return false;
     }
 
     public function IsMeetingTargetNice(): DBBoolean
