@@ -169,7 +169,7 @@ abstract class SiteUpdateRecipeBaseClass
             $hoursOfTheDay = $this->canRunHoursOfTheDay();
 
             // Sort the allowed hours to process them in order
-            sort($hoursOfTheDay);
+            sort($hoursOfTheDay, SORT_NUMERIC);
 
             if (empty($hoursOfTheDay)) {
                 // If no specific hours are defined, assume the job can run anytime
@@ -178,39 +178,66 @@ abstract class SiteUpdateRecipeBaseClass
 
 
             // Get the interval in hours between runs from the respective methods
-            $minHoursBetweenRuns = $this->getExpectedMinimumHoursBetweenRuns();
-            $maxHoursBetweenRuns = $this->getExpectedMaximumHoursBetweenRuns();
+            (float) $minHoursBetweenRuns = $this->getExpectedMinimumHoursBetweenRuns() + 0.001;
+            (float) $maxHoursBetweenRuns = $this->getExpectedMaximumHoursBetweenRuns() + 0.001;
             // max to min on purpose.
-            $minRuns = $maxHoursBetweenRuns;
+            (float) $minRuns = 0;
             // min to max on purpose.
-            $maxRuns = $minHoursBetweenRuns;
-            $testHour = 0;
-            $runTimeMin = 0;
-            $runTimeMax = 0;
+            (float) $maxRuns = 0;
+            (int) $testHour = 0;
+            (float) $runTimeMin = $minHoursBetweenRuns;
+            (float) $runTimeMax = $maxHoursBetweenRuns;
 
             // Iterate through a 24-hour period to determine potential run times
-            while ($minRuns < 1 || $testHour < 24) {
-                if (in_array($testHour, $hoursOfTheDay)) {
-                    $endOfTestHour = $testHour + 1;
-                    while ($runTimeMin < $endOfTestHour) {
-                        if ($runTimeMin >= $testHour) {
-                            $minRuns++;
-                        }
+            while ($testHour < 24 * 180) {
+                (float) $endOfTestHour = $testHour + 1;
+                // echo "
+                // testHour: $testHour,
+                // endOfTestHour: $endOfTestHour,
+                // runTimeMin: $runTimeMin,
+                // runTimeMax: $runTimeMax,
+                // minRuns: $minRuns,
+                // maxRuns: $maxRuns,
+                // minHoursBetweenRuns: $minHoursBetweenRuns,
+                // maxHoursBetweenRuns: $maxHoursBetweenRuns<br />";
+                if (in_array($testHour % 24, $hoursOfTheDay)) {
+
+                    // echo 'XXX';
+                    if ($runTimeMin <  $testHour) {
+                        $runTimeMin = $testHour;
+                    }
+                    $testA = (float) $runTimeMin >= (float) $testHour;
+                    $testB = (float) (float) ($runTimeMin) < (float) ($testHour +  $maxHoursBetweenRuns) ;
+                    $testC = (float) $runTimeMin < (float) $endOfTestHour;
+                    while ($testA && ($testB || $testC)) {
                         // max to min on purpose.
+                        // echo'A';
+                        $minRuns++;
                         $runTimeMin += $maxHoursBetweenRuns;
+                        if ((float) $runTimeMin > (float) $endOfTestHour) {
+                            break;
+                        }
+                    }
+                    if ($runTimeMax <  $testHour) {
+                        $runTimeMax = $testHour;
+                    }
+                    $testA = (float) $runTimeMax >= (float) $testHour;
+                    $testB = (float) (float) ($runTimeMax) < (float) ($testHour +  $minHoursBetweenRuns) ;
+                    $testC = (float) $runTimeMax < (float) $endOfTestHour;
+                    while ($testA && ($testB || $testC)) {
+                        // echo'B';
+                        $runTimeMax += $minHoursBetweenRuns;
+                        $maxRuns++;
+                        if ((float) $runTimeMax > (float) $endOfTestHour) {
+                            break;
+                        }
+
                     }
 
-                    while ($runTimeMax < $endOfTestHour) {
-                        if ($runTimeMax >= $testHour) {
-                            $maxRuns++;
-                        }
-                        // min to max on purpose.
-                        $runTimeMax += $minHoursBetweenRuns;
-                    }
                 }
                 $testHour++;
             }
-
+            // die('xxx');
             // Normalize the runs to a per-24-hour scale (since we're iterating through each hour as a starting point)
             // return $testHour;
             $divider = $testHour / 24;
