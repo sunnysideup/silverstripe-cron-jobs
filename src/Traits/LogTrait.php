@@ -171,9 +171,9 @@ trait LogTrait
                         ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
                         ReadonlyField::create('OverDueMinutes', 'Minutes overdue to run again?', $obj->overTimeSinceLastRunNice()),
                         ReadonlyField::create('MinMinutesBetweenRunsNice', 'Minimum time between runs', $obj->MinMinutesBetweenRunsNice()),
-                        ReadonlyField::create('getExpectedMinimumEntriesPer24Hours', 'Expected minimum runs per 24 hours', round($obj->getExpectedMinimumEntriesPer24Hours(), 3)),
-                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Maximum time between runs', $obj->MaxMinutesBetweenRunsNice()),
                         ReadonlyField::create('getExpectedMaximumEntriesPer24Hours', 'Expected maximum runs per 24 hours', round($obj->getExpectedMaximumEntriesPer24Hours(), 3)),
+                        ReadonlyField::create('MaxMinutesBetweenRunsNice', 'Maximum time between runs', $obj->MaxMinutesBetweenRunsNice()),
+                        ReadonlyField::create('getExpectedMinimumEntriesPer24Hours', 'Expected minimum runs per 24 hours', round($obj->getExpectedMinimumEntriesPer24Hours(), 3)),
                         ReadonlyField::create('getActualEntriesPer', 'Successful runs in last 24 hour cycle', $obj->getActualEntriesPer()),
                         ReadonlyField::create('getActualEntriesPer30', 'Successful runs in last 30 days cycle', $obj->getActualEntriesPer(30)),
                     ]
