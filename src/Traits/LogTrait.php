@@ -134,6 +134,9 @@ trait LogTrait
             'Type',
             'Errors',
             'MemoryTaken',
+            'SysLoadA',
+            'SysLoadB',
+            'SysLoadC',
             'SiteUpdateID',
         ];
         $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
