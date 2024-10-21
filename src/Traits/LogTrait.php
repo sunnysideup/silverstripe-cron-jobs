@@ -211,8 +211,6 @@ trait LogTrait
                     //
                     ReadonlyField::create('AverageSysLoadC', 'Average CPU use over 15 minutes', $obj->AverageSysLoadC()),
                     ReadonlyField::create('MaxSysLoadC', 'Average CPU use over 15 minutes', $obj->MaxSysLoadC()),
-
-
                 ],
             );
             $fields->addFieldsToTab(
