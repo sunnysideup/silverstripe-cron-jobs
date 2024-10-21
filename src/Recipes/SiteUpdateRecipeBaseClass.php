@@ -2,6 +2,8 @@
 
 namespace Sunnysideup\CronJobs\Recipes;
 
+use InvalidArgumentException;
+use RuntimeException;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Convert;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
@@ -31,6 +33,12 @@ abstract class SiteUpdateRecipeBaseClass
     use BaseMethodsForAllRunners;
 
 
+    private static $sys_load_maxes = [
+        0.9,
+        0.8,
+        0.7,
+    ];
+
     abstract public function getType(): string;
     abstract public function getDescription(): string;
 
@@ -49,6 +57,29 @@ abstract class SiteUpdateRecipeBaseClass
      * @var mixed[]
      */
     protected const STEPS = [];
+
+    public static function get_sys_load(): array
+    {
+        if (function_exists('sys_getloadavg')) {
+            $load = sys_getloadavg();
+            $cores = (int) shell_exec('nproc');
+            try {
+                $cores = (int) shell_exec('nproc');
+            } catch (RuntimeException | InvalidArgumentException $e) {
+                $cores = 1;
+            }
+            return [
+                ($load[0] ?? 0) / $cores,
+                ($load[1] ?? 0) / $cores,
+                ($load[2] ?? 0) / $cores,
+            ];
+        }
+        return [
+            0,
+            0,
+            0,
+        ];
+    }
 
     public function canRunHoursOfTheDayClean(?bool $fill = false): array
     {
@@ -295,7 +326,11 @@ abstract class SiteUpdateRecipeBaseClass
                 if ($this->CanRunAtThisHour()) {
                     if ($this->IsThereEnoughTimeSinceLastRun()) {
                         if ($this->canRunNowBasedOnWhatElseIsRunning($verbose)) {
-                            return true;
+                            if ($this->canRunNowBasedOnSysLoad($verbose)) {
+                                return true;
+                            } elseif ($verbose) {
+                                $this->logAnything('Can not run ' . $this->getType() . ' because of system load');
+                            }
                         } elseif ($verbose) {
                             $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
                         }
@@ -379,7 +414,7 @@ abstract class SiteUpdateRecipeBaseClass
         return 0;
     }
 
-    public function canRunNowBasedOnWhatElseIsRunning(?bool $verbose = false): bool
+    protected function canRunNowBasedOnWhatElseIsRunning(?bool $verbose = false): bool
     {
         if ($verbose) {
             $this->logAnything(
@@ -394,6 +429,19 @@ abstract class SiteUpdateRecipeBaseClass
         } elseif ($this->canRunAtTheSameTimeAsOtherRecipes() || $this->ignoreWhatElseIsRunning) {
             // two of the same should never run
             return $this->AnotherVersionIsCurrentlyRunning() === false;
+        }
+
+        return false;
+    }
+
+    protected function canRunNowBasedOnSysLoad(?bool $verbose = false): bool
+    {
+        $sysLoad =  self::get_sys_load();
+        $sysLoadMaxes = $this->Config()->get('sys_load_maxes');
+        if ($sysLoad[0] < $sysLoadMaxes[0] && $sysLoad[1] < $sysLoadMaxes[1] && $sysLoad[2] < $sysLoadMaxes[2]) {
+            return true;
+        } elseif ($verbose) {
+            $this->logAnything('System load is too high: '.implode(', ', $sysLoad));
         }
 
         return false;

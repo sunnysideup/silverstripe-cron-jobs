@@ -433,18 +433,10 @@ trait BaseMethodsForRecipesAndSteps
         $returnID = null;
         if ($this->log && $this->log->exists()) {
             $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
-            if (function_exists('sys_getloadavg')) {
-                $load = sys_getloadavg();
-                $cores = (int) shell_exec('nproc');
-                try {
-                    $cores = (int) shell_exec('nproc');
-                } catch (RuntimeException | InvalidArgumentException $e) {
-                    $cores = 1;
-                }
-                $this->log->SysLoadA = ($load[0] ?? 0) / $cores;
-                $this->log->SysLoadB = ($load[1] ?? 0) / $cores;
-                $this->log->SysLoadC = ($load[2] ?? 0) / $cores;
-            }
+            $loadAverages = $this->log->getSysLoad();
+            $this->log->SysLoadA = $loadAverages[0] ?? 0;
+            $this->log->SysLoadB = $loadAverages[1] ?? 0;
+            $this->log->SysLoadC = $loadAverages[2] ?? 0;
             $this->log->TimeTaken = round(microtime(true) - $this->timeAtStart);
             $returnID = $this->log->write();
         }
