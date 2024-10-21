@@ -456,7 +456,7 @@ abstract class SiteUpdateRecipeBaseClass
         $status = 'Completed';
         $notes = '';
         WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long();
-        if ($this->canRunCalculated()) {
+        if ($this->canRunCalculated(true)) {
             $updateID = $this->startLog();
             $steps = $this->getSteps();
             foreach ($steps as $className) {
@@ -512,7 +512,7 @@ abstract class SiteUpdateRecipeBaseClass
     {
         if (class_exists($className)) {
             $obj = $className::inst();
-            if ($obj->canRunCalculated()) {
+            if ($obj->canRunCalculated(true)) {
                 $obj->startLog($updateID);
                 $errors = (int) $obj->run();
                 $obj->stopLog($errors);
