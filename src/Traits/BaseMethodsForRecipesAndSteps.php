@@ -433,7 +433,7 @@ trait BaseMethodsForRecipesAndSteps
         $returnID = null;
         if ($this->log && $this->log->exists()) {
             $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
-            $loadAverages = $this->log->getSysLoad();
+            $loadAverages = SiteUpdateRecipeBaseClass::get_sys_load();
             $this->log->SysLoadA = $loadAverages[0] ?? 0;
             $this->log->SysLoadB = $loadAverages[1] ?? 0;
             $this->log->SysLoadC = $loadAverages[2] ?? 0;
