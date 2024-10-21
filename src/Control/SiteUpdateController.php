@@ -5,6 +5,7 @@ namespace Sunnysideup\CronJobs\Control;
 use PageController;
 use SilverStripe\Control\Controller;
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
+use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
@@ -12,6 +13,7 @@ use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Environment;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
@@ -80,13 +82,16 @@ class SiteUpdateController extends Controller
     public function runstep($request)
     {
         $this->runClassFromRequest($request);
-        return $this->redirectBack();
+        $link = Injector::inst()->get(SiteUpdatesAdmin::class)->getLinkForModelClass(SiteUpdateRunNext::class);
+        return $this->redirect($link);
+
     }
 
     public function runrecipe($request)
     {
         $this->content = $this->runClassFromRequest($request);
-        return $this->redirectBack();
+        $link = Injector::inst()->get(SiteUpdatesAdmin::class)->getLinkForModelClass(SiteUpdateRunNext::class);
+        return $this->redirect($link);
     }
 
     public function stopsiteupdates($request)
