@@ -64,6 +64,9 @@ class SiteUpdate extends DataObject
         'NumberOfStepsExpectecToRun' => 'Int',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
+        'SysLoadA' => 'Decimal(3,2)',
+        'SysLoadB' => 'Decimal(3,2)',
+        'SysLoadC' => 'Decimal(3,2)',
         'RunnerClassName' => 'Varchar(255)',
     ];
 
@@ -82,6 +85,9 @@ class SiteUpdate extends DataObject
         'Status' => 'Status',
         'TimeTaken' => 'Seconds used',
         'MemoryTaken' => 'Megabytes used',
+        'SysLoadA' => 'CPU use 1 Minute (1 = 100% CPU use)',
+        'SysLoadB' => 'CPU use 5 Minutes (1 = 100% CPU use)',
+        'SysLoadC' => 'CPU use 15 Minutes (1 = 100% CPU use)',
         'SiteUpdateSteps' => 'Steps',
         'ImportantLogs' => 'Important Logs',
     ];

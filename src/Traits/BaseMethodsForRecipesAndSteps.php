@@ -329,7 +329,21 @@ trait BaseMethodsForRecipesAndSteps
     public function AverageMemoryTaken(): int
     {
         return $this->aggregateTaken('avg', 'MemoryTaken');
+    }
 
+    public function AverageSysLoadA(): string
+    {
+        return $this->aggregateTaken('avg', 'SysLoadA', 2).'%';
+    }
+
+    public function AverageSysLoadB(): string
+    {
+        return $this->aggregateTaken('avg', 'SysLoadB', 2).'%';
+    }
+
+    public function AverageSysLoadC(): string
+    {
+        return $this->aggregateTaken('avg', 'SysLoadC', 2).'%';
     }
 
     public function MaxTimeTaken(): int
@@ -337,6 +351,20 @@ trait BaseMethodsForRecipesAndSteps
         return $this->aggregateTaken('max', 'TimeTaken');
     }
 
+    public function MaxSysLoadA(): string
+    {
+        return $this->aggregateTaken('max', 'SysLoadA', 2).'%';
+    }
+
+    public function MaxSysLoadB(): string
+    {
+        return $this->aggregateTaken('max', 'SysLoadB', 2).'%';
+    }
+
+    public function MaxSysLoadC(): string
+    {
+        return $this->aggregateTaken('max', 'SysLoadC', 2).'%';
+    }
 
     public function MaxTimeTakenNice(): string
     {
@@ -349,13 +377,13 @@ trait BaseMethodsForRecipesAndSteps
         return $this->aggregateTaken('max', 'MemoryTaken');
     }
 
-    protected function aggregateTaken(string $aggregateMethod, ?string $field = null): int
+    protected function aggregateTaken(string $aggregateMethod, ?string $field = null, ?int $decimals = 0): int
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list && $list->exists()) {
-            $list = $list->filter(['Status' => 'Completed']);
+            $list = $list->filter(['Status' => 'Completed', 'HasErrors' => false]);
             if ($list->exists()) {
-                return round($field ? $list->$aggregateMethod($field) : $list->$aggregateMethod());
+                return round(($field ? $list->$aggregateMethod($field) : $list->$aggregateMethod()), $decimals);
             }
         }
         return 0;
@@ -405,6 +433,18 @@ trait BaseMethodsForRecipesAndSteps
         $returnID = null;
         if ($this->log && $this->log->exists()) {
             $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
+            if (function_exists('sys_getloadavg')) {
+                $load = sys_getloadavg();
+                $cores = (int) shell_exec('nproc');
+                try {
+                    $cores = (int) shell_exec('nproc');
+                } catch (RuntimeException | InvalidArgumentException $e) {
+                    $cores = 1;
+                }
+                $this->log->SysLoadA = ($load[0] ?? 0) / $cores;
+                $this->log->SysLoadB = ($load[1] ?? 0) / $cores;
+                $this->log->SysLoadC = ($load[2] ?? 0) / $cores;
+            }
             $this->log->TimeTaken = round(microtime(true) - $this->timeAtStart);
             $returnID = $this->log->write();
         }
@@ -484,6 +524,8 @@ trait BaseMethodsForRecipesAndSteps
                 'MaxTimeTakenNice' => $this->MaxTimeTakenNice(),
                 'AverageMemoryTaken' => $this->AverageMemoryTaken(),
                 'MaxMemoryTaken' => $this->MaxMemoryTaken(),
+                'AverageSysLoadA' => $this->AverageSysLoadA(),
+                'MaxSysLoadA' => $this->MaxSysLoadA(),
                 'HoursOfTheDayNice' => $this->HoursOfTheDayNice(),
                 'MinMinutesBetweenRunsNice' => $this->MinMinutesBetweenRunsNice(),
                 'MaxMinutesBetweenRunsNice' => $this->MaxMinutesBetweenRunsNice(),

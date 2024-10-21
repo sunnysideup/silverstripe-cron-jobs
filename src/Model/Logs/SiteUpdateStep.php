@@ -52,6 +52,9 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
+        'SysLoadA' => 'Float',
+        'SysLoadB' => 'Float',
+        'SysLoadC' => 'Float',
         'RunnerClassName' => 'Varchar(255)',
     ];
 
@@ -83,6 +86,9 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep' => 'Allowed next step to run',
         'TimeTaken' => 'Seconds Used',
         'MemoryTaken' => 'Megabytes Used',
+        'SysLoadA' => 'CPU use Latest 1 Minute',
+        'SysLoadB' => 'CPU use Latest 5 Minutes',
+        'SysLoadC' => 'CPU use Latest 15 Minutes',
         'ImportantLogs' => 'Important Logs',
     ];
 
