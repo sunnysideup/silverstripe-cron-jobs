@@ -202,15 +202,15 @@ trait LogTrait
                     ReadonlyField::create('AverageMemoryTaken', 'Average memory taken - any run', $obj->AverageMemoryTaken()),
                     ReadonlyField::create('MaxMemoryTaken', 'Max memory taken - any run', $obj->MaxMemoryTaken()),
                     //
-                    HeaderField::create('CPUUse', 'CPU use'),
-                    ReadonlyField::create('AverageSysLoadA', 'Average CPU use over 1 minute', $obj->AverageSysLoadA()),
-                    ReadonlyField::create('MaxSysLoadA', 'Average CPU use over 1 minute', $obj->MaxSysLoadA()),
-                    //
-                    ReadonlyField::create('AverageSysLoadB', 'Average CPU use over 5 minutes', $obj->AverageSysLoadB()),
-                    ReadonlyField::create('MaxSysLoadB', 'Average CPU use over 5 minutes', $obj->MaxSysLoadB()),
-                    //
-                    ReadonlyField::create('AverageSysLoadC', 'Average CPU use over 15 minutes', $obj->AverageSysLoadC()),
-                    ReadonlyField::create('MaxSysLoadC', 'Average CPU use over 15 minutes', $obj->MaxSysLoadC()),
+                    // HeaderField::create('CPUUse', 'CPU use'),
+                    // ReadonlyField::create('AverageSysLoadA', 'Average CPU use over 1 minute', $obj->AverageSysLoadA()),
+                    // ReadonlyField::create('MaxSysLoadA', 'Max CPU use over 1 minute', $obj->MaxSysLoadA()),
+                    // //
+                    // ReadonlyField::create('AverageSysLoadB', 'Average CPU use over 5 minutes', $obj->AverageSysLoadB()),
+                    // ReadonlyField::create('MaxSysLoadB', 'Max CPU use over 5 minutes', $obj->MaxSysLoadB()),
+                    // //
+                    // ReadonlyField::create('AverageSysLoadC', 'Average CPU use over 15 minutes', $obj->AverageSysLoadC()),
+                    // ReadonlyField::create('MaxSysLoadC', 'Max CPU use over 15 minutes', $obj->MaxSysLoadC()),
                 ],
             );
             $fields->addFieldsToTab(
