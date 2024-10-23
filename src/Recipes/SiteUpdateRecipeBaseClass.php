@@ -162,7 +162,7 @@ abstract class SiteUpdateRecipeBaseClass
             // add first
             $days++;
             $expectedMinAdded += $expectedMin;
-            $expectedMaxAdded += $expectedMax;\
+            $expectedMaxAdded += $expectedMax;
             // expected for number of days
             $test = $this->getActualEntriesPer($days);
             // must hvae a min number of entries to be tested
