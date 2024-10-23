@@ -45,6 +45,8 @@ trait LogSuccessAndErrorsTrait
 
     protected static $time_since_last_message = 0;
 
+    private const SECONDS_BETWEEN_PINGS = 60;
+
     /**
      *
      * put out a message one a minute, or a . for every time a message is called.
@@ -55,7 +57,7 @@ trait LogSuccessAndErrorsTrait
      */
     protected function signOfLife(string $message, ?string $type = 'changed', ?bool $important = false)
     {
-        if((time() - self::$time_since_last_message) > 60) {
+        if ($this->needsToPing()) {
             $this->logAnything($message, $type, $important);
         } else {
             $this->logAnything('. ', $type, $important);
@@ -65,27 +67,31 @@ trait LogSuccessAndErrorsTrait
     protected function getLogFilePath(): ?string
     {
         $log = $this->getSiteUpdateLogObject();
-        if($log) {
+        if ($log) {
             return $log->logFilePath();
         }
         return null;
     }
 
+    protected $cachedLogForLogSuccessAndErrorsTrait = null;
+
     protected function getSiteUpdateLogObject(): SiteUpdate|SiteUpdateStep|null
     {
-        $log = null;
-        if($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
-            $log = $this->log;
-        } elseif($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
-            $log = $this;
+        if (! $this->cachedLogForLogSuccessAndErrorsTrait) {
+            $this->cachedLogForLogSuccessAndErrorsTrait = null;
+            if ($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
+                $this->cachedLogForLogSuccessAndErrorsTrait = $this->log;
+            } elseif ($this instanceof SiteUpdate || $this instanceof SiteUpdateStep) {
+                $this->cachedLogForLogSuccessAndErrorsTrait = $this;
+            }
         }
-        return $log;
+        return $this->cachedLogForLogSuccessAndErrorsTrait;
     }
 
     protected function createNote(string $message, string $messageTypeForNote, ?bool $important = false): void
     {
         $log = $this->getSiteUpdateLogObject();
-        if($log) {
+        if ($log) {
             $noteClass = $log->getRelationClass('ImportantLogs');
             $obj = $noteClass::create();
             $obj->Message = $message;
@@ -111,7 +117,7 @@ trait LogSuccessAndErrorsTrait
 
         $flushType = $flushTypes[$type] ?? 'changed';
 
-        $message = date('h:i:s') . ' | ' . $message;
+        $message = date('H:i:s') . ' | ' . $message;
         $logAllMessages = SiteUpdateConfig::inst()->LogAllMessagesInDatabase;
         if (Director::isDev() || $type !== 'changed' || $important || $logAllMessages) {
             FlushNowImplementor::do_flush(substr((string) $message, 0, 200), $flushType);
@@ -121,14 +127,25 @@ trait LogSuccessAndErrorsTrait
                 'deleted' => 'ERROR',
             ];
             $messageTypeForNote = $messageTypeForNote[$flushType] ?? 'Warning';
-            if($important || $logAllMessages) {
+            if ($important || $logAllMessages) {
                 $this->createNote($message, $messageTypeForNote, $important);
             }
         }
         $logFilePath =  $this->getLogFilePath();
-        if($logFilePath) {
+        if ($logFilePath) {
             $message .= PHP_EOL;
             file_put_contents($logFilePath, $message, FILE_APPEND);
         }
+        // update last edited...
+        if ($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
+            if ($this->needsToPing()) {
+                $this->recordTimeAndMemory();
+            }
+        }
+    }
+
+    protected function needsToPing(): bool
+    {
+        return (time() - self::$time_since_last_message) > self::SECONDS_BETWEEN_PINGS;
     }
 }
