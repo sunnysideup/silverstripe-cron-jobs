@@ -168,6 +168,19 @@ trait BaseMethodsForRecipesAndSteps
         return null;
     }
 
+    public function LastRunIfIncomplete(): SiteUpdate|SiteUpdateStep|null
+    {
+        $list = $this->listOfLogsForThisRecipeOrStep();
+        if ($list && $list->exists()) {
+            $obj = $list->filter(['Stopped' => true])->sort('ID', 'DESC')->first();
+            if ($obj && $obj->Status === 'NotCompleted') {
+                return $obj;
+            }
+
+        }
+        return null;
+    }
+
     public function LastCompletedLog()
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
