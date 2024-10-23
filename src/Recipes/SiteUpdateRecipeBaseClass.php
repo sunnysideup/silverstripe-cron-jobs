@@ -114,6 +114,7 @@ abstract class SiteUpdateRecipeBaseClass
     protected bool $ignoreTimeOfDay = false;
 
     protected bool $ignoreWhatElseIsRunning = false;
+    protected ?SiteUpdate $myIncompletePreviousRecipe = null;
 
     public function setIgnoreAll(): static
     {
@@ -209,8 +210,6 @@ abstract class SiteUpdateRecipeBaseClass
             $hoursOfTheDay = $this->canRunHoursOfTheDayClean(true);
 
             // Sort the allowed hours to process them in order
-
-
 
             // Get the interval in hours between runs from the respective methods
             (float) $minHoursBetweenRuns = $this->getExpectedMinimumHoursBetweenRuns() + 0.001;
@@ -451,6 +450,7 @@ abstract class SiteUpdateRecipeBaseClass
         $errors = 0;
         $status = 'Completed';
         $notes = '';
+        $this->myIncompletePreviousRecipe = $this->LastRunIfIncomplete();
         WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long();
         if ($this->canRunCalculated(true)) {
             $updateID = $this->startLog();
@@ -509,9 +509,12 @@ abstract class SiteUpdateRecipeBaseClass
         if (class_exists($className)) {
             $obj = $className::inst();
             if ($obj->canRunCalculated(true)) {
+                $this->logHeader('Starting ' . $obj->getTitle());
+
                 $obj->startLog($updateID);
                 $errors = (int) $obj->run();
                 $obj->stopLog($errors);
+                $this->logHeader('--- Finished ' . $obj->getTitle());
 
                 return $obj;
             }
@@ -522,7 +525,6 @@ abstract class SiteUpdateRecipeBaseClass
         $this->logAnything('Could not find: ' . $className . ' as a step', 'deleted');
 
         return null;
-
     }
 
     public function getLogClassName(): string
