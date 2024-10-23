@@ -15,10 +15,11 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
     /**
      * @var int
      */
-    private static $max_keep_days = 10;
+    private static int $max_keep_days = 10;
 
-    private static $max_keep_days_files = 3;
-    private static $max_minutes_without_sign_of_life = 10;
+    private static int $max_keep_days_files = 3;
+
+    private static int $max_minutes_without_sign_of_life = 10;
 
     public function getDescription(): string
     {
@@ -48,6 +49,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
 
     protected function oldLogsDeleterInner($className)
     {
+        $this->logAnything('Deleting old logs for ' . $className);
         $logs = $className::get()->filter(
             [
                 'Created:LessThan' => date(
@@ -74,6 +76,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         );
         if ($siteUpdates->exists()) {
             foreach ($siteUpdates as $siteUpdate) {
+                $this->logError('Marking as stopped: (markBadSiteUpdatesAsStopped) ' . $siteUpdate->ID, true);
                 $siteUpdate->Stopped = true;
                 $siteUpdate->Status = 'NotCompleted';
                 $siteUpdate->write();
@@ -91,10 +94,11 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
                         'Y-m-d H:i:s',
                         strtotime('-' . $this->Config()->max_minutes_without_sign_of_life . ' minutes')
                     ),
-                ]
+                    ]
             );
             if ($siteUpdates->exists()) {
                 foreach ($siteUpdates as $siteUpdate) {
+                    $this->logError('Marking as not completed: (markStoppedUpdatesAsNotCompleted) ' . $siteUpdate->ID, true);
                     $siteUpdate->Stopped = true;
                     $siteUpdate->Status = 'NotCompleted';
                     $siteUpdate->write();
@@ -107,6 +111,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
     {
         $files = glob(SiteUpdateConfig::folder_path() . '/*.log');
         $now = time();
+        $this->logAnything('Deleting count ('.count($files).') files older than ' . $days . ' days');
         foreach ($files as $file) {
             if (is_file($file)) {
                 if ($now - filemtime($file) >= 60 * 60 * 24 * $days) {
