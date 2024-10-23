@@ -451,7 +451,6 @@ abstract class SiteUpdateRecipeBaseClass
         $status = 'Completed';
         $notes = '';
         $this->myIncompletePreviousRecipe = $this->LastRunIfIncomplete();
-        WorkOutWhatToRunNext::stop_recipes_and_tasks_running_too_long();
         if ($this->canRunCalculated(true)) {
             $updateID = $this->startLog();
             $steps = $this->getSteps();

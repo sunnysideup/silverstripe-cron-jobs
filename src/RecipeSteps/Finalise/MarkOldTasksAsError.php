@@ -2,12 +2,15 @@
 
 namespace Sunnysideup\CronJobs\RecipeSteps\Finalise;
 
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
@@ -45,6 +48,7 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         $this->deleteFilesOderThan($this->Config()->max_keep_days_files);
         $this->markBadSiteUpdatesAsStopped();
         $this->markStoppedUpdatesAsNotCompleted();
+        $this->cleanupOldRecipesAndTasksStillRunning();
     }
 
     protected function oldLogsDeleterInner($className)
@@ -117,6 +121,40 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
                 if ($now - filemtime($file) >= 60 * 60 * 24 * $days) {
                     unlink($file);
                 }
+            }
+        }
+    }
+
+    protected function cleanupOldRecipesAndTasksStillRunning(?bool $clearAll = false)
+    {
+        $this->logAnything('Cleaning up really old recipes and tasks still running');
+        $array = [
+            SiteUpdate::class => Config::inst()->get(SiteUpdateRecipeBaseClass::class, 'max_execution_minutes_recipes'),
+            SiteUpdateStep::class => Config::inst()->get(SiteUpdateRecipeBaseClass::class, 'max_execution_minutes_steps'),
+        ];
+        foreach ($array as $className => $minutes) {
+            if ($clearAll) {
+                $filter = [
+                    'Stopped' => false,
+                ];
+            } else {
+                $mustBeCreatedBeforeDate = date(
+                    'Y-m-d H:i:s',
+                    strtotime('-' . $minutes . ' minutes')
+                );
+                $filter = [
+                    'Stopped' => false,
+                    'Created:LessThan' => $mustBeCreatedBeforeDate,
+                ];
+            }
+
+            $logs = $className::get()->filter($filter);
+            foreach ($logs as $log) {
+                $log->logAnything('Found: -- ' . $log->getTitle() . ' with ID ' . $log->ID . '  -- ... marking as NotCompleted as it has taken too long!.');
+                $log->Status = 'NotCompleted';
+                $log->Stopped = true;
+                $log->HasErrors = true;
+                $log->write();
             }
         }
     }
