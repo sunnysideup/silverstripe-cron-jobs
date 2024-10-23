@@ -180,12 +180,8 @@ abstract class SiteUpdateRecipeBaseClass
     {
         $daysCovered = max(1, $daysCovered);
         $hoursBack = $daysCovered * 24;
-        $minMultiplier = 1;
-        $maxMultiplier = 2;
-        if ($daysCovered > 2) {
-            $minMultiplier = 0;
-            $maxMultiplier = 1;
-        }
+        $minMultiplier = 0;
+        $maxMultiplier = 1;
         $last24Hours = $this->listOfLogsForThisRecipeOrStep()->filter([
             'Status' => 'Completed',
             'HasErrors' => false,
