@@ -158,14 +158,16 @@ abstract class SiteUpdateRecipeBaseClass
         $expectedMinAdded = 0;
         $expectedMaxAdded = 0;
         $days = 0;
-        while ($days < 10) {
-            // one week
-            $expectedMinAdded += $expectedMin;
-            $expectedMaxAdded += $expectedMax;
+        while ($days < 100) {
+            // add first
             $days++;
-            $test = $this->getActualEntriesPer(round($days));
-            if ($test >= $expectedMinAdded) {
-                return true;
+            $expectedMinAdded += $expectedMin;
+            $expectedMaxAdded += $expectedMax;\
+            // expected for number of days
+            $test = $this->getActualEntriesPer($days);
+            // must hvae a min number of entries to be tested
+            if ($expectedMinAdded > 1) {
+                return $test >=  $expectedMinAdded;
             }
         }
         return false;
