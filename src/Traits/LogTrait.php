@@ -20,6 +20,8 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\HeaderField;
 use Sunnysideup\CronJobs\Api\BashColours;
+use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 trait LogTrait
@@ -309,39 +311,46 @@ trait LogTrait
         return implode(', ', $timeParts);
     }
 
-
-
-    public function recordErrorsOnBeforeWrite(?string  $recordClassName = SiteUpdate::class, ?string $relFieldName = 'SiteUpdateID')
+    public function recordErrorsOnBeforeWrite(?string  $recordClassName = SiteUpdateNote::class, ?string $relFieldName = 'SiteUpdateID')
     {
         if (!$this->Stopped && $this->Status === 'Started') {
             return null;
         }
         $logError = false;
-        $errorContents = $this->getLogContent();
         $reasons = [];
-        if ($this->Errors > 0) {
-            $reasons[] = 'Errors Recorded';
-            $this->HasErrors = true;
-        }
-        if ($this->hasErrorInLog($errorContents)) {
-            $reasons[] = 'Has Error in Log';
-            $logError = true;
-        }
-        if ($this->Stopped && 'Started' === $this->Status) {
-            $reasons[] = 'Mismatch in Stopped and Status (Stopped and Started)';
-            $logError = true;
-        }
-        if (!$this->Stopped && $this->Status !== 'Started') {
-            $reasons[] = 'Mismatch in Stopped and Status (not Stopped and not Started)';
-            $logError = true;
-        }
-        if ('NotCompleted' === $this->Status) {
-            $reasons[] = 'Not completed';
-            $logError = true;
-        }
-        if ($recordClassName::get()->filter(['Type' => 'ERROR', $relFieldName => $this->ID, 'Important' => true,])->exists()) {
-            $reasons[] = 'Important error in error log';
-            $logError = true;
+        if ($this->Stopped) {
+            if ('NotCompleted' === $this->Status) {
+                $reasons[] = 'Not completed';
+                $logError = true;
+            }
+            if ($this->Errors > 0) {
+                $reasons[] = 'Errors Recorded';
+                $this->HasErrors = true;
+            }
+            $errorContents = $this->getLogContent();
+            if ($this->hasErrorInLog($errorContents)) {
+                $reasons[] = 'Has Error in Log';
+                $logError = true;
+            }
+            if ('Started' === $this->Status) {
+                $reasons[] = 'Mismatch in Stopped and Status (Stopped and Started)';
+                $logError = true;
+            }
+            if ($recordClassName::get()->filter(['Type' => 'ERROR', $relFieldName => $this->ID, 'Important' => true,])->exists()) {
+                $reasons[] = 'Important error in error log';
+                $logError = true;
+            }
+            if ($this instanceof SiteUpdate) {
+                /** @var SiteUpdateStep $step */
+                foreach ($this->SiteUpdateSteps()->filter('HasErrors', true) as $step) {
+                    $this->TotalStepsErrors += $step->Errors;
+                }
+            }
+        } else {
+            if ($this->Status !== 'Started') {
+                $reasons[] = 'Mismatch in Stopped and Status (not Stopped and not Started)';
+                $logError = true;
+            }
         }
         if ($logError) {
             $this->Stopped = true;
@@ -409,13 +418,6 @@ trait LogTrait
     {
         if (file_exists($this->logFilePath())) {
             unlink($this->logFilePath());
-        }
-    }
-
-    protected function deleteImportantLogs()
-    {
-        foreach ($this->ImportantLogs() as $log) {
-            $log->delete();
         }
     }
 
