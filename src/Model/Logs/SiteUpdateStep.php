@@ -148,7 +148,7 @@ class SiteUpdateStep extends DataObject
     {
         $fields = parent::getCMSFields();
         $this->addGenericFields($fields);
-
+        $fields->removeByName('Type');
         return $fields;
     }
 
