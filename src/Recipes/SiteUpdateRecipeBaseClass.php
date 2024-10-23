@@ -156,7 +156,7 @@ abstract class SiteUpdateRecipeBaseClass
         $expectedMax = $this->getExpectedMaximumEntriesPer24Hours();
         $expectedMinAdded = 0;
         $expectedMaxAdded = 0;
-        $days = 1;
+        $days = 0;
         while ($days < 10) {
             // one week
             $expectedMinAdded += $expectedMin;
