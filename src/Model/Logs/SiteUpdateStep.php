@@ -8,6 +8,7 @@ use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBDatetime;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Forms\SiteUpdateStepDropdownField;
 
@@ -64,6 +65,10 @@ class SiteUpdateStep extends DataObject
 
     private static $has_many = [
         'ImportantLogs' => SiteUpdateStepNote::class,
+    ];
+
+    private static $cascade_deletes = [
+        'ImportantLogs',
     ];
 
     private static $summary_fields = [
@@ -150,13 +155,20 @@ class SiteUpdateStep extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
+        $this->LastEdited = DBDatetime::now()->Rfc2822();
         $this->recordErrorsOnBeforeWrite(SiteUpdateStepNote::class, 'SiteUpdateStepID');
+    }
+
+    protected function onAfterWrite()
+    {
+        parent::onAfterWrite();
+        // also updated the parent
+        $this->SiteUpdate()->write();
     }
 
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();
         $this->deleteLogFile();
-        $this->deleteImportantLogs();
     }
 }

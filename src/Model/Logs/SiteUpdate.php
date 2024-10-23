@@ -16,6 +16,7 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Api\SiteUpdatesToGraph;
@@ -76,6 +77,10 @@ class SiteUpdate extends DataObject
         'ImportantLogs' => SiteUpdateNote::class,
     ];
 
+    private static $cascade_deletes = [
+        'SiteUpdateSteps',
+        'ImportantLogs',
+    ];
 
     private static $field_labels = [
         'Title' => 'Update recipe name',
@@ -264,11 +269,9 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
+        $this->LastEdited = DBDatetime::now()->Rfc2822();
         $this->TotalStepsErrors = 0;
         /** @var SiteUpdateStep $step */
-        foreach ($this->SiteUpdateSteps()->filter('HasErrors', true) as $step) {
-            $this->TotalStepsErrors += $step->Errors;
-        }
         if (! $this->Status) {
             $this->Status = $this->Stopped ? 'NotCompleted' : 'Started';
         }
@@ -298,7 +301,6 @@ class SiteUpdate extends DataObject
     public function onBeforeDelete()
     {
         parent::onBeforeDelete();
-        $this->deleteImportantLogs();
         $this->deleteLogFile();
     }
 

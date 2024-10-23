@@ -2,14 +2,10 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs\Custom;
 
-use Sunnysideup\CronJobs\Traits\LogTrait;
-use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
-use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
-use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext

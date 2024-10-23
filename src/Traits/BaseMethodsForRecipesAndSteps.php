@@ -32,7 +32,7 @@ trait BaseMethodsForRecipesAndSteps
     public function __destruct()
     {
         if ($this->log) {
-            if (false === $this->log->Stopped) {
+            if (false === (bool) $this->log->Stopped) {
                 $this->stopLog(1, 'NotCompleted', 'Did not complete, as on destruction, it was not Stopped.');
             }
         }

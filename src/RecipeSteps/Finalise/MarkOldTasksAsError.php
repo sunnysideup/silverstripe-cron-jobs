@@ -16,18 +16,22 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
      * @var int
      */
     private static $max_keep_days = 10;
+
     private static $max_keep_days_files = 3;
+    private static $max_minutes_without_sign_of_life = 10;
 
     public function getDescription(): string
     {
-        return 'Tasks that ran more than ' . $this->Config()->max_keep_days . ' days ago are deleted.';
+        return '
+            Tasks that ran more than ' . $this->Config()->max_keep_days . ' days ago are deleted.
+            Tasks that have not been updated in the last ' . $this->Config()->max_minutes_without_sign_of_life . ' minutes are marked as stopped and NotCompleted.
+            File Logs older than ' . $this->Config()->max_keep_days_files . ' days are deleted.';
     }
 
     public function run(): int
     {
         $this->oldLogsDeleter();
         return 0;
-
     }
 
     protected function oldLogsDeleter()
@@ -82,12 +86,16 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
         foreach ([SiteUpdate::class, SiteUpdateStep::class] as $className) {
             $siteUpdates = $className::get()->filter(
                 [
-                    'Status' => 'Started',
-                    'Stopped' => true,
+                    'Stopped' => false,
+                    'LastEdited:LessThan' => date(
+                        'Y-m-d H:i:s',
+                        strtotime('-' . $this->Config()->max_minutes_without_sign_of_life . ' minutes')
+                    ),
                 ]
             );
             if ($siteUpdates->exists()) {
                 foreach ($siteUpdates as $siteUpdate) {
+                    $siteUpdate->Stopped = true;
                     $siteUpdate->Status = 'NotCompleted';
                     $siteUpdate->write();
                 }
