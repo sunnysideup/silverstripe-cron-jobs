@@ -64,9 +64,9 @@ class SiteUpdate extends DataObject
         'NumberOfStepsExpectecToRun' => 'Int',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
-        'SysLoadA' => 'Decimal(3,2)',
-        'SysLoadB' => 'Decimal(3,2)',
-        'SysLoadC' => 'Decimal(3,2)',
+        'SysLoadA' => 'Decimal(3,3)',
+        'SysLoadB' => 'Decimal(3,3)',
+        'SysLoadC' => 'Decimal(3,3)',
         'RunnerClassName' => 'Varchar(255)',
     ];
 

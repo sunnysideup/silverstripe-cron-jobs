@@ -52,9 +52,9 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
-        'SysLoadA' => 'Float',
-        'SysLoadB' => 'Float',
-        'SysLoadC' => 'Float',
+        'SysLoadA' => 'Decimal(3,3)',
+        'SysLoadB' => 'Decimal(3,3)',
+        'SysLoadC' => 'Decimal(3,3)',
         'RunnerClassName' => 'Varchar(255)',
     ];
 
