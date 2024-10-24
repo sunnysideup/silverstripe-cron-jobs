@@ -23,6 +23,7 @@ use Sunnysideup\CronJobs\Api\SiteUpdatesToGraph;
 use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdown;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdownField;
+use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
 use Sunnysideup\CronJobs\View\Graph;
 
 /**
@@ -46,6 +47,8 @@ class SiteUpdate extends DataObject
 
     use LogTrait;
 
+    use InteractionWithLogFile;
+
     use LogSuccessAndErrorsTrait;
 
     private static $table_name = 'SiteUpdate';
@@ -65,6 +68,8 @@ class SiteUpdate extends DataObject
         'NumberOfStepsExpectecToRun' => 'Int',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
+        'Attempts' => 'Int',
+        'RamLoad' => 'Decimal(3,3)',
         'SysLoadA' => 'Decimal(3,3)',
         'SysLoadB' => 'Decimal(3,3)',
         'SysLoadC' => 'Decimal(3,3)',
@@ -125,6 +130,10 @@ class SiteUpdate extends DataObject
         'Stopped' => 'ExactMatchFilter',
         'Status' => 'ExactMatchFilter',
         'HasErrors' => 'ExactMatchFilter',
+    ];
+
+    private static $defaults = [
+        'Attempts' => 1,
     ];
 
     private static $default_sort = [
@@ -189,6 +198,7 @@ class SiteUpdate extends DataObject
         );
         $gridField = $fields->dataFieldByName('SiteUpdateSteps');
         if ($gridField) {
+            $gridField->setTitle('Steps - last step first');
 
             // $gridField->getConfig()
             //     ->removeComponentsByType(GridFieldDataColumns::class)
@@ -242,13 +252,14 @@ class SiteUpdate extends DataObject
                 ),
                 HTMLEditorField::create(
                     'AllStepsHere',
-                    'Steps expected to run',
+                    'Steps expected to run (in order)',
                     DBHTMLText::create_field('HTMLText', $steps)
                 )->performDisabledTransformation(),
 
             ]
         );
 
+        $this->addLogField($fields, 'Root.RawLogs');
 
         return $fields;
     }
@@ -269,13 +280,7 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->LastEdited = DBDatetime::now()->Rfc2822();
-        $this->TotalStepsErrors = 0;
-        /** @var SiteUpdateStep $step */
-        if (! $this->Status) {
-            $this->Status = $this->Stopped ? 'NotCompleted' : 'Started';
-        }
-        $this->recordErrorsOnBeforeWrite(SiteUpdateNote::class);
+        $this->recordsStandardValuesAndFixes(SiteUpdateNote::class);
     }
 
     protected function onAfterWrite()
