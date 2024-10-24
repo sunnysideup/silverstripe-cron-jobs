@@ -8,7 +8,7 @@ class TestRecipeStep5 extends SiteUpdateRecipeStepBaseClass
 {
     public function getDescription(): string
     {
-        return 'Test Step 2';
+        return 'Test Step 5';
     }
 
     public function run(): int

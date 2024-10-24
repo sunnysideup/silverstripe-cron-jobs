@@ -8,7 +8,7 @@ class TestRecipeStep7 extends SiteUpdateRecipeStepBaseClass
 {
     public function getDescription(): string
     {
-        return 'Test Step 2';
+        return 'Test Step 7';
     }
 
     public function run(): int

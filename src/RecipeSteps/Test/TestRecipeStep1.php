@@ -14,7 +14,7 @@ class TestRecipeStep1 extends SiteUpdateRecipeStepBaseClass
     public function run(): int
     {
         $seconds = 0;
-        while ($seconds < 70) {
+        while ($seconds < 3) {
             sleep(1);
             $seconds++;
             $this->logSignOfLife('Seconds passed: ' . $seconds);
