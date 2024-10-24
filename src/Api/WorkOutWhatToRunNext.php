@@ -20,7 +20,9 @@ class WorkOutWhatToRunNext
         foreach ($classes as $class) {
             if ($class !== CustomRecipe::class || $includeCustom) {
                 $obj = $class::inst();
-                $array[$class] = $obj;
+                if ($obj->canRun()) {
+                    $array[$class] = $obj;
+                }
             }
         }
 
@@ -46,10 +48,6 @@ class WorkOutWhatToRunNext
         foreach ($classes as $class => $obj) {
             if ($obj->canRunCalculated($verbose)) {
                 $candidates[$class] = $obj->overTimeSinceLastRun();
-            } else {
-                if ($verbose) {
-                    echo 'Skipping ' . $obj->getTitle() . ' as it cannot run';
-                }
             }
         }
         // if any of them are over then return task that is over by the most
