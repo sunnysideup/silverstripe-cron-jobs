@@ -78,5 +78,6 @@ class SiteUpdateRun extends BuildTask
                 user_error('Could not inst() class ' . $this->recipe);
             }
         }
+        echo PHP_EOL . 'DONE' . PHP_EOL;
     }
 }
