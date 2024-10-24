@@ -73,9 +73,9 @@ trait BaseMethodsForRecipesAndSteps
             $whatElseIsRunningArray = [];
             if ($verbose) {
                 foreach ($whatElseIsRunning as $otherOne) {
-                    $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . '), ';
+                    $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . ')';
                 }
-                $this->logAnything(implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
+                $this->logAnything('-- '.implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
             }
             // check again
             return true;
@@ -122,6 +122,7 @@ trait BaseMethodsForRecipesAndSteps
     {
         return $this->getLastStartedOrCompleted($asTs, true);
     }
+
     public function LastCompleted(?bool $asTs = false): string|int
     {
         return $this->getLastStartedOrCompleted($asTs, false);
@@ -168,15 +169,29 @@ trait BaseMethodsForRecipesAndSteps
         return null;
     }
 
-    public function LastRunIfIncomplete(): SiteUpdate|SiteUpdateStep|null
+    public function LastStoppedRunLog(): SiteUpdate|SiteUpdateStep|null
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list && $list->exists()) {
-            $obj = $list->filter(['Stopped' => true])->sort('ID', 'DESC')->first();
-            if ($obj && $obj->Status === 'NotCompleted') {
-                return $obj;
-            }
+            return $list->filter(['Stopped' => true])->sort('ID', 'DESC')->first();
+        }
+        return null;
+    }
 
+    public function LastRunIfNotCompletedLog(): SiteUpdate|SiteUpdateStep|null
+    {
+        $obj = $this->LastStoppedRunLog();
+        if ($obj && $obj->Status === 'NotCompleted') {
+            return $obj;
+        }
+        return null;
+    }
+
+    public function LastRunIfCompletedLog(): SiteUpdate|SiteUpdateStep|null
+    {
+        $obj = $this->LastStoppedRunLog();
+        if ($obj && $obj->Status === 'Completed') {
+            return $obj;
         }
         return null;
     }
@@ -259,7 +274,8 @@ trait BaseMethodsForRecipesAndSteps
             if ($excludeMe && $this->log?->ID) {
                 $filter = $filter + ['ID' => $this->log->ID];
             }
-            return $list->filter($filter)->exists();
+            $list = $list->filter($filter);
+            return $list->exists();
         }
 
         return false;
@@ -344,39 +360,22 @@ trait BaseMethodsForRecipesAndSteps
         return $this->aggregateTaken('avg', 'MemoryTaken');
     }
 
-    public function AverageSysLoadA(): string
+    public function AverageSysLoad(?string $letter): string
     {
-        return $this->aggregateTaken('avg', 'SysLoadA', 2).'%';
+        $var = 'SysLoad' . strtoupper($letter);
+        return $this->aggregateTaken('avg', $var, 2).'%';
     }
 
-    public function AverageSysLoadB(): string
-    {
-        return $this->aggregateTaken('avg', 'SysLoadB', 2).'%';
-    }
-
-    public function AverageSysLoadC(): string
-    {
-        return $this->aggregateTaken('avg', 'SysLoadC', 2).'%';
-    }
 
     public function MaxTimeTaken(): int
     {
         return $this->aggregateTaken('max', 'TimeTaken');
     }
 
-    public function MaxSysLoadA(): string
+    public function MaxSysLoad(?string $letter): string
     {
-        return $this->aggregateTaken('max', 'SysLoadA', 2).'%';
-    }
-
-    public function MaxSysLoadB(): string
-    {
-        return $this->aggregateTaken('max', 'SysLoadB', 2).'%';
-    }
-
-    public function MaxSysLoadC(): string
-    {
-        return $this->aggregateTaken('max', 'SysLoadC', 2).'%';
+        $var = 'SysLoad' . strtoupper($letter);
+        return $this->aggregateTaken('max', $var, 2).'%';
     }
 
     public function MaxTimeTakenNice(): string
@@ -390,7 +389,7 @@ trait BaseMethodsForRecipesAndSteps
         return $this->aggregateTaken('max', 'MemoryTaken');
     }
 
-    protected function aggregateTaken(string $aggregateMethod, ?string $field = null, ?int $decimals = 0): int
+    protected function aggregateTaken(string $aggregateMethod, ?string $field = null, ?int $decimals = 0): float
     {
         $list = $this->listOfLogsForThisRecipeOrStep();
         if ($list && $list->exists()) {
@@ -418,7 +417,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function startLog(?int $siteUpdateId = 0): int
     {
-        $this->timeAtStart = microtime(true);
+        $this->timeAtStart = time();
 
         $className = $this->getLogClassName();
         /** @var SiteUpdate|SiteUpdateStep $className */
@@ -450,7 +449,8 @@ trait BaseMethodsForRecipesAndSteps
             $this->log->SysLoadA = $loadAverages[0] ?? 0;
             $this->log->SysLoadB = $loadAverages[1] ?? 0;
             $this->log->SysLoadC = $loadAverages[2] ?? 0;
-            $this->log->TimeTaken = round(microtime(true) - $this->timeAtStart);
+            $this->log->RamLoad = SiteUpdateRecipeBaseClass::get_ram_usage();
+            $this->log->TimeTaken = round(time() - $this->timeAtStart);
             $returnID = $this->log->write();
         }
         return $returnID;
@@ -469,9 +469,13 @@ trait BaseMethodsForRecipesAndSteps
                 $this->log->Notes = $notes;
                 $returnID = $this->log->write();
             }
-        }
-        if ('Errors' === $status) {
-            $this->logError($notes, true);
+            if ('Errors' === $status) {
+                $this->logError($notes, true);
+            }
+        } else {
+            $this->logError('Could not stop log as it does not exist.');
+            $this->logError('-- status: ' . $status);
+            $this->logError('-- notes: ' . $notes);
         }
 
         return $returnID;
@@ -529,8 +533,12 @@ trait BaseMethodsForRecipesAndSteps
                 'MaxTimeTakenNice' => $this->MaxTimeTakenNice(),
                 'AverageMemoryTaken' => $this->AverageMemoryTaken(),
                 'MaxMemoryTaken' => $this->MaxMemoryTaken(),
-                'AverageSysLoadA' => $this->AverageSysLoadA(),
-                'MaxSysLoadA' => $this->MaxSysLoadA(),
+                'AverageSysLoadA' => $this->AverageSysLoad('A'),
+                'AverageSysLoadB' => $this->AverageSysLoad('B'),
+                'AverageSysLoadC' => $this->AverageSysLoad('C'),
+                'MaxSysLoadA' => $this->MaxSysLoad('A'),
+                'MaxSysLoadB' => $this->MaxSysLoad('B'),
+                'MaxSysLoadC' => $this->MaxSysLoad('C'),
                 'HoursOfTheDayNice' => $this->HoursOfTheDayNice(),
                 'MinMinutesBetweenRunsNice' => $this->MinMinutesBetweenRunsNice(),
                 'MaxMinutesBetweenRunsNice' => $this->MaxMinutesBetweenRunsNice(),
@@ -540,9 +548,15 @@ trait BaseMethodsForRecipesAndSteps
     }
 
 
-    public function getLog()
+    public function getLog(): SiteUpdate|SiteUpdateStep|null
     {
         return $this->log;
+    }
+
+    public function setLog(SiteUpdate|SiteUpdateStep $log): static
+    {
+        $this->log = $log;
+        return $this;
     }
 
 
