@@ -329,6 +329,7 @@ trait LogTrait
             return null;
         }
         $logError = false;
+        $errorContents = '';
         $reasons = [];
         if ($this->Stopped) {
             if ('NotCompleted' === $this->Status) {
@@ -378,7 +379,7 @@ trait LogTrait
             // No need to write as this is called from onBeforeWrite!
             $error = $recordClassName::create();
             $error->Type = 'ERROR';
-            $error->Message = implode(', ', $reasons). PHP_EOL. PHP_EOL .$errorContents;
+            $error->Message = trim(implode(', ', $reasons). PHP_EOL. $errorContents);
             $error->$relFieldName = $this->ID;
             $error->write();
         }
