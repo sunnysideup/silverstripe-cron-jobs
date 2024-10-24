@@ -312,14 +312,7 @@ class SiteUpdate extends DataObject
     public function getProposedSteps(): array
     {
         $runnerObject = $this->getRunnerObject();
-        $steps = $runnerObject ? $runnerObject->getSteps() : [];
-        foreach ($steps as $key => $step) {
-            $singleton = Injector::inst()->get($step);
-            if ($singleton->canRun() !== true) {
-                unset($steps[$key]);
-            }
-        }
-        return $steps;
+        return $runnerObject ? $runnerObject->getProposedSteps() : [];
     }
 
     public function getPercentageComplete(): float
