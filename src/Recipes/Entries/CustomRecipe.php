@@ -43,12 +43,6 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
     public function maxIntervalInMinutesBetweenRuns(): int
     {
         return 0;
-
-    }
-
-    public function run(?HTTPRequest $request)
-    {
-        parent::run($request);
     }
 
     /**

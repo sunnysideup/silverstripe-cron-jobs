@@ -68,11 +68,6 @@ class TestRecipe extends SiteUpdateRecipeBaseClass
 
     }
 
-    public function run(?HTTPRequest $request)
-    {
-        parent::run($request);
-    }
-
     protected function getForceRun(): bool
     {
         return true;
