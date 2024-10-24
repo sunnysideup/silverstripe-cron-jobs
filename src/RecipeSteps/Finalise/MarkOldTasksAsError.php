@@ -115,14 +115,16 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
     {
         $files = glob(SiteUpdateConfig::folder_path() . '/*.log');
         $now = time();
-        $this->logAnything('Deleting count ('.count($files).') files older than ' . $days . ' days');
+        $deleted = 0;
         foreach ($files as $file) {
             if (is_file($file)) {
                 if ($now - filemtime($file) >= 60 * 60 * 24 * $days) {
+                    $deleted++;
                     unlink($file);
                 }
             }
         }
+        $this->logAnything('Deleted '.$deleted .' files older than ' . $days . ' days. Total files '.count($files).' present.');
     }
 
     protected function cleanupOldRecipesAndTasksStillRunning(?bool $clearAll = false)
