@@ -24,6 +24,7 @@ use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
  * @property string $Status
  * @property bool $AllowedNextStep
  * @property int $TimeTaken
+ * @property int $Attempts
  * @property int $MemoryTaken
  * @property string $RunnerClassName
  * @property int $SiteUpdateID

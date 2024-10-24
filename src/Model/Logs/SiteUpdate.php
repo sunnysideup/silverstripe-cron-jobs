@@ -36,6 +36,7 @@ use Sunnysideup\CronJobs\View\Graph;
  * @property int $Errors
  * @property int $TotalStepsErrors
  * @property int $TimeTaken
+ * @property int $Attempts
  * @property int $MemoryTaken
  * @property string $RunnerClassName
  * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateSteps()
