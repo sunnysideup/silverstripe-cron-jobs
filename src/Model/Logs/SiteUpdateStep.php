@@ -11,6 +11,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Forms\SiteUpdateStepDropdownField;
+use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep
@@ -35,6 +36,8 @@ class SiteUpdateStep extends DataObject
 
     use LogTrait;
 
+    use InteractionWithLogFile;
+
     use LogSuccessAndErrorsTrait;
 
     private static $table_name = 'SiteUpdateStep';
@@ -53,6 +56,8 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
+        'Attempts' => 'Int',
+        'RamLoad' => 'Decimal(3,3)',
         'SysLoadA' => 'Decimal(3,3)',
         'SysLoadB' => 'Decimal(3,3)',
         'SysLoadC' => 'Decimal(3,3)',
@@ -125,10 +130,11 @@ class SiteUpdateStep extends DataObject
 
     private static $default_sort = [
         'ID' => 'DESC',
-    ];
+ ];
 
     private static $defaults = [
         'AllowedNextStep' => true,
+        'Attempts' => 1,
     ];
 
     public function canEdit($member = null)
@@ -148,15 +154,15 @@ class SiteUpdateStep extends DataObject
     {
         $fields = parent::getCMSFields();
         $this->addGenericFields($fields);
-        $fields->removeByName('Type');
+        $this->addLogField($fields, 'Root.RawLogs');
+
         return $fields;
     }
 
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->LastEdited = DBDatetime::now()->Rfc2822();
-        $this->recordErrorsOnBeforeWrite(SiteUpdateStepNote::class, 'SiteUpdateStepID');
+        $this->recordsStandardValuesAndFixes(SiteUpdateStepNote::class, 'SiteUpdateStepID');
     }
 
     protected function onAfterWrite()
