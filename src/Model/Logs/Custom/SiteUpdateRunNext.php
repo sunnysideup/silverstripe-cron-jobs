@@ -9,7 +9,7 @@ use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext
- *
+ * @todo: add date and time when to run, etc...
  * @property string $RecipeOrStep
  * @property string $RunnerClassName
  */
@@ -41,7 +41,7 @@ class SiteUpdateRunNext extends DataObject
     ];
 
     private static $default_sort = [
-        'ID' => 'DESC',
+        'ID' => 'ASC',
     ];
 
     private static $casting = [
