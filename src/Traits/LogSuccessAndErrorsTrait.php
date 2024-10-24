@@ -72,9 +72,12 @@ trait LogSuccessAndErrorsTrait
     {
         $log = $this->getSiteUpdateLogObject();
         if ($log) {
-            return $log->logFilePath();
+            $path = $log->logFilePath();
+            if($path) { 
+                return $path;
+            }
         }
-        return null;
+        return SiteUpdateConfig::inst()->logFilePath();
     }
 
     protected $cachedLogForLogSuccessAndErrorsTrait = null;
@@ -137,7 +140,14 @@ trait LogSuccessAndErrorsTrait
         $logFilePath =  $this->getLogFilePath();
         if ($logFilePath) {
             $message .= PHP_EOL;
-            file_put_contents($logFilePath, $message, FILE_APPEND);
+            try {
+                file_put_contents($logFilePath, $message, FILE_APPEND);
+            } catch (\Exception $e) {
+                echo 'COULD NOT LOG'.$message . PHP_EOL;
+                // do nothing
+            }
+        } else {
+            echo $message . PHP_EOL;
         }
         // update last edited...
         if ($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
