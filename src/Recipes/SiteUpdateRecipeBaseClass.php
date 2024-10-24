@@ -351,7 +351,7 @@ abstract class SiteUpdateRecipeBaseClass
         $al = ArrayList::create();
         foreach ($this->getSteps() as $className) {
             $obj = Injector::inst()->get($className);
-            if ($obj->canRun() || $all) {
+            if ($obj->canRunCalculated(false) || $all) {
                 $al->push($obj);
             }
         }
@@ -623,14 +623,14 @@ abstract class SiteUpdateRecipeBaseClass
                 $this->logHeader('--- Finished ' . $obj->getTitle());
 
                 return $obj;
+            } else {
+                $this->logAnything('Not allowed to run: ' . $className . ' as a step');
+                return null;
             }
-            $this->logAnything('Not allowed to run: ' . $className . ' as a step');
+        } else {
+            $this->logAnything('Could not find: ' . $className . ' as a step', 'deleted');
             return null;
         }
-
-        $this->logAnything('Could not find: ' . $className . ' as a step', 'deleted');
-
-        return null;
     }
 
     public function getLogClassName(): string
@@ -686,4 +686,15 @@ abstract class SiteUpdateRecipeBaseClass
         return Injector::inst()->get(Converters::class)->secondsToTime($seconds);
     }
 
+    public function getProposedSteps(): array
+    {
+        $steps = $this->getSteps();
+        foreach ($steps as $key => $step) {
+            $singleton = Injector::inst()->get($step);
+            if ($singleton->canRunCalculated(false) !== true) {
+                unset($steps[$key]);
+            }
+        }
+        return $steps;
+    }
 }
