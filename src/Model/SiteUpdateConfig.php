@@ -9,6 +9,9 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
+use Exception;
+use SilverStripe\Forms\ReadonlyField;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 
 class SiteUpdateConfig extends DataObject
 {
@@ -75,6 +78,42 @@ class SiteUpdateConfig extends DataObject
                 )
             );
         }
+        $outcome = SiteUpdateRecipeBaseClass::can_run_now_based_on_sys_load();
+        if ($outcome !== true) {
+            $fields->addFieldToTab(
+                'Root.Main',
+                LiteralField::create(
+                    'CanNotRunNow',
+                    '<p class="message error">Updates can not run because: '.$outcome.'.</p>'
+                )
+            );
+        }
+        $sysLoad = SiteUpdateRecipeBaseClass::get_sys_load();
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                ReadonlyField::create(
+                    'CurrentRamLoad',
+                    'RAM Load',
+                    round(SiteUpdateRecipeBaseClass::get_ram_usage() * 100).'%'
+                ),
+                ReadonlyField::create(
+                    'sysLoadA',
+                    'CPU Usage 1 minute',
+                    round($sysLoad[0] * 100).'%'
+                ),
+                ReadonlyField::create(
+                    'sysLoadB',
+                    'CPU Usage 5 minutes',
+                    round($sysLoad[1] * 100).'%'
+                ),
+                ReadonlyField::create(
+                    'sysLoadC',
+                    'CPU Usage 15 minutes',
+                    round($sysLoad[2] * 100).'%'
+                ),
+            ]
+        );
         $stopped = $fields->dataFieldByName('StopSiteUpdates');
         if ($stopped) {
             $alwaysRun = [];
@@ -85,6 +124,7 @@ class SiteUpdateConfig extends DataObject
             }
             $stopped->setDescription('The following update recipes always run: ' . implode(', ', $alwaysRun) .'.');
         }
+
         $this->addLogField($fields, 'Root.RawLogs');
         return $fields;
     }
@@ -114,7 +154,7 @@ class SiteUpdateConfig extends DataObject
         if (! file_exists($folderPath)) {
             try {
                 mkdir($folderPath);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 //do nothing
             }
         }
