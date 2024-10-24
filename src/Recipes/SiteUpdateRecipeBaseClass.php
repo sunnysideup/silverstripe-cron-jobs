@@ -39,6 +39,8 @@ abstract class SiteUpdateRecipeBaseClass
         0.7,
     ];
 
+    private static $max_number_of_attempts = 12;
+
     abstract public function getType(): string;
     abstract public function getDescription(): string;
 
@@ -60,25 +62,61 @@ abstract class SiteUpdateRecipeBaseClass
 
     public static function get_sys_load(): array
     {
-        if (function_exists('sys_getloadavg')) {
-            $load = sys_getloadavg();
-            $cores = (int) shell_exec('nproc');
-            try {
+        try {
+            if (function_exists('sys_getloadavg')) {
+                $load = sys_getloadavg();
                 $cores = (int) shell_exec('nproc');
-            } catch (RuntimeException | InvalidArgumentException $e) {
-                $cores = 1;
+                try {
+                    $cores = (int) shell_exec('nproc');
+                } catch (RuntimeException | InvalidArgumentException $e) {
+                    $cores = 1;
+                }
+                return [
+                    ($load[0] ?? 0) / $cores,
+                    ($load[1] ?? 0) / $cores,
+                    ($load[2] ?? 0) / $cores,
+                ];
             }
-            return [
-                ($load[0] ?? 0) / $cores,
-                ($load[1] ?? 0) / $cores,
-                ($load[2] ?? 0) / $cores,
-            ];
+        } catch (RuntimeException | InvalidArgumentException $e) {
+            // do nothing
         }
         return [
             0,
             0,
             0,
         ];
+
+    }
+
+    public static function get_ram_usage(): float
+    {
+        try {
+            $output = [];
+            exec('free -m', $output);
+
+            if (empty($output)) {
+                return 0; // In case the command fails
+            }
+
+            foreach ($output as $line) {
+                if (strpos($line, 'Mem:') === 0) {
+                    $parts = preg_split('/\s+/', $line);
+                    $total = (int) $parts[1]; // Total memory in MB
+                    $available = (int) $parts[6]; // Available memory in MB
+
+                    if ($total === 0) {
+                        return 0; // Avoid division by zero
+                    }
+
+                    return ($available / $total);
+                }
+            }
+        } catch (RuntimeException | InvalidArgumentException $e) {
+            // do nothing
+        }
+
+
+        return 0;
     }
 
     public function canRunHoursOfTheDayClean(?bool $fill = false): array
@@ -114,7 +152,8 @@ abstract class SiteUpdateRecipeBaseClass
     protected bool $ignoreTimeOfDay = false;
 
     protected bool $ignoreWhatElseIsRunning = false;
-    protected ?SiteUpdate $myIncompletePreviousRecipe = null;
+
+    protected ?SiteUpdate $myNotCompletePreviousRecipeLog = null;
 
     public function setIgnoreAll(): static
     {
@@ -202,6 +241,11 @@ abstract class SiteUpdateRecipeBaseClass
     public function getExpectedMaximumEntriesPer24Hours(): float
     {
         return $this->getExpectedMinimumOrMaximumEntriesPer24Hours('max');
+    }
+
+    public function canRunAdditionalCheck(): bool
+    {
+        return true;
     }
 
     protected $expectedMinimumOrMaximumEntriesPer24HoursCache = [];
@@ -317,31 +361,42 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function canRunCalculated(?bool $verbose = true): bool
     {
+        $whyNot = '';
+        if ($verbose) {
+            $this->logAnything('Checking if we can run '.$this->getTitle());
+        }
         // are updates running at all?
         if ($this->areUpdatesRunningAtAll()) {
             if ($this->canRun()) {
-                if ($this->CanRunAtThisHour()) {
-                    if ($this->IsThereEnoughTimeSinceLastRun()) {
-                        if ($this->canRunNowBasedOnWhatElseIsRunning($verbose)) {
-                            if ($this->canRunNowBasedOnSysLoad($verbose)) {
-                                return true;
+                if ($this->canRunAdditionalCheck()) {
+                    if ($this->CanRunAtThisHour()) {
+                        if ($this->IsThereEnoughTimeSinceLastRun()) {
+                            if ($this->canRunNowBasedOnWhatElseIsRunning($verbose)) {
+                                if ($this->canRunNowBasedOnSysLoad($verbose)) {
+                                    return true;
+                                } elseif ($verbose) {
+                                    $whyNot = 'of system load';
+                                }
                             } elseif ($verbose) {
-                                $this->logAnything('Can not run ' . $this->getType() . ' because of system load');
+                                $whyNot = 'something else is running';
                             }
                         } elseif ($verbose) {
-                            $this->logAnything('Can not run ' . $this->getType() . ' because something else is running');
+                            $whyNot = 'there is not enough time since last run';
                         }
                     } elseif ($verbose) {
-                        $this->logAnything('Can not run ' . $this->getType() . ' because there is not enough time since last run');
+                        $whyNot = 'it is not the right time of day';
                     }
                 } elseif ($verbose) {
-                    $this->logAnything('Can not run ' . $this->getType() . ' because it is not the right time of day');
+                    $whyNot = 'canRunAdditionalCheck returns FALSE';
                 }
             } elseif ($verbose) {
-                $this->logAnything('Can not run ' . $this->getType() . ' because canRun is FALSE');
+                $whyNot = 'because canRun returns FALSE';
             }
         } elseif ($verbose) {
-            $this->logAnything('Can not run ' . $this->getType() . ' because updated are not allowed right now is FALSE');
+            $whyNot = 'updated are not allowed right now is FALSE';
+        }
+        if ($verbose) {
+            $this->logAnything('-- NO: ' . $whyNot);
         }
         return false;
     }
@@ -413,15 +468,19 @@ abstract class SiteUpdateRecipeBaseClass
 
     protected function canRunNowBasedOnWhatElseIsRunning(?bool $verbose = false): bool
     {
-        if ($verbose) {
-            $this->logAnything(
-                '-- Anything else running ? '. ($this->IsAnythingRunning($verbose) ? 'YES' : 'NO').'. '.
-                'Can run at the same time as other recipes ? '. ($this->canRunAtTheSameTimeAsOtherRecipes() ? 'YES' : 'NO').'. '.
-                'Another version is currently running ? '. ($this->AnotherVersionIsCurrentlyRunning() ? 'YES' : 'NO').'.'
-            );
+        // if ($verbose) {
+        //     $this->logAnything(
+        //         '-- Anything else running ? '. ($this->IsAnythingRunning($verbose) ? 'YES' : 'NO').'. '
+        //     );
+        //     $this->logAnything(
+        //         '-- Can run at the same time as other recipes ? '. ($this->canRunAtTheSameTimeAsOtherRecipes() ? 'YES' : 'NO').'. '
+        //     );
+        //     $this->logAnything(
+        //         '-- Another version is currently running ? '. ($this->AnotherVersionIsCurrentlyRunning() ? 'YES' : 'NO').'.'
+        //     );
 
-        }
-        if ($this->IsAnythingRunning(false) === false) {
+        // }
+        if ($this->IsAnythingRunning($verbose) === false) {
             return true;
         } elseif ($this->canRunAtTheSameTimeAsOtherRecipes() || $this->ignoreWhatElseIsRunning) {
             // two of the same should never run
@@ -447,14 +506,28 @@ abstract class SiteUpdateRecipeBaseClass
 
     public function run(?HttpRequest $request)
     {
-        register_shutdown_function([$this, 'fatalHandler']);
         $this->logHeader('Start Recipe ' . $this->getType() . ' at ' . date('l jS \of F Y h:i:s A'));
         $errors = 0;
         $status = 'Completed';
         $notes = '';
-        $this->myIncompletePreviousRecipe = $this->LastRunIfIncomplete();
         if ($this->canRunCalculated(true)) {
             $updateID = $this->startLog();
+            register_shutdown_function(function () use ($updateID) {
+                $this->fatalHandler($updateID);
+            });
+            /** @var null|SiteUpdate $this->myNotCompletePreviousRecipeLog */
+            $this->myNotCompletePreviousRecipeLog = $this->LastRunIfNotCompletedLog();
+            if ($this->myNotCompletePreviousRecipeLog) {
+                $this->log->Attempts = $this->myNotCompletePreviousRecipeLog->Attempts + 1;
+            }
+            $this->log->write();
+            if ($this->log->Attempts > 1) {
+                $this->logAnything('This is attempt number: ' . $this->log->Attempts);
+                if ($this->log->Attempts > $this->Config()->max_number_of_attempts) {
+                    $this->logError('This is attempt number: ' . $this->log->Attempts. ' - stopping now', true);
+                    $this->myNotCompletePreviousRecipeLog = null;
+                }
+            }
             $steps = $this->getSteps();
             foreach ($steps as $className) {
                 $stepRunner = $this->runOneStep($className, $updateID);
@@ -479,24 +552,29 @@ abstract class SiteUpdateRecipeBaseClass
     }
 
 
-    public function fatalHandler(): void
+    public function fatalHandler(?int $siteUpdateID = 0): void
     {
-        $errno   = E_CORE_ERROR;
-        $errfile = 'unknown file';
-        $errline = 0;
-        $errstr  = 'shutdown';
 
         $error = error_get_last();
 
-        if ($error !== null) {
+        if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+            if (! $this->log && $siteUpdateID) {
+                $this->log = SiteUpdate::get()->byID($siteUpdateID);
+            }
+            $errfile = 'unknown file';
+            $errline = 0;
+            $errstr  = 'shutdown';
             $errno   = $error['type'] ?? 0;
             $errfile = $error['file'] ?? 'unknown file';
             $errline = $error['line'] ?? 0;
             $errstr  = $error['message'] ?? 'shutdown';
             $errorFormatted = "Error [$errno]: $errstr in $errfile on line $errline";
             $this->stopLog(1, 'NotCompleted', $errorFormatted);
-        } else {
-            $this->stopLog(1, 'NotCompleted', 'Unknown error');
+            if ($this->log) {
+                $this->log->logAnything('Fatal error: '.$errfile.' on line '.$errline.' with message '.$errstr);
+            } else {
+                $this->logAnything('Fatal error: '.$errfile.' on line '.$errline.' with message '.$errstr);
+            }
         }
     }
 
@@ -510,11 +588,38 @@ abstract class SiteUpdateRecipeBaseClass
         if (class_exists($className)) {
             $obj = $className::inst();
             if ($obj->canRunCalculated(true)) {
+
                 $this->logHeader('Starting ' . $obj->getTitle());
 
                 $obj->startLog($updateID);
-                $errors = (int) $obj->run();
-                $obj->stopLog($errors);
+                $alreadyRan = false;
+                if ($this->myNotCompletePreviousRecipeLog) {
+                    $this->logAnything('Checking if this step was already started in a previous run of this recipe.');
+                    if ($this->myNotCompletePreviousRecipeLog->hasCompletedStep($className)) {
+                        $obj->stopLog(0, 'Skipped', 'This step was already completed in a previous run of this recipe.');
+                        $alreadyRan = true;
+                    } elseif ($this->myNotCompletePreviousRecipeLog->hasNotCompletedStep($className)) {
+                        $obj->logAnything('This step was started in a previous run of this recipe, but did not complete.');
+                        $myNotCompletePreviousRecipeStepLog = $obj->LastRunIfNotCompletedLog();
+                        $log = $obj->getLog();
+                        if ($myNotCompletePreviousRecipeStepLog) {
+                            $log->Attempts = ((int) $myNotCompletePreviousRecipeStepLog->Attempts ?: 1) + 1;
+                            $log->write();
+                            $this->logAnything('This is now attempt '.$log->Attempts.' for the step.'.$log->ClassName.'_'.$log->ID);
+                        } else {
+                            $this->logAnything('Could not find the previous step log. for the step.'.$log->ClassName.'_'.$log->ID);
+                        }
+                        $obj->setLog($log);
+                    } else {
+                        $obj->logAnything('This step was not started in a previous run of this recipe.');
+                    }
+                } else {
+                    $obj->logAnything('This step was not started in a previous run of this recipe.');
+                }
+                if ($alreadyRan === false) {
+                    $errors = (int) $obj->run();
+                    $obj->stopLog($errors);
+                }
                 $this->logHeader('--- Finished ' . $obj->getTitle());
 
                 return $obj;
