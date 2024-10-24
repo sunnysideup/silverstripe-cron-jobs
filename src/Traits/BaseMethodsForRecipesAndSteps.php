@@ -431,7 +431,7 @@ trait BaseMethodsForRecipesAndSteps
             $this->mySiteUpdateID = (int) $siteUpdateId;
         } elseif ($this->log instanceof SiteUpdate) {
             $this->mySiteUpdateID = (int) $this->log->ID;
-            $this->log->NumberOfStepsExpectecToRun = count($this->getSteps());
+            $this->log->NumberOfStepsExpectecToRun = count($this->getProposedSteps());
         } else {
             user_error('No SiteUpdateID provided and this is not a SiteUpdate class.', E_USER_ERROR);
         }
