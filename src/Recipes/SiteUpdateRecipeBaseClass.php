@@ -9,11 +9,11 @@ use SilverStripe\Core\Convert;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
-use Sunnysideup\CronJobs\RecipeSteps\Finalise\MarkOldTasksAsError;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBBoolean;
@@ -38,6 +38,8 @@ abstract class SiteUpdateRecipeBaseClass
         0.8,
         0.7,
     ];
+
+    private static $ram_load_max = 0.8;
 
     private static $max_number_of_attempts = 12;
 
@@ -142,7 +144,7 @@ abstract class SiteUpdateRecipeBaseClass
     private static $max_execution_minutes_steps = 120;
 
     private static array $always_run_at_the_start_steps = [
-        MarkOldTasksAsError::class,
+        // CleanUpSiteUpdatesStep::class,
     ];
 
     private static array $always_run_at_the_end_steps = [];
@@ -492,25 +494,47 @@ abstract class SiteUpdateRecipeBaseClass
 
     protected function canRunNowBasedOnSysLoad(?bool $verbose = false): bool
     {
-        $sysLoad =  self::get_sys_load();
-        $sysLoadMaxes = $this->Config()->get('sys_load_maxes');
-        if ($sysLoad[0] < $sysLoadMaxes[0] && $sysLoad[1] < $sysLoadMaxes[1] && $sysLoad[2] < $sysLoadMaxes[2]) {
+        $outcome = self::can_run_now_based_on_sys_load();
+        if ($outcome === true) {
             return true;
-        } elseif ($verbose) {
-            $this->logAnything('System load is too high: '.implode(', ', $sysLoad));
         }
-
+        if ($verbose) {
+            $this->logAnything('Can not run now because '.$outcome);
+        }
         return false;
     }
 
+    public static function can_run_now_based_on_sys_load(): bool|string
+    {
+        $sysLoad =  self::get_sys_load();
+        $sysLoadMaxes = Config::inst()->get(static::class, 'sys_load_maxes');
+        if ($sysLoad[0] < $sysLoadMaxes[0] && $sysLoad[1] < $sysLoadMaxes[1] && $sysLoad[2] < $sysLoadMaxes[2]) {
+            $ramLoad =  self::get_ram_usage();
+            if ($ramLoad < Config::inst()->get(static::class, 'ram_load_max')) {
+                return true;
+            } else {
+                return 'RAM load is too high: '.$ramLoad;
+            }
+        } else {
+            return 'System load is too high: '.implode(', ', $sysLoad);
+        }
+    }
 
-    public function run(?HttpRequest $request)
+
+    /**
+     *
+     * returns true on completion (not necessarily success)
+     * @param mixed $request
+     * @param mixed $verbose
+     * @return bool
+     */
+    public function run(?HttpRequest $request = null, ?bool $verbose = true): bool
     {
         $this->logHeader('Start Recipe ' . $this->getType() . ' at ' . date('l jS \of F Y h:i:s A'));
         $errors = 0;
         $status = 'Completed';
         $notes = '';
-        if ($this->canRunCalculated(true)) {
+        if ($this->canRunCalculated($verbose)) {
             $updateID = $this->startLog();
             register_shutdown_function(function () use ($updateID) {
                 $this->fatalHandler($updateID);
@@ -546,9 +570,11 @@ abstract class SiteUpdateRecipeBaseClass
                 }
             }
             $this->stopLog($errors, $status, $notes);
+            $this->logHeader('End ' . $this->getTitle());
+            return true;
         }
+        return false;
 
-        $this->logHeader('End ' . $this->getTitle());
     }
 
 
