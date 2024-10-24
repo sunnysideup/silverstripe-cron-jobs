@@ -64,4 +64,9 @@ abstract class SiteUpdateRecipeStepBaseClass
         }
         return false;
     }
+
+    public function getProposedSteps(): array
+    {
+        return [];
+    }
 }
