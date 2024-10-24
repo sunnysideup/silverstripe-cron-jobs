@@ -13,7 +13,7 @@ use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
-class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
+class CleanUpSiteUpdatesStep extends SiteUpdateRecipeStepBaseClass
 {
     /**
      * @var int
@@ -27,8 +27,8 @@ class MarkOldTasksAsError extends SiteUpdateRecipeStepBaseClass
     public function getDescription(): string
     {
         return '
-            Tasks that ran more than ' . $this->Config()->max_keep_days . ' days ago are deleted.
-            Tasks that have not been updated in the last ' . $this->Config()->max_minutes_without_sign_of_life . ' minutes are marked as stopped and NotCompleted.
+            Recipes and steps that ran more than ' . $this->Config()->max_keep_days . ' days ago are deleted.
+            Recipes and steps that have not been updated in the last ' . $this->Config()->max_minutes_without_sign_of_life . ' minutes are marked as stopped and NotCompleted.
             File Logs older than ' . $this->Config()->max_keep_days_files . ' days are deleted.';
     }
 
