@@ -152,13 +152,13 @@ trait LogTrait
                 'SysLoadB',
                 'SysLoadC',
                 'RamLoad',
+                'MemoryTaken',
             ]
         );
         $readonlyFields = [
             'AllowedNextStep',
             'Status',
             'Errors',
-            'MemoryTaken',
             'SiteUpdateID',
             'Attempts',
         ];
@@ -191,12 +191,12 @@ trait LogTrait
                     ReadonlyField::create('Errors', 'Error count'),
                     ReadonlyField::create('Notes', 'Notes / Errors'),
                     ReadonlyField::create('TimeTakenNice', 'Time taken for this run', $this->getTimeNice()),
+                    ReadonlyField::create('MemoryTakenNice', 'Memory used in Megabytes', $this->getMemoryTakenNice),
                     ReadonlyField::create('RamLoadNice', 'Total Ram Load of Server', $this->getRamLoadNice()),
                     ReadonlyField::create('SysLoadANice', 'CPUs used previous minute', $this->getSysLoadNice('A')),
-                    ReadonlyField::create('SysLoadBNice', 'CPUs used previous 5 minute', $this->getSysLoadNice('B')),
+                    ReadonlyField::create('SysLoadBNice', 'CPUs used previous 5 minutes', $this->getSysLoadNice('B')),
                     ReadonlyField::create('SysLoadCNice', 'CPUs used previous 15 minutes', $this->getSysLoadNice('C')),
-                    ReadonlyField::create('MemoryTakenNice', 'Memory taken for this run', $this->getMemoryTakenNice()),
-                ],
+],
                 'ImportantLogs'
             );
             if ($this instanceof SiteUpdate) {

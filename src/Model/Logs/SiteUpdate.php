@@ -229,7 +229,7 @@ class SiteUpdate extends DataObject
         }
 
         $fields->addFieldsToTab(
-            'Root.Main',
+            'Root.SiteUpdateSteps',
             [
                 ReadonlyField::create(
                     'PercentageCompleteNice',
