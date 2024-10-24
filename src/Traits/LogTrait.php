@@ -19,6 +19,7 @@ use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\HeaderField;
+use SilverStripe\ORM\FieldType\DBDatetime;
 use Sunnysideup\CronJobs\Api\BashColours;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
@@ -65,6 +66,17 @@ trait LogTrait
     public function getTimeNice(): string
     {
         return $this->secondsToTime($this->TimeTaken);
+    }
+
+    public function getRamLoadNice(): string
+    {
+        return round(($this->RamLoad) * 100).'%';
+    }
+
+    public function getSysLoadNice(?string $letter = 'A'): string
+    {
+        $var = 'SysLoad' . strtoupper($letter);
+        return round(($this->$var) * 100).'%';
     }
 
     public function getMemoryTakenNice(): string
@@ -130,30 +142,39 @@ trait LogTrait
 
     protected function addGenericFields($fields)
     {
+        $fields->removeByName(
+            [
+                'RunnerClassName',
+                'TimeTaken',
+                'HasErrors',
+                'Type',
+                'SysLoadA',
+                'SysLoadB',
+                'SysLoadC',
+                'RamLoad',
+            ]
+        );
         $readonlyFields = [
             'AllowedNextStep',
             'Status',
-            'Type',
             'Errors',
             'MemoryTaken',
-            'SysLoadA',
-            'SysLoadB',
-            'SysLoadC',
             'SiteUpdateID',
+            'Attempts',
         ];
-        $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
 
+        $this->makeReadonOnlyForCMSFieldsAll($fields, $readonlyFields);
         $fields->addFieldsToTab(
             'Root.Main',
             [
                 ReadonlyField::create('Title', 'Name'),
                 ReadonlyField::create('Description', 'Description'),
-                ReadonlyField::create('Type', 'Type'),
                 ReadonlyField::create('Created', 'Started')
                     ->setDescription($this->dbObject('Created')->Ago()),
                 ReadonlyField::create('LastEdited', 'Last active')
                     ->setDescription($this->dbObject('LastEdited')->Ago()),
                 $fields->dataFieldByName('Status'),
+                ReadonlyField::create('Attempts', 'Attempts'),
             ],
             'Stopped'
         );
@@ -163,8 +184,21 @@ trait LogTrait
         /** @var SiteUpdateRecipeBaseClass|SiteUpdateRecipeStepBaseClass $obj */
         $obj = $this->getRunnerObject();
         if ($obj) {
-            $fields->removeByName('TimeTaken');
-            $fields->removeByName('HasErrors');
+            $fields->addFieldsToTab(
+                'Root.ImportantLogs',
+                [
+                    ReadonlyField::create('HasErrorsNice', 'This run had errors?', $this->dbObject('HasErrors')->NiceAndColourfullInvertedColours()),
+                    ReadonlyField::create('Errors', 'Error count'),
+                    ReadonlyField::create('Notes', 'Notes / Errors'),
+                    ReadonlyField::create('TimeTakenNice', 'Time taken for this run', $this->getTimeNice()),
+                    ReadonlyField::create('RamLoadNice', 'Total Ram Load of Server', $this->getRamLoadNice()),
+                    ReadonlyField::create('SysLoadANice', 'CPUs used previous minute', $this->getSysLoadNice('A')),
+                    ReadonlyField::create('SysLoadBNice', 'CPUs used previous 5 minute', $this->getSysLoadNice('B')),
+                    ReadonlyField::create('SysLoadCNice', 'CPUs used previous 15 minutes', $this->getSysLoadNice('C')),
+                    ReadonlyField::create('MemoryTakenNice', 'Memory taken for this run', $this->getMemoryTakenNice()),
+                ],
+                'ImportantLogs'
+            );
             if ($this instanceof SiteUpdate) {
                 $fields->addFieldsToTab(
                     'Root.Schedule',
@@ -186,8 +220,9 @@ trait LogTrait
                 $fields->addFieldsToTab(
                     'Root.LastRun',
                     [
-                        ReadonlyField::create('LastStarted', 'Started', $obj->LastStarted()),
-                        ReadonlyField::create('LastCompleted', 'Completed', $obj->LastCompleted()),
+                        ReadonlyField::create('StatusOfLastRun', 'Status of Last Run', $obj->LastStoppedRunLog()?->Status ?? 'n/a'),
+                        ReadonlyField::create('LastStarted', 'Last time a run started', $obj->LastStarted()),
+                        ReadonlyField::create('LastCompleted', 'Last time a run completed', $obj->LastCompleted()),
                         ReadonlyField::create('LastRunHadErrorsNice', 'Most recent run had errors', $obj->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours()),
                     ]
                 );
@@ -218,17 +253,7 @@ trait LogTrait
                     // ReadonlyField::create('MaxSysLoadC', 'Max CPU use over 15 minutes', $obj->MaxSysLoadC()),
                 ],
             );
-            $fields->addFieldsToTab(
-                'Root.ImportantLogs',
-                [
-                    ReadonlyField::create('HasErrorsNice', 'This run had errors?', $this->dbObject('HasErrors')->NiceAndColourfullInvertedColours()),
-                    ReadonlyField::create('Errors', 'Error count'),
-                    ReadonlyField::create('Notes', 'Notes / Errors'),
-                    ReadonlyField::create('TimeTakenNice', 'Time taken for this run', $this->getTimeNice()),
-                    ReadonlyField::create('MemoryTakenNice', 'Memory taken for this run', $this->getMemoryTakenNice()),
-                ],
-                'ImportantLogs'
-            );
+
         }
         $removeOptionsFields = [
             'ImportantLogs',
@@ -248,24 +273,6 @@ trait LogTrait
                 ]
             );
         }
-        $data = $this->getLogContent();
-        $source = basename($this->logFilePath());
-
-        $logField = LiteralField::create(
-            'Logs',
-            '<h2>Response from the lastest update only - stored in (' . $source . ')</h2>
-            <div style="background-color: #300a24; padding: 20px; height: 600px; overflow-y: auto; border-radius: 10px; color: #efefef;">' . $data . '</div>'
-        );
-        $fields->addFieldsToTab(
-            'Root.ImportantLogs',
-            [
-                $logField,
-            ]
-        );
-        $obj = $this->getRunnerObject();
-        $fields->removeByName(
-            'RunnerClassName',
-        );
 
     }
 
@@ -311,8 +318,13 @@ trait LogTrait
         return implode(', ', $timeParts);
     }
 
-    public function recordErrorsOnBeforeWrite(?string  $recordClassName = SiteUpdateNote::class, ?string $relFieldName = 'SiteUpdateID')
+    protected function recordsStandardValuesAndFixes(?string  $recordClassName = SiteUpdateNote::class, ?string $relFieldName = 'SiteUpdateID')
     {
+        $this->LastEdited = DBDatetime::now()->Rfc2822();
+        /** @var SiteUpdateStep $step */
+        if (! $this->Status) {
+            $this->Status = $this->Stopped ? 'NotCompleted' : 'Started';
+        }
         if (!$this->Stopped && $this->Status === 'Started') {
             return null;
         }
@@ -341,10 +353,17 @@ trait LogTrait
                 $logError = true;
             }
             if ($this instanceof SiteUpdate) {
+                $this->TotalStepsErrors = 0;
                 /** @var SiteUpdateStep $step */
-                foreach ($this->SiteUpdateSteps()->filter('HasErrors', true) as $step) {
+                foreach ($this->SiteUpdateSteps()->filter(['HasErrors' => true]) as $step) {
                     $this->TotalStepsErrors += $step->Errors;
                 }
+            }
+            $startTS = strtotime($this->Created);
+            $endTS = strtotime($this->LastEdited);
+            $diffTs = $endTS - $startTS;
+            if ($this->TimeTaken < $diffTs) {
+                $this->TimeTaken = $diffTs;
             }
         } else {
             if ($this->Status !== 'Started') {
@@ -404,33 +423,21 @@ trait LogTrait
     }
 
 
-    protected function getLogContent(): string
-    {
-        $filePath = $this->logFilePath();
-        if (file_exists($filePath)) {
-            return BashColours::bash_to_html(file_get_contents($filePath));
-        }
 
-        return 'no file found here '.$filePath;
+    public function hasCompletedStep(string $stepClassName): bool
+    {
+        if (! $this instanceof SiteUpdate) {
+            return false;
+        }
+        return $this->SiteUpdateSteps()->filter(['RunnerClassName' => $stepClassName, 'Status' => 'Completed', 'Stopped' => true])->exists();
     }
 
-    protected function deleteLogFile()
+    public function hasNotCompletedStep(string $stepClassName): bool
     {
-        if (file_exists($this->logFilePath())) {
-            unlink($this->logFilePath());
+        if (! $this instanceof SiteUpdate) {
+            return false;
         }
-    }
-
-
-    protected function hasErrorInLog(string $contents): bool
-    {
-        $needles = ['[Emergency]', '[Error]', '[CRITICAL]', '[ALERT]', '[ERROR]'];
-        foreach ($needles as $needle) {
-            if (strpos($contents, $needle) !== false) {
-                return true;
-            }
-        }
-        return false;
+        return $this->SiteUpdateSteps()->filter(['RunnerClassName' => $stepClassName, 'Status' => 'NotCompleted', 'Stopped' => true])->exists();
     }
 
 
