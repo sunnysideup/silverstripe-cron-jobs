@@ -30,6 +30,8 @@ class SiteUpdateRun extends BuildTask
         return $this;
     }
 
+    protected $cleanupAttempt = 0;
+
     /**
      * @param mixed $request
      * @return void
