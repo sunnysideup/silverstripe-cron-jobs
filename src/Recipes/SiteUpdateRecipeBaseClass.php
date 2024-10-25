@@ -361,7 +361,7 @@ abstract class SiteUpdateRecipeBaseClass
         return $al;
     }
 
-    public function canRunCalculated(?bool $verbose = true): bool
+    public function canRunCalculated(?bool $verbose = true, ?bool $reason = false): bool|string
     {
         $whyNot = '';
         if ($verbose) {
@@ -399,6 +399,8 @@ abstract class SiteUpdateRecipeBaseClass
         }
         if ($verbose) {
             $this->logAnything('-- NO: ' . $whyNot);
+        } elseif ($reason) {
+            return 'Can not run right now because '.$whyNot;
         }
         return false;
     }
@@ -564,9 +566,8 @@ abstract class SiteUpdateRecipeBaseClass
                         $log->AllowedNextStep = false;
                         $log->write();
                         break;
-                    } else {
-                        $this->recordTimeAndMemory();
                     }
+                    $this->recordTimeAndMemory();
                 }
             }
             $this->stopLog($errors, $status, $notes);
