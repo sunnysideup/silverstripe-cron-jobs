@@ -330,7 +330,7 @@ class SiteUpdate extends DataObject
 
     public function getNumberOfStepsRan(): int
     {
-        return $this->SiteUpdateSteps()->filter(['Status' => 'Completed'])->count();
+        return $this->SiteUpdateSteps()->filter(['Status' => ['Completed', 'Skipped']])->count();
     }
 
 
