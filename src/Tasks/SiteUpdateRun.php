@@ -8,6 +8,7 @@ use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
+use Sunnysideup\CronJobs\Recipes\Entries\CleanUpSiteUpdatesRecipe;
 
 class SiteUpdateRun extends BuildTask
 {
@@ -73,7 +74,14 @@ class SiteUpdateRun extends BuildTask
         if ($outcome) {
             echo PHP_EOL . 'RAN: '. $this->recipe . PHP_EOL;
         } else {
-            echo PHP_EOL . 'NOTHING HAS BEEN RUN'.  PHP_EOL;
+            if ($this->cleanupAttempt < 3 && $this->recipe !== CleanUpSiteUpdatesRecipe::class) {
+                $this->cleanupAttempt++;
+                $this->recipe = CleanUpSiteUpdatesRecipe::class;
+                echo PHP_EOL . 'RETRYING WITH: '. $this->recipe . PHP_EOL;
+                $this->doTheActualRun($request, $forceRun);
+            } else {
+                echo PHP_EOL . 'NOTHING HAS BEEN RUN'.  PHP_EOL;
+            }
         }
     }
 
