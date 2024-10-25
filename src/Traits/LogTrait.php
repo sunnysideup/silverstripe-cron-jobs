@@ -205,6 +205,7 @@ trait LogTrait
                     [
                         ReadonlyField::create('CanRunNice', 'Can run at all?', $obj->CanRunNice()->NiceAndColourfull()),
                         ReadonlyField::create('CanRunCalculatedNice', 'Can run right now?', $obj->CanRunCalculatedNice()->NiceAndColourfull()),
+                        ReadonlyField::create('ReasonItCanNotRun', 'Why can it not run right now?', $obj->CanRunCalculatedReason()?: 'Should be able to run'),
                         ReadonlyField::create('CurrentlyRunningNice', 'An instance is currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfullInvertedColours()),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
                         ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
