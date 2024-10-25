@@ -2,14 +2,21 @@
 
 namespace Sunnysideup\CronJobs\Model;
 
+use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
+use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
+use Exception;
+use SilverStripe\Forms\ReadonlyField;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 
 class SiteUpdateConfig extends DataObject
 {
+    use InteractionWithLogFile;
+
     private static string $table_name = 'SiteUpdateConfig';
 
     private static string $singular_name = 'Configuration';
@@ -44,18 +51,6 @@ class SiteUpdateConfig extends DataObject
     {
         if (! self::$me) {
             self::$me = SiteUpdateConfig::get()->first();
-            if (! self::$me) {
-                self::$me = SiteUpdateConfig::create();
-                self::$me->write();
-            }
-        }
-        $folderPath = static::folder_path();
-        if (! file_exists($folderPath)) {
-            try {
-                mkdir($folderPath);
-            } catch (\Exception $e) {
-                //do nothing
-            }
         }
         return self::$me;
     }
@@ -83,6 +78,42 @@ class SiteUpdateConfig extends DataObject
                 )
             );
         }
+        $outcome = SiteUpdateRecipeBaseClass::can_run_now_based_on_sys_load();
+        if ($outcome !== true) {
+            $fields->addFieldToTab(
+                'Root.Main',
+                LiteralField::create(
+                    'CanNotRunNow',
+                    '<p class="message error">Updates can not run because: '.$outcome.'.</p>'
+                )
+            );
+        }
+        $sysLoad = SiteUpdateRecipeBaseClass::get_sys_load();
+        $fields->addFieldsToTab(
+            'Root.Main',
+            [
+                ReadonlyField::create(
+                    'CurrentRamLoad',
+                    'RAM Load',
+                    round(SiteUpdateRecipeBaseClass::get_ram_usage() * 100).'%'
+                ),
+                ReadonlyField::create(
+                    'sysLoadA',
+                    'CPU Usage 1 minute',
+                    round($sysLoad[0] * 100).'%'
+                ),
+                ReadonlyField::create(
+                    'sysLoadB',
+                    'CPU Usage 5 minutes',
+                    round($sysLoad[1] * 100).'%'
+                ),
+                ReadonlyField::create(
+                    'sysLoadC',
+                    'CPU Usage 15 minutes',
+                    round($sysLoad[2] * 100).'%'
+                ),
+            ]
+        );
         $stopped = $fields->dataFieldByName('StopSiteUpdates');
         if ($stopped) {
             $alwaysRun = [];
@@ -93,6 +124,8 @@ class SiteUpdateConfig extends DataObject
             }
             $stopped->setDescription('The following update recipes always run: ' . implode(', ', $alwaysRun) .'.');
         }
+
+        $this->addLogField($fields, 'Root.RawLogs');
         return $fields;
     }
 
@@ -108,6 +141,32 @@ class SiteUpdateConfig extends DataObject
             $defaults = $this->Config()->get('defaults');
             $this->Title = $defaults['Title'] ?? 'Default Site Update Configuration';
         }
+    }
+
+    public function requireDefaultRecords()
+    {
+        parent::requireDefaultRecords();
+        if (! SiteUpdateConfig::get()->exists()) {
+            $obj = SiteUpdateConfig::create();
+            $obj->write();
+        }
+        $folderPath = static::folder_path();
+        if (! file_exists($folderPath)) {
+            try {
+                mkdir($folderPath);
+            } catch (Exception $e) {
+                //do nothing
+            }
+        }
+    }
+
+    public function logFilePath(): string
+    {
+        return Controller::join_links(
+            self::folder_path(),
+            'SiteUpdateConfig_' . $this->ID . '-'.date('Y-m-d').'-update.log'
+        );
+
     }
 
 }

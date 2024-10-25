@@ -23,6 +23,7 @@ use Sunnysideup\CronJobs\Api\SiteUpdatesToGraph;
 use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdown;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdownField;
+use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
 use Sunnysideup\CronJobs\View\Graph;
 
 /**
@@ -35,6 +36,7 @@ use Sunnysideup\CronJobs\View\Graph;
  * @property int $Errors
  * @property int $TotalStepsErrors
  * @property int $TimeTaken
+ * @property int $Attempts
  * @property int $MemoryTaken
  * @property string $RunnerClassName
  * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateSteps()
@@ -45,6 +47,8 @@ class SiteUpdate extends DataObject
     use CMSNicetiesTraitForReadOnly;
 
     use LogTrait;
+
+    use InteractionWithLogFile;
 
     use LogSuccessAndErrorsTrait;
 
@@ -65,9 +69,11 @@ class SiteUpdate extends DataObject
         'NumberOfStepsExpectecToRun' => 'Int',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
-        'SysLoadA' => 'Decimal(3,2)',
-        'SysLoadB' => 'Decimal(3,2)',
-        'SysLoadC' => 'Decimal(3,2)',
+        'Attempts' => 'Int',
+        'RamLoad' => 'Decimal(3,3)',
+        'SysLoadA' => 'Decimal(3,3)',
+        'SysLoadB' => 'Decimal(3,3)',
+        'SysLoadC' => 'Decimal(3,3)',
         'RunnerClassName' => 'Varchar(255)',
     ];
 
@@ -125,6 +131,10 @@ class SiteUpdate extends DataObject
         'Stopped' => 'ExactMatchFilter',
         'Status' => 'ExactMatchFilter',
         'HasErrors' => 'ExactMatchFilter',
+    ];
+
+    private static $defaults = [
+        'Attempts' => 1,
     ];
 
     private static $default_sort = [
@@ -189,6 +199,7 @@ class SiteUpdate extends DataObject
         );
         $gridField = $fields->dataFieldByName('SiteUpdateSteps');
         if ($gridField) {
+            $gridField->setTitle('Steps - last step first');
 
             // $gridField->getConfig()
             //     ->removeComponentsByType(GridFieldDataColumns::class)
@@ -219,7 +230,7 @@ class SiteUpdate extends DataObject
         }
 
         $fields->addFieldsToTab(
-            'Root.Main',
+            'Root.SiteUpdateSteps',
             [
                 ReadonlyField::create(
                     'PercentageCompleteNice',
@@ -242,13 +253,14 @@ class SiteUpdate extends DataObject
                 ),
                 HTMLEditorField::create(
                     'AllStepsHere',
-                    'Steps expected to run',
+                    'Steps expected to run (in order)',
                     DBHTMLText::create_field('HTMLText', $steps)
                 )->performDisabledTransformation(),
 
             ]
         );
 
+        $this->addLogField($fields, 'Root.RawLogs');
 
         return $fields;
     }
@@ -269,13 +281,7 @@ class SiteUpdate extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->LastEdited = DBDatetime::now()->Rfc2822();
-        $this->TotalStepsErrors = 0;
-        /** @var SiteUpdateStep $step */
-        if (! $this->Status) {
-            $this->Status = $this->Stopped ? 'NotCompleted' : 'Started';
-        }
-        $this->recordErrorsOnBeforeWrite(SiteUpdateNote::class);
+        $this->recordsStandardValuesAndFixes(SiteUpdateNote::class);
     }
 
     protected function onAfterWrite()
@@ -307,14 +313,7 @@ class SiteUpdate extends DataObject
     public function getProposedSteps(): array
     {
         $runnerObject = $this->getRunnerObject();
-        $steps = $runnerObject ? $runnerObject->getSteps() : [];
-        foreach ($steps as $key => $step) {
-            $singleton = Injector::inst()->get($step);
-            if ($singleton->canRun() !== true) {
-                unset($steps[$key]);
-            }
-        }
-        return $steps;
+        return $runnerObject ? $runnerObject->getProposedSteps() : [];
     }
 
     public function getPercentageComplete(): float

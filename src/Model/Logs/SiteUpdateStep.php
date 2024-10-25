@@ -11,6 +11,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Forms\SiteUpdateStepDropdownField;
+use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep
@@ -23,6 +24,7 @@ use Sunnysideup\CronJobs\Forms\SiteUpdateStepDropdownField;
  * @property string $Status
  * @property bool $AllowedNextStep
  * @property int $TimeTaken
+ * @property int $Attempts
  * @property int $MemoryTaken
  * @property string $RunnerClassName
  * @property int $SiteUpdateID
@@ -34,6 +36,8 @@ class SiteUpdateStep extends DataObject
     use CMSNicetiesTraitForReadOnly;
 
     use LogTrait;
+
+    use InteractionWithLogFile;
 
     use LogSuccessAndErrorsTrait;
 
@@ -53,9 +57,11 @@ class SiteUpdateStep extends DataObject
         'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
-        'SysLoadA' => 'Float',
-        'SysLoadB' => 'Float',
-        'SysLoadC' => 'Float',
+        'Attempts' => 'Int',
+        'RamLoad' => 'Decimal(3,3)',
+        'SysLoadA' => 'Decimal(3,3)',
+        'SysLoadB' => 'Decimal(3,3)',
+        'SysLoadC' => 'Decimal(3,3)',
         'RunnerClassName' => 'Varchar(255)',
     ];
 
@@ -125,10 +131,11 @@ class SiteUpdateStep extends DataObject
 
     private static $default_sort = [
         'ID' => 'DESC',
-    ];
+ ];
 
     private static $defaults = [
         'AllowedNextStep' => true,
+        'Attempts' => 1,
     ];
 
     public function canEdit($member = null)
@@ -148,6 +155,7 @@ class SiteUpdateStep extends DataObject
     {
         $fields = parent::getCMSFields();
         $this->addGenericFields($fields);
+        $this->addLogField($fields, 'Root.RawLogs');
 
         return $fields;
     }
@@ -155,8 +163,7 @@ class SiteUpdateStep extends DataObject
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->LastEdited = DBDatetime::now()->Rfc2822();
-        $this->recordErrorsOnBeforeWrite(SiteUpdateStepNote::class, 'SiteUpdateStepID');
+        $this->recordsStandardValuesAndFixes(SiteUpdateStepNote::class, 'SiteUpdateStepID');
     }
 
     protected function onAfterWrite()

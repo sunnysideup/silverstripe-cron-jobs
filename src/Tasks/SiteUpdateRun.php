@@ -50,35 +50,50 @@ class SiteUpdateRun extends BuildTask
         }
         if (!$this->recipe) {
             // check if a run next is listed...
-            $runNowObj = SiteUpdateRunNext::get()
-                ->sort(['ID' => 'DESC'])->first();
+            $runNowObj = SiteUpdateRunNext::get()->first();
             if ($runNowObj) {
                 if ($runNowObj->RecipeOrStep === 'Step') {
                     $this->recipe = CustomRecipe::class;
+                    $runNowObj = null;
                 } else {
                     $this->recipe = $runNowObj->RunnerClassName;
+                }
+                $outcome = $this->doTheActualRun($request, true);
+                if ($outcome && $runNowObj) {
                     $runNowObj->delete();
                 }
-                $forceRun = true;
             } elseif (! $this->recipe) {
                 // check out what should run next
                 $this->recipe = WorkOutWhatToRunNext::get_next_recipe_to_run(true);
             }
         }
         if ($this->recipe) {
-            if (!class_exists($this->recipe)) {
-                DB::alteration_message('Could not find Recipe, using CustomRecipe!', 'deleted');
-                $this->recipe = CustomRecipe::class;
-            }
-            $obj = $this->recipe::inst();
-            if ($obj) {
-                if ($forceRun) {
-                    $obj->setIgnoreAll(true);
-                }
-                $obj->run($request);
-            } else {
-                user_error('Could not inst() class ' . $this->recipe);
-            }
+            $outcome = $this->doTheActualRun($request, $forceRun);
+        }
+        if ($outcome) {
+            echo PHP_EOL . 'RAN: '. $this->recipe . PHP_EOL;
+        } else {
+            echo PHP_EOL . 'NOTHING HAS BEEN RUN'.  PHP_EOL;
         }
     }
+
+    protected function doTheActualRun($request, bool $forceRun = false): bool
+    {
+        if (!class_exists($this->recipe)) {
+            DB::alteration_message('Could not find Recipe, using CustomRecipe!', 'deleted');
+            $this->recipe = CustomRecipe::class;
+        }
+        $className = $this->recipe;
+        $obj = $className::inst();
+        if ($obj) {
+            if ($forceRun) {
+                $obj->setIgnoreAll(true);
+            }
+            return $obj->run($request);
+        } else {
+            user_error('Could not inst() class ' . $this->recipe);
+        }
+        return false;
+    }
+
 }

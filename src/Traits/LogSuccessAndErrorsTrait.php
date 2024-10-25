@@ -18,6 +18,8 @@ trait LogSuccessAndErrorsTrait
 {
     public function logAnything(string $message, ?string $type = 'changed', ?bool $important = false)
     {
+        // needs to be here so that ping does not run it...
+        self::$seconds_since_last_log_entry = time();
         $this->logAnythingInner($message, $type, $important);
     }
 
@@ -43,7 +45,8 @@ trait LogSuccessAndErrorsTrait
         $this->logAnything('---');
     }
 
-    protected static $time_since_last_message = 0;
+    protected static int $seconds_since_last_log_entry = 0;
+    protected static int $seconds_since_log_update = 0;
 
     private const SECONDS_BETWEEN_PINGS = 60;
 
@@ -55,12 +58,13 @@ trait LogSuccessAndErrorsTrait
      * @param mixed $important
      * @return void
      */
-    protected function signOfLife(string $message, ?string $type = 'changed', ?bool $important = false)
+    protected function logSignOfLife(string $message, ?string $type = 'changed', ?bool $important = false)
     {
         if ($this->needsToPing()) {
             $this->logAnything($message, $type, $important);
         } else {
-            $this->logAnything('. ', $type, $important);
+            // specifically goes directly to the inner to not update the ping time.
+            $this->logAnythingInner('. ', $type, $important);
         }
     }
 
@@ -68,9 +72,12 @@ trait LogSuccessAndErrorsTrait
     {
         $log = $this->getSiteUpdateLogObject();
         if ($log) {
-            return $log->logFilePath();
+            $path = $log->logFilePath();
+            if($path) { 
+                return $path;
+            }
         }
-        return null;
+        return SiteUpdateConfig::inst()->logFilePath();
     }
 
     protected $cachedLogForLogSuccessAndErrorsTrait = null;
@@ -103,7 +110,6 @@ trait LogSuccessAndErrorsTrait
 
     protected function logAnythingInner(string $message, ?string $type = 'changed', ?bool $important = false, ?string $logFilePath = '')
     {
-        self::$time_since_last_message = time();
         $type = strtolower($type);
         $flushTypes = [
             'success' => 'created',
@@ -134,18 +140,31 @@ trait LogSuccessAndErrorsTrait
         $logFilePath =  $this->getLogFilePath();
         if ($logFilePath) {
             $message .= PHP_EOL;
-            file_put_contents($logFilePath, $message, FILE_APPEND);
+            try {
+                file_put_contents($logFilePath, $message, FILE_APPEND);
+            } catch (\Exception $e) {
+                echo 'COULD NOT LOG'.$message . PHP_EOL;
+                // do nothing
+            }
+        } else {
+            echo $message . PHP_EOL;
         }
         // update last edited...
         if ($this instanceof SiteUpdateRecipeBaseClass || $this instanceof SiteUpdateRecipeStepBaseClass) {
-            if ($this->needsToPing()) {
+            if ($this->needsToUpdateLog()) {
                 $this->recordTimeAndMemory();
+                self::$seconds_since_log_update = time();
             }
         }
     }
 
     protected function needsToPing(): bool
     {
-        return (time() - self::$time_since_last_message) > self::SECONDS_BETWEEN_PINGS;
+        return (time() - self::$seconds_since_last_log_entry) > self::SECONDS_BETWEEN_PINGS;
+    }
+
+    protected function needsToUpdateLog(): bool
+    {
+        return (time() - self::$seconds_since_log_update) > self::SECONDS_BETWEEN_PINGS;
     }
 }

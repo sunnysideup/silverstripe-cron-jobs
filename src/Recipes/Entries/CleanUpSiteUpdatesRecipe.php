@@ -7,17 +7,18 @@ use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\ORM\DataList;
+use Sunnysideup\CronJobs\RecipeSteps\Finalise\CleanUpSiteUpdatesStep;
 
-class CustomRecipe extends SiteUpdateRecipeBaseClass
+class CleanUpSiteUpdatesRecipe extends SiteUpdateRecipeBaseClass
 {
     public function getDescription(): string
     {
-        return 'Custom / Manual Update Recipe';
+        return 'Clean up old recipes and steps';
     }
 
     public function getType(): string
     {
-        return 'Custom';
+        return 'Cleanup';
     }
 
     public function canRun(): bool
@@ -37,31 +38,12 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
 
     public function minIntervalInMinutesBetweenRuns(): int
     {
-        return 0;
+        return 5;
     }
 
     public function maxIntervalInMinutesBetweenRuns(): int
     {
-        return 0;
-    }
-
-    /**
-     * run the step and delete the "run next" instruction afterwards
-     * @return SiteUpdateRecipeStepBaseClass|null
-     */
-    public function runOneStep(string $className, ?int $updateID = 0)
-    {
-        $step = parent::runOneStep($className, $updateID);
-
-        $runNextObject = $this->getBaseStepList()
-            ->filter(['RunnerClassName' => $className])
-            ->first()
-        ;
-        if ($runNextObject) {
-            $runNextObject->delete();
-        }
-
-        return $step;
+        return 10;
     }
 
     protected function getForceRun(): bool
@@ -76,9 +58,9 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
 
     public function getSteps(): array
     {
-        $array = $this->getBaseStepList()
-            ->column('RunnerClassName')
-        ;
+        $array = [
+            CleanUpSiteUpdatesStep::class,
+        ];
         $parentArrays = parent::getSteps();
         // add the parents to the start of the array
         array_unshift($array, ...$parentArrays);
@@ -86,11 +68,5 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
         return $array;
     }
 
-    protected function getBaseStepList(): DataList
-    {
-        return SiteUpdateRunNext::get()
-            ->sort(['ID' => 'DESC'])
-            ->filter(['RecipeOrStep' => 'Step'])
-        ;
-    }
+
 }
