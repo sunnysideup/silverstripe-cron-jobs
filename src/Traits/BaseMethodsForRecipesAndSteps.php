@@ -491,6 +491,11 @@ trait BaseMethodsForRecipesAndSteps
         return DBBoolean::create_field('Boolean', $this->CanRunCalculated(false));
     }
 
+    public function CanRunCalculatedReason(): string
+    {
+        return $this->CanRunCalculated(false, true);
+    }
+
     public static function my_child_links(): ArrayList
     {
         $array = ClassInfo::subclassesFor(static::class, false);
