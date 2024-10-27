@@ -361,7 +361,7 @@ abstract class SiteUpdateRecipeBaseClass
         return $al;
     }
 
-    public function canRunCalculated(?bool $verbose = true, ?bool $reason = false): bool|string
+    public function canRunCalculated(?bool $verbose = true, ?bool $returnReason = false): bool|string
     {
         $whyNot = '';
         if ($verbose) {
@@ -376,30 +376,30 @@ abstract class SiteUpdateRecipeBaseClass
                             if ($this->canRunNowBasedOnWhatElseIsRunning($verbose)) {
                                 if ($this->canRunNowBasedOnSysLoad($verbose)) {
                                     return true;
-                                } elseif ($verbose) {
+                                } elseif ($verbose || $returnReason) {
                                     $whyNot = 'of system load';
                                 }
-                            } elseif ($verbose) {
+                            } elseif ($verbose || $returnReason) {
                                 $whyNot = 'something else is running';
                             }
-                        } elseif ($verbose) {
+                        } elseif ($verbose || $returnReason) {
                             $whyNot = 'there is not enough time since last run';
                         }
-                    } elseif ($verbose) {
+                    } elseif ($verbose || $returnReason) {
                         $whyNot = 'it is not the right time of day';
                     }
-                } elseif ($verbose) {
+                } elseif ($verbose || $returnReason) {
                     $whyNot = 'canRunAdditionalCheck returns FALSE';
                 }
-            } elseif ($verbose) {
+            } elseif ($verbose || $returnReason) {
                 $whyNot = 'because canRun returns FALSE';
             }
-        } elseif ($verbose) {
+        } elseif ($verbose || $returnReason) {
             $whyNot = 'updated are not allowed right now is FALSE';
         }
         if ($verbose) {
             $this->logAnything('-- NO: ' . $whyNot);
-        } elseif ($reason) {
+        } elseif ($returnReason) {
             return 'Can not run right now because '.$whyNot;
         }
         return false;
