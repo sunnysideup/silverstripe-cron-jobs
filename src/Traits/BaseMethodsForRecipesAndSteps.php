@@ -461,6 +461,11 @@ trait BaseMethodsForRecipesAndSteps
     {
         $returnID = null;
         if ($this->log && $this->log->exists()) {
+            if (SiteUpdateRecipeStepBaseClass::has_had_stop_error_response()) {
+                $errors = 1;
+                $status = 'Shortened';
+                $notes = 'Stopped due to error due to a stop error response .';
+            }
             $this->recordTimeAndMemory();
             if (!$this->log->Stopped) {
                 $this->log->Stopped = true;

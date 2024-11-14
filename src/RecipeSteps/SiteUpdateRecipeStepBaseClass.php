@@ -13,6 +13,9 @@ use Sunnysideup\Flush\FlushNow;
 
 abstract class SiteUpdateRecipeStepBaseClass
 {
+
+    protected static const STOP_ERROR_RESPONSE = -1;
+
     use Configurable;
 
     use BaseMethodsForRecipesAndSteps;
@@ -22,6 +25,12 @@ abstract class SiteUpdateRecipeStepBaseClass
     use BaseMethodsForAllRunners;
 
     protected $debug = false;
+    protected static bool $hasHadStopErrorResponse = false;
+
+    public static function has_had_stop_error_response(): bool
+    {
+        return self::$hasHadStopErrorResponse;
+    }
 
     abstract public function run(): int;
 
@@ -31,6 +40,9 @@ abstract class SiteUpdateRecipeStepBaseClass
      */
     public function allowNextStepToRun(): bool
     {
+        if(self::$hasHadStopErrorResponse) {
+            return false;
+        }
         return true;
     }
 
@@ -54,13 +66,16 @@ abstract class SiteUpdateRecipeStepBaseClass
         return 'runstep';
     }
 
-    public function canRunCalculated(?bool $verbose = true): bool
+    public function canRunCalculated(?bool $verbose = true, ?bool $returnReason = false): bool|string
     {
         // are updates running at all?
         if ($this->canRun()) {
             return true;
         } elseif ($verbose) {
             $this->logAnything('Can not run ' . $this->getType() . ' because canRun returned FALSE');
+        }
+        if($returnReason) {
+            return 'canRun returned FALSE';
         }
         return false;
     }
@@ -69,4 +84,12 @@ abstract class SiteUpdateRecipeStepBaseClass
     {
         return [];
     }
+
+    protected function stopError(string $message): int
+    {
+        $this->logError($message, true);
+        self::$hasHadStopErrorResponse = true;
+        return self::STOP_ERROR_RESPONSE;
+    }
 }
+

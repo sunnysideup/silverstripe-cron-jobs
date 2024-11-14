@@ -53,7 +53,7 @@ class SiteUpdateStep extends DataObject
         'Type' => 'Varchar(255)',
         'HasErrors' => 'Boolean',
         'Errors' => 'Int',
-        'Status' => 'Enum("Started,NotCompleted,Completed,Skipped","Started")',
+        'Status' => 'Enum("Started,NotCompleted,Completed,Skipped,Shortened","Started")',
         'AllowedNextStep' => 'Boolean(1)',
         'TimeTaken' => 'Int',
         'MemoryTaken' => 'Int',
