@@ -14,7 +14,7 @@ use Sunnysideup\Flush\FlushNow;
 abstract class SiteUpdateRecipeStepBaseClass
 {
 
-    protected static const STOP_ERROR_RESPONSE = -1;
+    public static const STOP_ERROR_RESPONSE = -1;
 
     use Configurable;
 
