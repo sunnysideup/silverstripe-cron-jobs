@@ -42,11 +42,11 @@ trait NoteTrait
         $fields->addFieldsToTab(
             'Root.Main',
             [
-                ReadonlyField::create('Created', 'When did this error occur?'),
+                ReadonlyField::create('Created', 'When did this occur?'),
             ]
         );
         $fields->removeByName('Title');
-        $fields->dataFieldByName('Important')->setTitle('Is this an key error?');
+        $fields->dataFieldByName('Important')->setTitle('Is this an important note?');
 
         //...
 
