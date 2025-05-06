@@ -20,6 +20,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\View\ArrayData;
 use Sunnysideup\CronJobs\Api\Converters;
+use Sunnysideup\CronJobs\Api\SysLoads;
 
 trait BaseMethodsForRecipesAndSteps
 {
@@ -75,7 +76,7 @@ trait BaseMethodsForRecipesAndSteps
                 foreach ($whatElseIsRunning as $otherOne) {
                     $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . ')';
                 }
-                $this->logAnything('-- '.implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
+                $this->logAnything('-- ' . implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
             }
             // check again
             return true;
@@ -130,7 +131,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function LastCompletedNice(?bool $asTs = false): string|int
     {
-        return 'Last completed '.$this->LastCompleted(false);
+        return 'Last completed ' . $this->LastCompleted(false);
     }
 
     protected function getLastStartedOrCompleted(?bool $asTs = false, ?bool $startedRatherThanCompleted = false): string|int
@@ -363,7 +364,7 @@ trait BaseMethodsForRecipesAndSteps
     public function AverageSysLoad(?string $letter): string
     {
         $var = 'SysLoad' . strtoupper($letter);
-        return $this->aggregateTaken('avg', $var, 2).'%';
+        return $this->aggregateTaken('avg', $var, 2) . '%';
     }
 
 
@@ -375,7 +376,7 @@ trait BaseMethodsForRecipesAndSteps
     public function MaxSysLoad(?string $letter): string
     {
         $var = 'SysLoad' . strtoupper($letter);
-        return $this->aggregateTaken('max', $var, 2).'%';
+        return $this->aggregateTaken('max', $var, 2) . '%';
     }
 
     public function MaxTimeTakenNice(): string
@@ -444,12 +445,12 @@ trait BaseMethodsForRecipesAndSteps
     {
         $returnID = null;
         if ($this->log && $this->log->exists()) {
-            $this->log->MemoryTaken = round(memory_get_peak_usage(true) / 1024 / 1024);
-            $loadAverages = SiteUpdateRecipeBaseClass::get_sys_load();
+            $this->log->MemoryTaken = SysLoads::get_max_ram_use_in_megabytes();
+            $loadAverages = SysLoads::get_sys_load();
             $this->log->SysLoadA = $loadAverages[0] ?? 0;
             $this->log->SysLoadB = $loadAverages[1] ?? 0;
             $this->log->SysLoadC = $loadAverages[2] ?? 0;
-            $this->log->RamLoad = SiteUpdateRecipeBaseClass::get_ram_usage();
+            $this->log->RamLoad = SysLoads::get_ram_usage_as_percent_of_total_available();
             $this->log->TimeTaken = round(time() - $this->timeAtStart);
             $returnID = $this->log->write();
         }
@@ -568,7 +569,4 @@ trait BaseMethodsForRecipesAndSteps
         $this->log = $log;
         return $this;
     }
-
-
-
 }

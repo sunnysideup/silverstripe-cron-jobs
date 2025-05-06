@@ -11,6 +11,7 @@ use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
 use Exception;
 use SilverStripe\Forms\ReadonlyField;
+use Sunnysideup\CronJobs\Api\SysLoads;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 
 class SiteUpdateConfig extends DataObject
@@ -84,33 +85,33 @@ class SiteUpdateConfig extends DataObject
                 'Root.Main',
                 LiteralField::create(
                     'CanNotRunNow',
-                    '<p class="message error">Updates can not run because: '.$outcome.'.</p>'
+                    '<p class="message error">Updates can not run because: ' . $outcome . '.</p>'
                 )
             );
         }
-        $sysLoad = SiteUpdateRecipeBaseClass::get_sys_load();
+        $sysLoad = SysLoads::get_sys_load(true);
         $fields->addFieldsToTab(
             'Root.Main',
             [
                 ReadonlyField::create(
                     'CurrentRamLoad',
                     'RAM Load',
-                    round(SiteUpdateRecipeBaseClass::get_ram_usage() * 100).'%'
+                    SysLoads::get_ram_usage_as_percent_of_total_available(true)
                 ),
                 ReadonlyField::create(
                     'sysLoadA',
                     'CPU Usage 1 minute',
-                    round($sysLoad[0] * 100).'%'
+                    $sysLoad[0]
                 ),
                 ReadonlyField::create(
                     'sysLoadB',
                     'CPU Usage 5 minutes',
-                    round($sysLoad[1] * 100).'%'
+                    $sysLoad[1]
                 ),
                 ReadonlyField::create(
                     'sysLoadC',
                     'CPU Usage 15 minutes',
-                    round($sysLoad[2] * 100).'%'
+                    $sysLoad[2]
                 ),
             ]
         );
@@ -122,7 +123,7 @@ class SiteUpdateConfig extends DataObject
                     $alwaysRun[] = $obj->getTitle();
                 }
             }
-            $stopped->setDescription('The following update recipes always run: ' . implode(', ', $alwaysRun) .'.');
+            $stopped->setDescription('The following update recipes always run: ' . implode(', ', $alwaysRun) . '.');
         }
 
         $this->addLogField($fields, 'Root.RawLogs');
@@ -164,9 +165,7 @@ class SiteUpdateConfig extends DataObject
     {
         return Controller::join_links(
             self::folder_path(),
-            'SiteUpdateConfig_' . $this->ID . '-'.date('Y-m-d').'-update.log'
+            'SiteUpdateConfig_' . $this->ID . '-' . date('Y-m-d') . '-update.log'
         );
-
     }
-
 }

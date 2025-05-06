@@ -18,6 +18,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBBoolean;
 use Sunnysideup\CronJobs\Api\Converters;
+use Sunnysideup\CronJobs\Api\SysLoads;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
@@ -62,64 +63,7 @@ abstract class SiteUpdateRecipeBaseClass
      */
     protected const STEPS = [];
 
-    public static function get_sys_load(): array
-    {
-        try {
-            if (function_exists('sys_getloadavg')) {
-                $load = sys_getloadavg();
-                $cores = (int) shell_exec('nproc');
-                try {
-                    $cores = (int) shell_exec('nproc');
-                } catch (RuntimeException | InvalidArgumentException $e) {
-                    $cores = 1;
-                }
-                return [
-                    ($load[0] ?? 0) / $cores,
-                    ($load[1] ?? 0) / $cores,
-                    ($load[2] ?? 0) / $cores,
-                ];
-            }
-        } catch (RuntimeException | InvalidArgumentException $e) {
-            // do nothing
-        }
-        return [
-            0,
-            0,
-            0,
-        ];
 
-    }
-
-    public static function get_ram_usage(): float
-    {
-        try {
-            $output = [];
-            exec('free -m', $output);
-
-            if (empty($output)) {
-                return 0; // In case the command fails
-            }
-
-            foreach ($output as $line) {
-                if (strpos($line, 'Mem:') === 0) {
-                    $parts = preg_split('/\s+/', $line);
-                    $total = (int) $parts[1]; // Total memory in MB
-                    $available = (int) $parts[6]; // Available memory in MB
-
-                    if ($total === 0) {
-                        return 0; // Avoid division by zero
-                    }
-
-                    return ($available / $total);
-                }
-            }
-        } catch (RuntimeException | InvalidArgumentException $e) {
-            // do nothing
-        }
-
-
-        return 0;
-    }
 
     public function canRunHoursOfTheDayClean(?bool $fill = false): array
     {
@@ -229,8 +173,8 @@ abstract class SiteUpdateRecipeBaseClass
         $last24Hours = $this->listOfLogsForThisRecipeOrStep()->filter([
             'Status' => 'Completed',
             'HasErrors' => false,
-            'Created:GreaterThan' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $maxMultiplier).' hours')),
-            'Created:LessThanOrEqual' => date('Y-m-d H:i:s', strtotime('-'.($hoursBack * $minMultiplier).' hours')),
+            'Created:GreaterThan' => date('Y-m-d H:i:s', strtotime('-' . ($hoursBack * $maxMultiplier) . ' hours')),
+            'Created:LessThanOrEqual' => date('Y-m-d H:i:s', strtotime('-' . ($hoursBack * $minMultiplier) . ' hours')),
         ]);
         return (int) $last24Hours->count();
     }
@@ -289,7 +233,7 @@ abstract class SiteUpdateRecipeBaseClass
                         $runTimeMin = $testHour;
                     }
                     $testA = (float) $runTimeMin >= (float) $testHour;
-                    $testB = (float) (float) ($runTimeMin) < (float) ($testHour +  $maxHoursBetweenRuns) ;
+                    $testB = (float) (float) ($runTimeMin) < (float) ($testHour +  $maxHoursBetweenRuns);
                     $testC = (float) $runTimeMin < (float) $endOfTestHour;
                     while ($testA && ($testB || $testC)) {
                         // max to min on purpose.
@@ -304,7 +248,7 @@ abstract class SiteUpdateRecipeBaseClass
                         $runTimeMax = $testHour;
                     }
                     $testA = (float) $runTimeMax >= (float) $testHour;
-                    $testB = (float) (float) ($runTimeMax) < (float) ($testHour +  $minHoursBetweenRuns) ;
+                    $testB = (float) (float) ($runTimeMax) < (float) ($testHour +  $minHoursBetweenRuns);
                     $testC = (float) $runTimeMax < (float) $endOfTestHour;
                     while ($testA && ($testB || $testC)) {
                         // echo'B';
@@ -313,9 +257,7 @@ abstract class SiteUpdateRecipeBaseClass
                         if ((float) $runTimeMax > (float) $endOfTestHour) {
                             break;
                         }
-
                     }
-
                 }
                 $testHour++;
             }
@@ -333,7 +275,6 @@ abstract class SiteUpdateRecipeBaseClass
         }
 
         return $this->expectedMinimumOrMaximumEntriesPer24HoursCache[$minOrMax];
-
     }
 
     public function getExpectedMinimumHoursBetweenRuns(): float
@@ -365,7 +306,7 @@ abstract class SiteUpdateRecipeBaseClass
     {
         $whyNot = '';
         if ($verbose) {
-            $this->logAnything('Checking if we can run '.$this->getTitle());
+            $this->logAnything('Checking if we can run ' . $this->getTitle());
         }
         // are updates running at all?
         if ($this->areUpdatesRunningAtAll()) {
@@ -400,7 +341,7 @@ abstract class SiteUpdateRecipeBaseClass
         if ($verbose) {
             $this->logAnything('-- NO: ' . $whyNot);
         } elseif ($returnReason) {
-            return 'Can not run right now because '.$whyNot;
+            return 'Can not run right now because ' . $whyNot;
         }
         return false;
     }
@@ -501,24 +442,24 @@ abstract class SiteUpdateRecipeBaseClass
             return true;
         }
         if ($verbose) {
-            $this->logAnything('Can not run now because '.$outcome);
+            $this->logAnything('Can not run now because ' . $outcome);
         }
         return false;
     }
 
     public static function can_run_now_based_on_sys_load(): bool|string
     {
-        $sysLoad =  self::get_sys_load();
+        $sysLoad =  SysLoads::get_sys_load();
         $sysLoadMaxes = Config::inst()->get(static::class, 'sys_load_maxes');
         if ($sysLoad[0] < $sysLoadMaxes[0] && $sysLoad[1] < $sysLoadMaxes[1] && $sysLoad[2] < $sysLoadMaxes[2]) {
-            $ramLoad =  self::get_ram_usage();
+            $ramLoad =  SysLoads::get_ram_usage_as_percent_of_total_available();
             if ($ramLoad < Config::inst()->get(static::class, 'ram_load_max')) {
                 return true;
             } else {
-                return 'RAM load is too high: '.$ramLoad;
+                return 'RAM load is too high: ' . $ramLoad;
             }
         } else {
-            return 'System load is too high: '.implode(', ', $sysLoad);
+            return 'System load is too high: ' . implode(', ', $sysLoad);
         }
     }
 
@@ -550,7 +491,7 @@ abstract class SiteUpdateRecipeBaseClass
             if ($this->log->Attempts > 1) {
                 $this->logAnything('This is attempt number: ' . $this->log->Attempts);
                 if ($this->log->Attempts > $this->Config()->max_number_of_attempts) {
-                    $this->logError('This is attempt number: ' . $this->log->Attempts. ' - stopping now', true);
+                    $this->logError('This is attempt number: ' . $this->log->Attempts . ' - stopping now', true);
                     $this->myNotCompletePreviousRecipeLog = null;
                 }
             }
@@ -575,7 +516,6 @@ abstract class SiteUpdateRecipeBaseClass
             return true;
         }
         return false;
-
     }
 
 
@@ -598,9 +538,9 @@ abstract class SiteUpdateRecipeBaseClass
             $errorFormatted = "Error [$errno]: $errstr in $errfile on line $errline";
             $this->stopLog(1, 'NotCompleted', $errorFormatted);
             if ($this->log) {
-                $this->log->logAnything('Fatal error: '.$errfile.' on line '.$errline.' with message '.$errstr);
+                $this->log->logAnything('Fatal error: ' . $errfile . ' on line ' . $errline . ' with message ' . $errstr);
             } else {
-                $this->logAnything('Fatal error: '.$errfile.' on line '.$errline.' with message '.$errstr);
+                $this->logAnything('Fatal error: ' . $errfile . ' on line ' . $errline . ' with message ' . $errstr);
             }
         }
     }
@@ -632,9 +572,9 @@ abstract class SiteUpdateRecipeBaseClass
                         if ($myNotCompletePreviousRecipeStepLog) {
                             $log->Attempts = ((int) $myNotCompletePreviousRecipeStepLog->Attempts ?: 1) + 1;
                             $log->write();
-                            $this->logAnything('This is now attempt '.$log->Attempts.' for the step.'.$log->ClassName.'_'.$log->ID);
+                            $this->logAnything('This is now attempt ' . $log->Attempts . ' for the step.' . $log->ClassName . '_' . $log->ID);
                         } else {
-                            $this->logAnything('Could not find the previous step log. for the step.'.$log->ClassName.'_'.$log->ID);
+                            $this->logAnything('Could not find the previous step log. for the step.' . $log->ClassName . '_' . $log->ID);
                         }
                         $obj->setLog($log);
                     } else {

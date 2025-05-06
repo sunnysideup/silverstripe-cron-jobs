@@ -7,6 +7,7 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\ORM\DataObjectInterface;
+use Sunnysideup\CronJobs\Api\SysLoads;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use Sunnysideup\Flush\FlushNowImplementor;
@@ -21,6 +22,20 @@ trait LogSuccessAndErrorsTrait
         // needs to be here so that ping does not run it...
         self::$seconds_since_last_log_entry = time();
         $this->logAnythingInner($message, $type, $important);
+    }
+
+    public function logResourceUse()
+    {
+        $this->logAnything(
+            '
+             Memory Used: ' . SysLoads::get_max_ram_use_in_megabytes() . '
+             Memory Percentage Used: ' . SysLoads::get_ram_usage_as_percent_of_total_available(true) . '
+             Load (1m, 5m 15m): ' . implode(
+                ' | ',
+                SysLoads::get_sys_load(true)
+            ),
+            'changed'
+        );
     }
 
     public function logSuccess(string $message, ?bool $important = false)
@@ -73,7 +88,7 @@ trait LogSuccessAndErrorsTrait
         $log = $this->getSiteUpdateLogObject();
         if ($log) {
             $path = $log->logFilePath();
-            if($path) { 
+            if ($path) {
                 return $path;
             }
         }
@@ -143,7 +158,7 @@ trait LogSuccessAndErrorsTrait
             try {
                 file_put_contents($logFilePath, $message, FILE_APPEND);
             } catch (\Exception $e) {
-                echo 'COULD NOT LOG'.$message . PHP_EOL;
+                echo 'COULD NOT LOG' . $message . PHP_EOL;
                 // do nothing
             }
         } else {
