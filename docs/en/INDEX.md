@@ -120,5 +120,5 @@ class MyFirstUpdateStep extends SiteUpdateRecipeStepBaseClass
 ### set up the cron job to run it
 
 ```shell
-* * * * * vendor/bin/sake dev/tasks/site-update-run
+* * * * * vendor/bin/sake dev/tasks/site-update-run > /dev/null 2>&1
 ```
