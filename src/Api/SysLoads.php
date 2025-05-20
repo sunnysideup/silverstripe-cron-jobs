@@ -54,7 +54,7 @@ class SysLoads
         return round(memory_get_usage(true) / 1024 / 1024);
     }
 
-    public static function get_ram_usage_as_percent_of_total_available(?bool $asPercentage = false): float
+    public static function get_ram_usage_as_percent_of_total_available(?bool $asPercentage = false): int|float|string
     {
         try {
             $output = [];
@@ -71,18 +71,17 @@ class SysLoads
                     $available = (int) $parts[6]; // Available memory in MB
 
                     if ($total === 0) {
-                        return $asPercentage ? self::float_2_percentage((float) 0) : 0;
+                        return $asPercentage ? 'error' : 0;
                     }
-
-                    return $asPercentage ? self::float_2_percentage((float) ($available / $total)) : 0;
+                    $v = ($available / $total);
+                    return $asPercentage ? self::float_2_percentage($v) : 0;
                 }
             }
         } catch (RuntimeException | InvalidArgumentException $e) {
             // do nothing
         }
 
-
-        return $asPercentage ? self::float_2_percentage((float) 0) : 0;
+        return $asPercentage ? 'error' : 0;
     }
 
     public static function float_2_percentage(float|int $float): string
