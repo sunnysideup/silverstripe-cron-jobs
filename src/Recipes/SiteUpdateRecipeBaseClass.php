@@ -42,7 +42,7 @@ abstract class SiteUpdateRecipeBaseClass
 
     private static $ram_load_max = 0.8;
 
-    private static $max_number_of_attempts = 12;
+    private static $max_number_of_attempts = 7;
 
     abstract public function getType(): string;
     abstract public function getDescription(): string;
@@ -477,6 +477,7 @@ abstract class SiteUpdateRecipeBaseClass
         $errors = 0;
         $status = 'Completed';
         $notes = '';
+        $canRun = true;
         if ($this->canRunCalculated($verbose)) {
             $updateID = $this->startLog();
             register_shutdown_function(function () use ($updateID) {
@@ -493,23 +494,28 @@ abstract class SiteUpdateRecipeBaseClass
                 if ($this->log->Attempts > $this->Config()->max_number_of_attempts) {
                     $this->logError('This is attempt number: ' . $this->log->Attempts . ' - stopping now', true);
                     $this->myNotCompletePreviousRecipeLog = null;
+                    $canRun = false;
                 }
             }
-            $steps = $this->getSteps();
-            foreach ($steps as $className) {
-                $stepRunner = $this->runOneStep($className, $updateID);
-                if ($stepRunner) {
-                    if ($stepRunner->allowNextStepToRun() !== true) {
-                        $errors = 1;
-                        $status = 'Shortened';
-                        $notes = 'This update recipe stopped early because a step prevented the next step from running.';
-                        $log = $stepRunner->getLog();
-                        $log->AllowedNextStep = false;
-                        $log->write();
-                        break;
+            if ($canRun) {
+                $steps = $this->getSteps();
+                foreach ($steps as $className) {
+                    $stepRunner = $this->runOneStep($className, $updateID);
+                    if ($stepRunner) {
+                        if ($stepRunner->allowNextStepToRun() !== true) {
+                            $errors = 1;
+                            $status = 'Shortened';
+                            $notes = 'This update recipe stopped early because a step prevented the next step from running.';
+                            $log = $stepRunner->getLog();
+                            $log->AllowedNextStep = false;
+                            $log->write();
+                            break;
+                        }
+                        $this->recordTimeAndMemory();
                     }
-                    $this->recordTimeAndMemory();
                 }
+            } else {
+                $status = 'Shortened';
             }
             $this->stopLog($errors, $status, $notes);
             $this->logHeader('End ' . $this->getTitle());
