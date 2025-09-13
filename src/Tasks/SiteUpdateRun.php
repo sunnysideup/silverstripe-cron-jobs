@@ -40,6 +40,8 @@ class SiteUpdateRun extends BuildTask
     public function run($request)
     {
         error_reporting(E_ERROR | E_PARSE);
+        // allow the database to be around for longer
+        DB::query('SET SESSION wait_timeout=600;');
         $forceRun = false;
         // recipe already set ...
         if (! $this->recipe) {
@@ -72,15 +74,15 @@ class SiteUpdateRun extends BuildTask
             $outcome = $this->doTheActualRun($request, $forceRun);
         }
         if ($outcome) {
-            echo PHP_EOL . 'RAN: '. $this->recipe . PHP_EOL;
+            echo PHP_EOL . 'RAN: ' . $this->recipe . PHP_EOL;
         } else {
             if ($this->cleanupAttempt < 3 && $this->recipe !== CleanUpSiteUpdatesRecipe::class) {
                 $this->cleanupAttempt++;
                 $this->recipe = CleanUpSiteUpdatesRecipe::class;
-                echo PHP_EOL . 'RETRYING WITH: '. $this->recipe . PHP_EOL;
+                echo PHP_EOL . 'RETRYING WITH: ' . $this->recipe . PHP_EOL;
                 $this->doTheActualRun($request, $forceRun);
             } else {
-                echo PHP_EOL . 'NOTHING HAS BEEN RUN'.  PHP_EOL;
+                echo PHP_EOL . 'NOTHING HAS BEEN RUN' .  PHP_EOL;
             }
         }
     }
@@ -103,5 +105,4 @@ class SiteUpdateRun extends BuildTask
         }
         return false;
     }
-
 }
