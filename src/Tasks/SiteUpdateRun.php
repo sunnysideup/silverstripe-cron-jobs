@@ -41,7 +41,7 @@ class SiteUpdateRun extends BuildTask
     {
         error_reporting(E_ERROR | E_PARSE);
         // allow the database to be around for longer
-        DB::query('SET SESSION wait_timeout=600;');
+        DB::query('SET SESSION wait_timeout=1200;');
         $forceRun = false;
         // recipe already set ...
         if (! $this->recipe) {
