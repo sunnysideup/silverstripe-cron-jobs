@@ -2,7 +2,9 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs\Custom;
 
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
@@ -49,9 +51,7 @@ class SiteUpdateRunNext extends DataObject
         'Description' => 'Varchar',
     ];
 
-    private static $field_labels = [
-
-    ];
+    private static $field_labels = [];
 
     public function getCMSFields()
     {
@@ -66,10 +66,19 @@ class SiteUpdateRunNext extends DataObject
                 ReadonlyField::create('Description', 'Description'),
             ]
         );
+        if (Director::isDev()) {
+            $link = '<p><a href="/dev/tasks/site-update-run" target="_blank">Click here to run now</a></p>';
+        } else {
+            $link = '<p>Run the following command from the command line: <pre>vendor/bin/sake dev/tasks/site-update-run</pre></p>';
+        }
         $fields->addFieldsToTab(
             'Root.Main',
             [
                 ReadonlyField::create('CreatedNice', 'Lodged', $this->dbObject('Created')->Ago()),
+                LiteralField::create(
+                    'RunLinkExample',
+                    $link
+                )
             ]
         );
         return $fields;
