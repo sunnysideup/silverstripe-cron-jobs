@@ -1,9 +1,6 @@
 
 <h2>Currently Running</h2>
 <% if $CurrentlyRunning %>
-<p>
-    <a href='/admin/site-updates/Sunnysideup-CronJobs-Model-Logs-SiteUpdate'>Review list of updates:</a>
-</p>
 
 <ul>
 
@@ -18,3 +15,7 @@
         Nothing is running right now.
     </p>
 <% end_if %>
+
+<p>
+    <a href='/admin/site-updates/Sunnysideup-CronJobs-Model-Logs-SiteUpdate'>Review full list of updates:</a>
+</p>
