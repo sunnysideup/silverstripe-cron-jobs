@@ -1,6 +1,6 @@
 <?php
 
-namespace Sunnysideup\CronJobs\Cms;
+namespace Sunnysideup\CronJobs\Admin;
 
 use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
@@ -57,7 +57,6 @@ class SiteUpdatesAdmin extends ModelAdmin
 
             // Add the custom GridFieldDataColumns
             $config->addComponent(new CustomGridFieldDataColumns());
-
         }
         if ($this->modelClass === SiteUpdateConfig::class) {
             $fields = $form->Fields();
@@ -73,14 +72,14 @@ class SiteUpdatesAdmin extends ModelAdmin
                 ->setSets(SiteUpdatesToGraph::create()->SiteUpdatesToGraphData('-24 hours'))
                 ->render();
             $htmlRight .= '
-                <h3><br /><a href="'.SiteUpdateController::my_link().'" target="_blank">Open Full Review</a></h3>';
+                <h3><br /><a href="' . SiteUpdateController::my_link() . '" target="_blank">Open Full Review</a></h3>';
 
             $fields->push(
                 LiteralField::create(
                     'CurrentlyRunning',
                     '<div style="display: flex; flex-direction: row; justify-content: space-between; flex-wrap: wrap;">
                         <div style="min-width: 200px">' . $htmlLeft . '</div>
-                        <div style="min-width: 1440px; width: 100%; overflow-x: auto;">'. $htmlRight . '</div>
+                        <div style="min-width: 1440px; width: 100%; overflow-x: auto;">' . $htmlRight . '</div>
                     </div>'
                 )
             );
@@ -102,5 +101,4 @@ class SiteUpdatesAdmin extends ModelAdmin
     {
         return SiteUpdateController::custom_running_next();
     }
-
 }
