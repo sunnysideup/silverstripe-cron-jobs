@@ -5,7 +5,7 @@ namespace Sunnysideup\CronJobs\Control;
 use PageController;
 use SilverStripe\Control\Controller;
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
-use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
+use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
@@ -84,7 +84,6 @@ class SiteUpdateController extends Controller
         $this->runClassFromRequest($request);
         $link = Injector::inst()->get(SiteUpdatesAdmin::class)->getLinkForModelClass(SiteUpdateRunNext::class);
         return $this->redirect($link);
-
     }
 
     public function runrecipe($request)
@@ -173,7 +172,7 @@ class SiteUpdateController extends Controller
     public static function custom_running_next(): string
     {
         $runNowObj = SiteUpdateRunNext::get()
-                ->sort(['ID' => 'DESC'])->first();
+            ->sort(['ID' => 'DESC'])->first();
         if ($runNowObj) {
             return $runNowObj->getTitle();
         }

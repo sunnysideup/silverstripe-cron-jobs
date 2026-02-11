@@ -4,7 +4,7 @@ namespace Sunnysideup\CronJobs\Traits;
 
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\ReadonlyField;
-use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
+use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
 
 trait NoteTrait
 {
@@ -63,6 +63,4 @@ trait NoteTrait
         parent::onBeforeWrite();
         $this->Message = strip_tags((string) $this->Message);
     }
-
-
 }

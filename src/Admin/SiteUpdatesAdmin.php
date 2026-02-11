@@ -20,7 +20,7 @@ use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
 use Sunnysideup\CronJobs\View\Graph;
 
 /**
- * Class \Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin
+ * Class \Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin
  *
  */
 class SiteUpdatesAdmin extends ModelAdmin

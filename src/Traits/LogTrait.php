@@ -5,7 +5,7 @@ namespace Sunnysideup\CronJobs\Traits;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
-use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
+use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
@@ -70,18 +70,18 @@ trait LogTrait
 
     public function getRamLoadNice(): string
     {
-        return round(($this->RamLoad) * 100).'%';
+        return round(($this->RamLoad) * 100) . '%';
     }
 
     public function getSysLoadNice(?string $letter = 'A'): string
     {
         $var = 'SysLoad' . strtoupper($letter);
-        return round(($this->$var) * 100).'%';
+        return round(($this->$var) * 100) . '%';
     }
 
     public function getMemoryTakenNice(): string
     {
-        return $this->MemoryTaken.' megabytes';
+        return $this->MemoryTaken . ' megabytes';
     }
 
     public function getCreatedNice(): string
@@ -196,7 +196,7 @@ trait LogTrait
                     ReadonlyField::create('SysLoadANice', 'CPUs used previous minute', $this->getSysLoadNice('A')),
                     ReadonlyField::create('SysLoadBNice', 'CPUs used previous 5 minutes', $this->getSysLoadNice('B')),
                     ReadonlyField::create('SysLoadCNice', 'CPUs used previous 15 minutes', $this->getSysLoadNice('C')),
-],
+                ],
                 'ImportantLogs'
             );
             if ($this instanceof SiteUpdate) {
@@ -205,7 +205,7 @@ trait LogTrait
                     [
                         ReadonlyField::create('CanRunNice', 'Can run at all?', $obj->CanRunNice()->NiceAndColourfull()),
                         ReadonlyField::create('CanRunCalculatedNice', 'Can run right now?', $obj->CanRunCalculatedNice()->NiceAndColourfull()),
-                        ReadonlyField::create('ReasonItCanNotRun', 'Why can it not run right now?', $obj->CanRunCalculatedReason()?: 'Should be able to run'),
+                        ReadonlyField::create('ReasonItCanNotRun', 'Why can it not run right now?', $obj->CanRunCalculatedReason() ?: 'Should be able to run'),
                         ReadonlyField::create('CurrentlyRunningNice', 'An instance is currently Running?', $obj->IsCurrentlyRunningNice()->NiceAndColourfullInvertedColours()),
                         ReadonlyField::create('HoursOfTheDayNice', 'Hours of the day it runs', $obj->HoursOfTheDayNice()),
                         ReadonlyField::create('IsMeetingTarget', 'Is it meeting its targets?', $obj->IsMeetingTargetNice()->NiceAndColourfull()),
@@ -254,7 +254,6 @@ trait LogTrait
                     // ReadonlyField::create('MaxSysLoadC', 'Max CPU use over 15 minutes', $obj->MaxSysLoadC()),
                 ],
             );
-
         }
         $removeOptionsFields = [
             'ImportantLogs',
@@ -274,7 +273,6 @@ trait LogTrait
                 ]
             );
         }
-
     }
 
     protected function secondsToTime(int $inputSeconds)
@@ -380,11 +378,10 @@ trait LogTrait
             // No need to write as this is called from onBeforeWrite!
             $error = $recordClassName::create();
             $error->Type = 'ERROR';
-            $error->Message = trim(implode(', ', $reasons). PHP_EOL. $errorContents);
+            $error->Message = trim(implode(', ', $reasons) . PHP_EOL . $errorContents);
             $error->$relFieldName = $this->ID;
             $error->write();
         }
-
     }
 
     public function logFilePath(): string
@@ -393,7 +390,6 @@ trait LogTrait
             SiteUpdateConfig::folder_path(),
             $this->getShortClassCode() . '_' . $this->ID . '-update.log'
         );
-
     }
 
     public function deleteAllFilesInFolder(?string $directory = '')
@@ -403,7 +399,7 @@ trait LogTrait
         }
         if (file_exists($directory)) {
             if (!is_dir($directory)) {
-                throw new InvalidArgumentException('The provided path is not a directory: '.$directory);
+                throw new InvalidArgumentException('The provided path is not a directory: ' . $directory);
             }
 
             $files = glob($directory . '/*', GLOB_MARK);
@@ -421,7 +417,6 @@ trait LogTrait
                 }
             }
         }
-
     }
 
 
@@ -441,6 +436,4 @@ trait LogTrait
         }
         return $this->SiteUpdateSteps()->filter(['RunnerClassName' => $stepClassName, 'Status' => 'NotCompleted', 'Stopped' => true])->exists();
     }
-
-
 }

@@ -7,7 +7,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
-use Sunnysideup\CronJobs\Cms\SiteUpdatesAdmin;
+use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
 
 /**
  * Class \Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext
