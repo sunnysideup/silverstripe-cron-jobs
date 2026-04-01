@@ -42,6 +42,13 @@ class SiteUpdateNote extends DataObject
         'Title' => 'Subject',
     ];
 
+    private static $searchable_fields = [
+        'Type' => 'PartialMatchFilter',
+        'Title' => 'PartialMatchFilter',
+        'Message' => 'PartialMatchFilter',
+        'SiteUpdate.Type' => 'PartialMatchFilter',
+    ];
+
     public function ParentRel(): string
     {
         return 'SiteUpdate';

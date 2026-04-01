@@ -43,6 +43,13 @@ class SiteUpdateStepNote extends DataObject
         'Title' => 'Subject',
     ];
 
+    private static $searchable_fields = [
+        'Type' => 'PartialMatchFilter',
+        'Title' => 'PartialMatchFilter',
+        'Message' => 'PartialMatchFilter',
+        'SiteUpdateStep.Type' => 'PartialMatchFilter',
+    ];
+
 
     public function ParentRel(): string
     {
