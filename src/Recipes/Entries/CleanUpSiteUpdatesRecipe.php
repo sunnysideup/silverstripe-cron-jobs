@@ -2,11 +2,8 @@
 
 namespace Sunnysideup\CronJobs\Recipes\Entries;
 
-use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
+use Override;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
-use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
-use SilverStripe\Control\HTTPRequest;
-use SilverStripe\ORM\DataList;
 use Sunnysideup\CronJobs\RecipeSteps\Finalise\CleanUpSiteUpdatesStep;
 
 class CleanUpSiteUpdatesRecipe extends SiteUpdateRecipeBaseClass
@@ -46,6 +43,7 @@ class CleanUpSiteUpdatesRecipe extends SiteUpdateRecipeBaseClass
         return 10;
     }
 
+    #[Override]
     protected function getForceRun(): bool
     {
         return true;
@@ -56,6 +54,7 @@ class CleanUpSiteUpdatesRecipe extends SiteUpdateRecipeBaseClass
         return true;
     }
 
+    #[Override]
     public function getSteps(): array
     {
         $array = [

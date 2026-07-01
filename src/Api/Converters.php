@@ -7,6 +7,7 @@ use SilverStripe\Core\Injector\Injectable;
 class Converters
 {
     use Injectable;
+
     public function SecondsToTime(int $seconds): string
     {
         $timeUnits = [
@@ -28,7 +29,7 @@ class Converters
             }
         }
 
-        return $result ? implode(', ', $result) : 'n/a';
+        return $result !== [] ? implode(', ', $result) : 'n/a';
     }
 
     private function formatTimeUnit(int $value, string $unit): string

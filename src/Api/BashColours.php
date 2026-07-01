@@ -25,7 +25,7 @@ class BashColours
             '/\[1;37m(.*?)\[0m/s' => '<div style="color: white;">$1</div>',
         ];
 
-        $string = preg_replace(array_keys($colors), $colors, $string);
+        $string = preg_replace(array_keys($colors), $colors, (string) $string);
         $string = str_replace("\n", '<br />', $string);
         $string = str_replace("\r", '<br />', $string);
 

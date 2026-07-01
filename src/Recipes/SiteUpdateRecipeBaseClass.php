@@ -2,24 +2,18 @@
 
 namespace Sunnysideup\CronJobs\Recipes;
 
-use InvalidArgumentException;
-use RuntimeException;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Core\Config\Configurable;
-use SilverStripe\Core\Convert;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBBoolean;
 use Sunnysideup\CronJobs\Api\Converters;
 use Sunnysideup\CronJobs\Api\SysLoads;
-use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
 
@@ -45,6 +39,7 @@ abstract class SiteUpdateRecipeBaseClass
     private static $max_number_of_attempts = 7;
 
     abstract public function getType(): string;
+
     abstract public function getDescription(): string;
 
     abstract public function canRun(): bool;
@@ -58,6 +53,7 @@ abstract class SiteUpdateRecipeBaseClass
     abstract public function maxIntervalInMinutesBetweenRuns(): int;
 
     abstract public function runEvenIfUpdatesAreStopped(): bool;
+
     /**
      * @var mixed[]
      */
@@ -70,10 +66,11 @@ abstract class SiteUpdateRecipeBaseClass
         $hoursOfTheDay = $this->canRunHoursOfTheDay();
         sort($hoursOfTheDay, SORT_NUMERIC);
 
-        if (empty($hoursOfTheDay) && $fill) {
+        if ($hoursOfTheDay === [] && $fill) {
             // If no specific hours are defined, assume the job can run anytime
             $hoursOfTheDay = range(0, 23); // Full 24 hours
         }
+
         return $hoursOfTheDay;
     }
 
@@ -155,6 +152,7 @@ abstract class SiteUpdateRecipeBaseClass
                 return $test >=  $expectedMinAdded;
             }
         }
+
         return false;
     }
 
@@ -178,6 +176,7 @@ abstract class SiteUpdateRecipeBaseClass
         ]);
         return (int) $last24Hours->count();
     }
+
     public function getExpectedMinimumEntriesPer24Hours(): float
     {
         // note that we turn min and max around here!
@@ -232,6 +231,7 @@ abstract class SiteUpdateRecipeBaseClass
                     if ($runTimeMin <  $testHour) {
                         $runTimeMin = $testHour;
                     }
+
                     $testA = (float) $runTimeMin >= (float) $testHour;
                     $testB = (float) (float) ($runTimeMin) < (float) ($testHour +  $maxHoursBetweenRuns);
                     $testC = (float) $runTimeMin < (float) $endOfTestHour;
@@ -244,9 +244,11 @@ abstract class SiteUpdateRecipeBaseClass
                             break;
                         }
                     }
+
                     if ($runTimeMax <  $testHour) {
                         $runTimeMax = $testHour;
                     }
+
                     $testA = (float) $runTimeMax >= (float) $testHour;
                     $testB = (float) (float) ($runTimeMax) < (float) ($testHour +  $minHoursBetweenRuns);
                     $testC = (float) $runTimeMax < (float) $endOfTestHour;
@@ -259,14 +261,16 @@ abstract class SiteUpdateRecipeBaseClass
                         }
                     }
                 }
+
                 $testHour++;
             }
+
             // die('xxx');
             // Normalize the runs to a per-24-hour scale (since we're iterating through each hour as a starting point)
             // return $testHour;
             $divider = $testHour / 24;
-            $minRuns = $minRuns / $divider;
-            $maxRuns = $maxRuns / $divider;
+            $minRuns /= $divider;
+            $maxRuns /= $divider;
 
             $this->expectedMinimumOrMaximumEntriesPer24HoursCache = [
                 'min' => $minRuns,
@@ -308,6 +312,7 @@ abstract class SiteUpdateRecipeBaseClass
         if ($verbose) {
             $this->logAnything('Checking if we can run ' . $this->getTitle());
         }
+
         // are updates running at all?
         if ($this->areUpdatesRunningAtAll()) {
             if ($this->canRun()) {
@@ -338,11 +343,13 @@ abstract class SiteUpdateRecipeBaseClass
         } elseif ($verbose || $returnReason) {
             $whyNot = 'updated are not allowed right now is FALSE';
         }
+
         if ($verbose) {
             $this->logAnything('-- NO: ' . $whyNot);
         } elseif ($returnReason) {
             return 'Can not run right now because ' . $whyNot;
         }
+
         return false;
     }
 
@@ -351,12 +358,10 @@ abstract class SiteUpdateRecipeBaseClass
         if ($this->ignoreTimeOfDay) {
             return true;
         }
+
         $hourOfDay = $this->getCurrentHour();
         $hoursOfTheDay = $this->canRunHoursOfTheDayClean();
-        if (empty($hoursOfTheDay) || in_array($hourOfDay, $hoursOfTheDay)) {
-            return true;
-        }
-        return false;
+        return $hoursOfTheDay === [] || in_array($hourOfDay, $hoursOfTheDay);
     }
 
     public function IsThereEnoughTimeSinceLastRun(): bool
@@ -371,16 +376,14 @@ abstract class SiteUpdateRecipeBaseClass
         // echo "diff: $diff\n";
         // echo "lastRunTs: $lastRunTs\n";
         // echo "now: $now\n";
-        if ($diffInMinutes > $this->minIntervalInMinutesBetweenRuns()) {
-            return true;
-        }
-        return false;
+        return $diffInMinutes > $this->minIntervalInMinutesBetweenRuns();
     }
 
     public function overTimeSinceLastRunNice(): string
     {
         return $this->secondsToTime($this->overTimeSinceLastRun() * 60);
     }
+
     public function IsoverTimeSinceLastRun(): bool
     {
         return $this->overTimeSinceLastRun() > 0;
@@ -399,7 +402,7 @@ abstract class SiteUpdateRecipeBaseClass
     public function overTimeSinceLastRun(): int
     {
         $canRunHoursOfTheDay = $this->canRunHoursOfTheDayClean();
-        if (in_array($this->getCurrentHour(), $canRunHoursOfTheDay) || empty($canRunHoursOfTheDay)) {
+        if (in_array($this->getCurrentHour(), $canRunHoursOfTheDay) || $canRunHoursOfTheDay === []) {
             $lastRunTs = $this->LastCompleted(true);
             $nowTs = time();
             $diff = round(($nowTs - $lastRunTs) / 60);
@@ -408,6 +411,7 @@ abstract class SiteUpdateRecipeBaseClass
                 return $diff;
             }
         }
+
         return 0;
     }
 
@@ -441,9 +445,11 @@ abstract class SiteUpdateRecipeBaseClass
         if ($outcome === true) {
             return true;
         }
+
         if ($verbose) {
             $this->logAnything('Can not run now because ' . $outcome);
         }
+
         return false;
     }
 
@@ -485,9 +491,10 @@ abstract class SiteUpdateRecipeBaseClass
             });
             /** @var null|SiteUpdate $this->myNotCompletePreviousRecipeLog */
             $this->myNotCompletePreviousRecipeLog = $this->LastRunIfNotCompletedLog();
-            if ($this->myNotCompletePreviousRecipeLog) {
+            if ($this->myNotCompletePreviousRecipeLog !== null) {
                 $this->log->Attempts = $this->myNotCompletePreviousRecipeLog->Attempts + 1;
             }
+
             $this->log->write();
             if ($this->log->Attempts > 1) {
                 $this->logAnything('This is attempt number: ' . $this->log->Attempts);
@@ -497,6 +504,7 @@ abstract class SiteUpdateRecipeBaseClass
                     $canRun = false;
                 }
             }
+
             if ($canRun) {
                 $steps = $this->getSteps();
                 foreach ($steps as $className) {
@@ -511,16 +519,19 @@ abstract class SiteUpdateRecipeBaseClass
                             $log->write();
                             break;
                         }
+
                         $this->recordTimeAndMemory();
                     }
                 }
             } else {
                 $status = 'Shortened';
             }
+
             $this->stopLog($errors, $status, $notes);
             $this->logHeader('End ' . $this->getTitle());
             return true;
         }
+
         return false;
     }
 
@@ -534,6 +545,7 @@ abstract class SiteUpdateRecipeBaseClass
             if (! $this->log && $siteUpdateID) {
                 $this->log = SiteUpdate::get()->byID($siteUpdateID);
             }
+
             $errfile = 'unknown file';
             $errline = 0;
             $errstr  = 'shutdown';
@@ -541,7 +553,7 @@ abstract class SiteUpdateRecipeBaseClass
             $errfile = $error['file'] ?? 'unknown file';
             $errline = $error['line'] ?? 0;
             $errstr  = $error['message'] ?? 'shutdown';
-            $errorFormatted = "Error [$errno]: $errstr in $errfile on line $errline";
+            $errorFormatted = sprintf('Error [%s]: %s in %s on line %d', $errno, $errstr, $errfile, $errline);
             $this->stopLog(1, 'NotCompleted', $errorFormatted);
             if ($this->log) {
                 $this->log->logAnything('Fatal error: ' . $errfile . ' on line ' . $errline . ' with message ' . $errstr);
@@ -566,7 +578,7 @@ abstract class SiteUpdateRecipeBaseClass
 
                 $obj->startLog($updateID);
                 $alreadyRan = false;
-                if ($this->myNotCompletePreviousRecipeLog) {
+                if ($this->myNotCompletePreviousRecipeLog instanceof SiteUpdate) {
                     $this->logAnything('Checking if this step was already started in a previous run of this recipe.');
                     if ($this->myNotCompletePreviousRecipeLog->hasCompletedStep($className)) {
                         $obj->stopLog(0, 'Skipped', 'This step was already completed in a previous run of this recipe.');
@@ -582,6 +594,7 @@ abstract class SiteUpdateRecipeBaseClass
                         } else {
                             $this->logAnything('Could not find the previous step log. for the step.' . $log->ClassName . '_' . $log->ID);
                         }
+
                         $obj->setLog($log);
                     } else {
                         $obj->logAnything('This step was not started in a previous run of this recipe.');
@@ -589,10 +602,12 @@ abstract class SiteUpdateRecipeBaseClass
                 } else {
                     $obj->logAnything('This step was not started in a previous run of this recipe.');
                 }
+
                 if ($alreadyRan === false) {
                     $errors = (int) $obj->run();
                     $obj->stopLog($errors);
                 }
+
                 $this->logHeader('--- Finished ' . $obj->getTitle());
 
                 return $obj;
@@ -632,6 +647,7 @@ abstract class SiteUpdateRecipeBaseClass
                     array_unshift($array, $className);
                 }
             }
+
             foreach ($this->Config()->get('always_run_at_the_end_steps') as $className) {
                 if (! in_array($className, $array)) {
                     $array[] = $className;
@@ -640,6 +656,7 @@ abstract class SiteUpdateRecipeBaseClass
 
             $this->steps = $array;
         }
+
         return $this->steps;
     }
 
@@ -668,6 +685,7 @@ abstract class SiteUpdateRecipeBaseClass
                 unset($steps[$key]);
             }
         }
+
         return $steps;
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Sunnysideup\CronJobs\Traits;
 
-use InvalidArgumentException;
-use RuntimeException;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
@@ -13,12 +13,10 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBBoolean;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBField;
-use SilverStripe\View\ArrayData;
 use Sunnysideup\CronJobs\Api\Converters;
 use Sunnysideup\CronJobs\Api\SysLoads;
 
@@ -32,10 +30,8 @@ trait BaseMethodsForRecipesAndSteps
 
     public function __destruct()
     {
-        if ($this->log) {
-            if (false === (bool) $this->log->Stopped) {
-                $this->stopLog(1, 'NotCompleted', 'Did not complete, as on destruction, it was not Stopped.');
-            }
+        if ($this->log && false === (bool) $this->log->Stopped) {
+            $this->stopLog(1, 'NotCompleted', 'Did not complete, as on destruction, it was not Stopped.');
         }
     }
 
@@ -52,7 +48,7 @@ trait BaseMethodsForRecipesAndSteps
 
         $obj = SiteUpdateRunNext::create([
             'RecipeOrStep' => $recipeOrStep,
-            'RunnerClassName' => get_class($obj),
+            'RunnerClassName' => $obj::class,
         ]);
         $obj->write();
     }
@@ -69,6 +65,7 @@ trait BaseMethodsForRecipesAndSteps
         if (Director::is_cli()) {
             $verbose = true;
         }
+
         $whatElseIsRunning = $this->whatElseIsRunning();
         if ($whatElseIsRunning->exists()) {
             $whatElseIsRunningArray = [];
@@ -76,8 +73,10 @@ trait BaseMethodsForRecipesAndSteps
                 foreach ($whatElseIsRunning as $otherOne) {
                     $whatElseIsRunningArray[] = $otherOne->getTitle() . ' (' . $otherOne->ID . ')';
                 }
+
                 $this->logAnything('-- ' . implode(', ', $whatElseIsRunningArray) . ' --- is/are still running');
             }
+
             // check again
             return true;
         }
@@ -141,18 +140,22 @@ trait BaseMethodsForRecipesAndSteps
             if ($startedRatherThanCompleted === false) {
                 $list = $list?->exclude(['Status' => 'Started']);
             }
+
             $field = 'LastEdited';
             if ($startedRatherThanCompleted) {
                 $field = 'Created';
             }
+
             $obj = $list->sort('ID', 'DESC')->first();
             if ($obj) {
                 if ($asTs) {
-                    return $obj ? strtotime($obj->$field) : 0;
+                    return $obj ? strtotime((string) $obj->$field) : 0;
                 }
+
                 return DBField::create_field(DBDatetime::class, $obj->$field)->Ago();
             }
         }
+
         if ($asTs) {
             return 0;
         } else {
@@ -167,6 +170,7 @@ trait BaseMethodsForRecipesAndSteps
             return $className::get()
                 ->filter(['RunnerClassName' => static::class]);
         }
+
         return null;
     }
 
@@ -176,6 +180,7 @@ trait BaseMethodsForRecipesAndSteps
         if ($list && $list->exists()) {
             return $list->filter(['Stopped' => true])->sort('ID', 'DESC')->first();
         }
+
         return null;
     }
 
@@ -185,6 +190,7 @@ trait BaseMethodsForRecipesAndSteps
         if ($obj && $obj->Status === 'NotCompleted') {
             return $obj;
         }
+
         return null;
     }
 
@@ -194,6 +200,7 @@ trait BaseMethodsForRecipesAndSteps
         if ($obj && $obj->Status === 'Completed') {
             return $obj;
         }
+
         return null;
     }
 
@@ -206,6 +213,7 @@ trait BaseMethodsForRecipesAndSteps
                 ->sort(['ID' => 'DESC'])
                 ->first();
         }
+
         return null;
     }
 
@@ -273,8 +281,9 @@ trait BaseMethodsForRecipesAndSteps
         if ($list && $list->exists()) {
             $filter = ['Stopped' => false];
             if ($excludeMe && $this->log?->ID) {
-                $filter = $filter + ['ID' => $this->log->ID];
+                $filter += ['ID' => $this->log->ID];
             }
+
             $list = $list->filter($filter);
             return $list->exists();
         }
@@ -291,11 +300,13 @@ trait BaseMethodsForRecipesAndSteps
     {
         if ($this instanceof SiteUpdateRecipeBaseClass) {
             $array = $this->canRunHoursOfTheDayClean();
-            if (empty($array)) {
+            if ($array === []) {
                 return 'any time';
             }
+
             return $this->summariseHours($array);
         }
+
         return 'n/a';
     }
 
@@ -305,8 +316,9 @@ trait BaseMethodsForRecipesAndSteps
         $ranges = [];
         $start = $hours[0];
         $end = $hours[0];
+        $counter = count($hours);
 
-        for ($i = 1; $i < count($hours); $i++) {
+        for ($i = 1; $i < $counter; $i++) {
             if ($hours[$i] == $end + 1) {
                 $end = $hours[$i];
             } else {
@@ -336,6 +348,7 @@ trait BaseMethodsForRecipesAndSteps
         if ($this instanceof SiteUpdateRecipeBaseClass) {
             return Injector::inst()->get(Converters::class)->MinutesToTime($this->maxIntervalInMinutesBetweenRuns());
         }
+
         return 'n/a';
     }
 
@@ -363,7 +376,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function AverageSysLoad(?string $letter): string
     {
-        $var = 'SysLoad' . strtoupper($letter);
+        $var = 'SysLoad' . strtoupper((string) $letter);
         return $this->aggregateTaken('avg', $var, 2) . '%';
     }
 
@@ -375,7 +388,7 @@ trait BaseMethodsForRecipesAndSteps
 
     public function MaxSysLoad(?string $letter): string
     {
-        $var = 'SysLoad' . strtoupper($letter);
+        $var = 'SysLoad' . strtoupper((string) $letter);
         return $this->aggregateTaken('max', $var, 2) . '%';
     }
 
@@ -399,6 +412,7 @@ trait BaseMethodsForRecipesAndSteps
                 return round(($field ? $list->$aggregateMethod($field) : $list->$aggregateMethod()), $decimals);
             }
         }
+
         return 0;
     }
 
@@ -436,6 +450,7 @@ trait BaseMethodsForRecipesAndSteps
         } else {
             user_error('No SiteUpdateID provided and this is not a SiteUpdate class.', E_USER_ERROR);
         }
+
         $id = $this->log->write();
         return $id;
     }
@@ -454,6 +469,7 @@ trait BaseMethodsForRecipesAndSteps
             $this->log->TimeTaken = round(time() - $this->timeAtStart);
             $returnID = $this->log->write();
         }
+
         return $returnID;
     }
 
@@ -467,6 +483,7 @@ trait BaseMethodsForRecipesAndSteps
                 $status = 'Shortened';
                 $notes = 'Stopped due to error due to a stop error response .';
             }
+
             $this->recordTimeAndMemory();
             if (!$this->log->Stopped) {
                 $this->log->Stopped = true;
@@ -475,6 +492,7 @@ trait BaseMethodsForRecipesAndSteps
                 $this->log->Notes = $notes;
                 $returnID = $this->log->write();
             }
+
             if ('Errors' === $status) {
                 $this->logError($notes, true);
             }
@@ -505,7 +523,7 @@ trait BaseMethodsForRecipesAndSteps
     public static function my_child_links(): ArrayList
     {
         $array = ClassInfo::subclassesFor(static::class, false);
-        $al = new ArrayList();
+        $al = ArrayList::create();
         foreach ($array as $class) {
             $al->push($class::inst()->getKeyVarsAsArrayData());
         }
@@ -517,45 +535,44 @@ trait BaseMethodsForRecipesAndSteps
     public function getKeyVarsAsArrayData(): ArrayData
     {
         if ($this instanceof SiteUpdateRecipeBaseClass) {
-            $subLinksAsArrayList = new ArrayList();
+            $subLinksAsArrayList = ArrayList::create();
             foreach ($this->SubLinks(true) as $subLink) {
                 $subLinksAsArrayList->push($subLink->getKeyVarsAsArrayData());
             }
         } else {
             $subLinksAsArrayList = null;
         }
+
         // we need to list them here as the class is not viewable data.
-        return new ArrayData(
-            [
-                'Title' => $this->getTitle(),
-                'Link' => Director::absoluteURL($this->Link()),
-                'CMSEditLink' => Director::absoluteURL($this->CMSEditLink() ?: '/admin/site-updates'),
-                'Description' => trim($this->getDescription()),
-                'CanRunNice' => $this->CanRunNice()->NiceAndColourfull(),
-                'CanRunCalculated' => $this->CanRunCalculatedNice()->NiceAndColourfull(),
-                'LastStarted' => $this->LastStarted(),
-                'LastCompleted' => $this->LastCompleted(),
-                'LastRunHadErrors' => $this->LastRunHadErrors(),
-                'LastRunHadErrorsSymbol' => $this->LastRunHadErrorsSymbol(),
-                'LastRunHadErrorsNice' => $this->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours(),
-                'HasHadErrorsNice' => $this->HasHadErrorsNice()->NiceAndColourfullInvertedColours(),
-                'NumberOfLogs' => $this->NumberOfLogs(),
-                'AverageTimeTakenNice' => $this->AverageTimeTakenNice(),
-                'MaxTimeTakenNice' => $this->MaxTimeTakenNice(),
-                'AverageMemoryTaken' => $this->AverageMemoryTaken(),
-                'MaxMemoryTaken' => $this->MaxMemoryTaken(),
-                'AverageSysLoadA' => $this->AverageSysLoad('A'),
-                'AverageSysLoadB' => $this->AverageSysLoad('B'),
-                'AverageSysLoadC' => $this->AverageSysLoad('C'),
-                'MaxSysLoadA' => $this->MaxSysLoad('A'),
-                'MaxSysLoadB' => $this->MaxSysLoad('B'),
-                'MaxSysLoadC' => $this->MaxSysLoad('C'),
-                'HoursOfTheDayNice' => $this->HoursOfTheDayNice(),
-                'MinMinutesBetweenRunsNice' => $this->MinMinutesBetweenRunsNice(),
-                'MaxMinutesBetweenRunsNice' => $this->MaxMinutesBetweenRunsNice(),
-                'SubLinks' => $subLinksAsArrayList,
-            ]
-        );
+        return ArrayData::create([
+            'Title' => $this->getTitle(),
+            'Link' => Director::absoluteURL($this->Link()),
+            'CMSEditLink' => Director::absoluteURL($this->CMSEditLink() ?: '/admin/site-updates'),
+            'Description' => trim($this->getDescription()),
+            'CanRunNice' => $this->CanRunNice()->NiceAndColourfull(),
+            'CanRunCalculated' => $this->CanRunCalculatedNice()->NiceAndColourfull(),
+            'LastStarted' => $this->LastStarted(),
+            'LastCompleted' => $this->LastCompleted(),
+            'LastRunHadErrors' => $this->LastRunHadErrors(),
+            'LastRunHadErrorsSymbol' => $this->LastRunHadErrorsSymbol(),
+            'LastRunHadErrorsNice' => $this->LastRunHadErrorsNice()->NiceAndColourfullInvertedColours(),
+            'HasHadErrorsNice' => $this->HasHadErrorsNice()->NiceAndColourfullInvertedColours(),
+            'NumberOfLogs' => $this->NumberOfLogs(),
+            'AverageTimeTakenNice' => $this->AverageTimeTakenNice(),
+            'MaxTimeTakenNice' => $this->MaxTimeTakenNice(),
+            'AverageMemoryTaken' => $this->AverageMemoryTaken(),
+            'MaxMemoryTaken' => $this->MaxMemoryTaken(),
+            'AverageSysLoadA' => $this->AverageSysLoad('A'),
+            'AverageSysLoadB' => $this->AverageSysLoad('B'),
+            'AverageSysLoadC' => $this->AverageSysLoad('C'),
+            'MaxSysLoadA' => $this->MaxSysLoad('A'),
+            'MaxSysLoadB' => $this->MaxSysLoad('B'),
+            'MaxSysLoadC' => $this->MaxSysLoad('C'),
+            'HoursOfTheDayNice' => $this->HoursOfTheDayNice(),
+            'MinMinutesBetweenRunsNice' => $this->MinMinutesBetweenRunsNice(),
+            'MaxMinutesBetweenRunsNice' => $this->MaxMinutesBetweenRunsNice(),
+            'SubLinks' => $subLinksAsArrayList,
+        ]);
     }
 
 

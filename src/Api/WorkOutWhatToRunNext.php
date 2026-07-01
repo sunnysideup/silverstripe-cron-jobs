@@ -3,10 +3,6 @@
 namespace Sunnysideup\CronJobs\Api;
 
 use SilverStripe\Core\ClassInfo;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Injector\Injector;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
@@ -28,6 +24,7 @@ class WorkOutWhatToRunNext
 
         return $array;
     }
+
     public static function get_recipe_steps(): array
     {
         $classes = ClassInfo::subClassesFor(SiteUpdateRecipeStepBaseClass::class, false);
@@ -50,16 +47,19 @@ class WorkOutWhatToRunNext
                 $candidates[$class] = $obj->overTimeSinceLastRun();
             }
         }
+
         // if any of them are over then return task that is over by the most
         // else return the last candidate.
-        if (! empty($candidates)) {
+        if ($candidates !== []) {
             asort($candidates);
             $candidateKeys = array_keys($candidates);
             return array_pop($candidateKeys);
         }
+
         if ($verbose) {
             echo 'No recipes to run';
         }
+
         return null;
     }
 

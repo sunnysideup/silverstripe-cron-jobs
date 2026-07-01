@@ -2,13 +2,13 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs;
 
+use Override;
+use SilverStripe\ORM\DataList;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
-use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\FieldType\DBDatetime;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Forms\SiteUpdateStepDropdownField;
 use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
@@ -28,8 +28,8 @@ use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
  * @property int $MemoryTaken
  * @property string $RunnerClassName
  * @property int $SiteUpdateID
- * @method \Sunnysideup\CronJobs\Model\Logs\SiteUpdate SiteUpdate()
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateStepNote[] ImportantLogs()
+ * @method SiteUpdate SiteUpdate()
+ * @method DataList|SiteUpdateStepNote[] ImportantLogs()
  */
 class SiteUpdateStep extends DataObject
 {
@@ -138,6 +138,7 @@ class SiteUpdateStep extends DataObject
         'Attempts' => 1,
     ];
 
+    #[Override]
     public function canEdit($member = null)
     {
         if (Director::isDev()) {
@@ -151,6 +152,7 @@ class SiteUpdateStep extends DataObject
         return parent::canEdit($member);
     }
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -160,12 +162,14 @@ class SiteUpdateStep extends DataObject
         return $fields;
     }
 
+    #[Override]
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
         $this->recordsStandardValuesAndFixes(SiteUpdateStepNote::class, 'SiteUpdateStepID');
     }
 
+    #[Override]
     protected function onAfterWrite()
     {
         parent::onAfterWrite();
@@ -173,7 +177,8 @@ class SiteUpdateStep extends DataObject
         $this->SiteUpdate()->write();
     }
 
-    public function onBeforeDelete()
+    #[Override]
+    protected function onBeforeDelete()
     {
         parent::onBeforeDelete();
         $this->deleteLogFile();

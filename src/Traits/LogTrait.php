@@ -7,20 +7,16 @@ use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use Sunnysideup\CMSNiceties\Forms\CMSNicetiesLinkButton;
 use InvalidArgumentException;
 use RuntimeException;
 use SilverStripe\Control\Controller;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
-use SilverStripe\Control\Director;
 use SilverStripe\Core\ClassInfo;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use Sunnysideup\CronJobs\Api\BashColours;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
@@ -75,7 +71,7 @@ trait LogTrait
 
     public function getSysLoadNice(?string $letter = 'A'): string
     {
-        $var = 'SysLoad' . strtoupper($letter);
+        $var = 'SysLoad' . strtoupper((string) $letter);
         return round(($this->$var) * 100) . '%';
     }
 
@@ -134,9 +130,11 @@ trait LogTrait
         if (! $this->RunnerClassName) {
             return 'error';
         }
+
         if (! class_exists($this->RunnerClassName)) {
             return 'error';
         }
+
         return ClassInfo::shortName($this->RunnerClassName);
     }
 
@@ -228,6 +226,7 @@ trait LogTrait
                     ]
                 );
             }
+
             $fields->addFieldsToTab(
                 'Root.Stats',
                 [
@@ -255,6 +254,7 @@ trait LogTrait
                 ],
             );
         }
+
         $removeOptionsFields = [
             'ImportantLogs',
             'SiteUpdateSteps',
@@ -265,6 +265,7 @@ trait LogTrait
                 $gfNotes->getConfig()->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
             }
         }
+
         if ($obj) {
             $fields->addFieldsToTab(
                 'Root.RunNow',
@@ -280,6 +281,7 @@ trait LogTrait
         if ($inputSeconds < 1) {
             return 'n/a';
         }
+
         $secondsInAMinute = 60;
         $secondsInAnHour = 60 * $secondsInAMinute;
         $secondsInADay = 24 * $secondsInAnHour;
@@ -324,9 +326,11 @@ trait LogTrait
         if (! $this->Status) {
             $this->Status = $this->Stopped ? 'NotCompleted' : 'Started';
         }
+
         if (!$this->Stopped && $this->Status === 'Started') {
             return null;
         }
+
         $logError = false;
         $errorContents = '';
         $reasons = [];
@@ -335,23 +339,28 @@ trait LogTrait
                 $reasons[] = 'Not completed';
                 $logError = true;
             }
+
             if ($this->Errors > 0) {
                 $reasons[] = 'Errors Recorded';
                 $this->HasErrors = true;
             }
+
             $errorContents = $this->getLogContent();
             if ($this->hasErrorInLog($errorContents)) {
                 $reasons[] = 'Has Error in Log';
                 $logError = true;
             }
+
             if ('Started' === $this->Status) {
                 $reasons[] = 'Mismatch in Stopped and Status (Stopped and Started)';
                 $logError = true;
             }
+
             if ($recordClassName::get()->filter(['Type' => 'ERROR', $relFieldName => $this->ID, 'Important' => true,])->exists()) {
                 $reasons[] = 'Important error in error log';
                 $logError = true;
             }
+
             if ($this instanceof SiteUpdate) {
                 $this->TotalStepsErrors = 0;
                 /** @var SiteUpdateStep $step */
@@ -359,18 +368,18 @@ trait LogTrait
                     $this->TotalStepsErrors += $step->Errors;
                 }
             }
+
             $startTS = strtotime($this->Created);
             $endTS = strtotime($this->LastEdited);
             $diffTs = $endTS - $startTS;
             if ($this->TimeTaken < $diffTs) {
                 $this->TimeTaken = $diffTs;
             }
-        } else {
-            if ($this->Status !== 'Started') {
-                $reasons[] = 'Mismatch in Stopped and Status (not Stopped and not Started)';
-                $logError = true;
-            }
+        } elseif ($this->Status !== 'Started') {
+            $reasons[] = 'Mismatch in Stopped and Status (not Stopped and not Started)';
+            $logError = true;
         }
+
         if ($logError) {
             $this->Stopped = true;
             $this->HasErrors = true;
@@ -382,6 +391,8 @@ trait LogTrait
             $error->$relFieldName = $this->ID;
             $error->write();
         }
+
+        return null;
     }
 
     public function logFilePath(): string
@@ -397,6 +408,7 @@ trait LogTrait
         if (! $directory) {
             $directory = SiteUpdateConfig::folder_path();
         }
+
         if (file_exists($directory)) {
             if (!is_dir($directory)) {
                 throw new InvalidArgumentException('The provided path is not a directory: ' . $directory);
@@ -410,10 +422,8 @@ trait LogTrait
                     if (!rmdir($file)) {
                         throw new RuntimeException('Failed to delete directory ' . $file);
                     }
-                } else {
-                    if (!unlink($file)) {
-                        throw new RuntimeException('Failed to delete file ' . $file);
-                    }
+                } elseif (!unlink($file)) {
+                    throw new RuntimeException('Failed to delete file ' . $file);
                 }
             }
         }
@@ -426,6 +436,7 @@ trait LogTrait
         if (! $this instanceof SiteUpdate) {
             return false;
         }
+
         return $this->SiteUpdateSteps()->filter(['RunnerClassName' => $stepClassName, 'Status' => 'Completed', 'Stopped' => true])->exists();
     }
 
@@ -434,6 +445,7 @@ trait LogTrait
         if (! $this instanceof SiteUpdate) {
             return false;
         }
+
         return $this->SiteUpdateSteps()->filter(['RunnerClassName' => $stepClassName, 'Status' => 'NotCompleted', 'Stopped' => true])->exists();
     }
 }

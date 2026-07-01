@@ -2,26 +2,21 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs;
 
-use GuzzleHttp\Psr7\Header;
-use SilverStripe\Control\Controller;
+use Override;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use Sunnysideup\CronJobs\Traits\LogTrait;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Forms\GridField\GridFieldDataColumns;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use Sunnysideup\CMSNiceties\Traits\CMSNicetiesTraitForReadOnly;
 use Sunnysideup\CronJobs\Api\SiteUpdatesToGraph;
-use Sunnysideup\CronJobs\Forms\CustomGridFieldDataColumns;
-use Sunnysideup\CronJobs\Forms\SiteUpdateDropdown;
 use Sunnysideup\CronJobs\Forms\SiteUpdateDropdownField;
 use Sunnysideup\CronJobs\Traits\InteractionWithLogFile;
 use Sunnysideup\CronJobs\View\Graph;
@@ -39,8 +34,8 @@ use Sunnysideup\CronJobs\View\Graph;
  * @property int $Attempts
  * @property int $MemoryTaken
  * @property string $RunnerClassName
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep[] SiteUpdateSteps()
- * @method \SilverStripe\ORM\DataList|\Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote[] ImportantLogs()
+ * @method DataList|SiteUpdateStep[] SiteUpdateSteps()
+ * @method DataList|SiteUpdateNote[] ImportantLogs()
  */
 class SiteUpdate extends DataObject
 {
@@ -150,6 +145,7 @@ class SiteUpdate extends DataObject
         'PercentageComplete' => 'Percentage',
     ];
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -206,6 +202,7 @@ class SiteUpdate extends DataObject
             //     ->addComponent(new CustomGridFieldDataColumns());
 
         }
+
         $runnerObject = $this->getRunnerObject();
         if ($runnerObject) {
             $allSteps = $runnerObject->SubLinks(true);
@@ -215,6 +212,7 @@ class SiteUpdate extends DataObject
                 if ($step->canRun() === false) {
                     continue;
                 }
+
                 $number++;
                 $steps .=
                     '<li>
@@ -224,6 +222,7 @@ class SiteUpdate extends DataObject
                         <hr />
                     </li>';
             }
+
             $steps .= '</ul>';
         } else {
             $steps = 'No steps found';
@@ -265,6 +264,7 @@ class SiteUpdate extends DataObject
         return $fields;
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         if (Director::isDev()) {
@@ -278,12 +278,14 @@ class SiteUpdate extends DataObject
         return parent::canEdit($member);
     }
 
+    #[Override]
     protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
         $this->recordsStandardValuesAndFixes(SiteUpdateNote::class);
     }
 
+    #[Override]
     protected function onAfterWrite()
     {
         parent::onAfterWrite();
@@ -304,7 +306,8 @@ class SiteUpdate extends DataObject
         }
     }
 
-    public function onBeforeDelete()
+    #[Override]
+    protected function onBeforeDelete()
     {
         parent::onBeforeDelete();
         $this->deleteLogFile();
@@ -322,9 +325,11 @@ class SiteUpdate extends DataObject
             $proposedStepsCount = count($this->getProposedSteps());
             $this->NumberOfStepsExpectecToRun = $proposedStepsCount;
         }
+
         if ($this->NumberOfStepsExpectecToRun === 0) {
             return 0;
         }
+
         return $this->getNumberOfStepsRan() / $this->NumberOfStepsExpectecToRun;
     }
 

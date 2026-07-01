@@ -1,15 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\CronJobs\RecipeSteps;
 
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Core\Config\Configurable;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\DB;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
-use Sunnysideup\Flush\FlushNow;
 
 abstract class SiteUpdateRecipeStepBaseClass
 {
@@ -24,6 +23,7 @@ abstract class SiteUpdateRecipeStepBaseClass
     public const STOP_ERROR_RESPONSE = -1;
 
     protected $debug = false;
+
     protected static bool $hasHadStopErrorResponse = false;
 
     public static function has_had_stop_error_response(): bool
@@ -39,10 +39,7 @@ abstract class SiteUpdateRecipeStepBaseClass
      */
     public function allowNextStepToRun(): bool
     {
-        if (self::$hasHadStopErrorResponse) {
-            return false;
-        }
-        return true;
+        return !self::$hasHadStopErrorResponse;
     }
 
     public function getLogClassName(): string
@@ -73,9 +70,11 @@ abstract class SiteUpdateRecipeStepBaseClass
         } elseif ($verbose) {
             $this->logAnything('Can not run ' . $this->getType() . ' because canRun returned FALSE');
         }
+
         if ($returnReason) {
             return 'canRun returned FALSE';
         }
+
         return false;
     }
 

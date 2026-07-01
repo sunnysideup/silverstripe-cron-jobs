@@ -2,10 +2,11 @@
 
 namespace Sunnysideup\CronJobs\Recipes\Entries;
 
+use Override;
+use SilverStripe\ORM\DataObject;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
-use SilverStripe\Control\HTTPRequest;
 use SilverStripe\ORM\DataList;
 
 class CustomRecipe extends SiteUpdateRecipeBaseClass
@@ -49,6 +50,7 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
      * run the step and delete the "run next" instruction afterwards
      * @return SiteUpdateRecipeStepBaseClass|null
      */
+    #[Override]
     public function runOneStep(string $className, ?int $updateID = 0)
     {
         $step = parent::runOneStep($className, $updateID);
@@ -57,13 +59,14 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
             ->filter(['RunnerClassName' => $className])
             ->first()
         ;
-        if ($runNextObject) {
+        if ($runNextObject instanceof DataObject) {
             $runNextObject->delete();
         }
 
         return $step;
     }
 
+    #[Override]
     protected function getForceRun(): bool
     {
         return true;
@@ -74,6 +77,7 @@ class CustomRecipe extends SiteUpdateRecipeBaseClass
         return true;
     }
 
+    #[Override]
     public function getSteps(): array
     {
         $array = $this->getBaseStepList()

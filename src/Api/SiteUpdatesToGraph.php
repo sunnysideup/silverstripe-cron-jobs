@@ -24,6 +24,7 @@ class SiteUpdatesToGraph
             } else {
                 $title = $recipe->getTitle().': '.$recipe->getDescription().'.  No current records. ';
             }
+
             $title .= '<a href="'.$recipe->Link().'" target="_blank">Schedule now.</a>';
             $data[] = [
                 'Title' => $title,
@@ -42,6 +43,7 @@ class SiteUpdatesToGraph
         if ($dateFilter) {
             $logs = $logs->filter(['Created:GreaterThanOrEqual' => date('Y-m-d H:i:s', strtotime($dateFilter))]);
         }
+
         foreach ($logs as $log) {
             $data[] = [
                 'StartDateTime' => $log->Created,

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\CronJobs\RecipeSteps\Test;
 
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
@@ -19,6 +21,7 @@ class TestRecipeStep1 extends SiteUpdateRecipeStepBaseClass
             $seconds++;
             $this->logSignOfLife('Seconds passed: ' . $seconds);
         }
+
         return 0;
     }
 
