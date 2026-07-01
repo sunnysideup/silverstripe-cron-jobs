@@ -17,6 +17,7 @@ class TimeGuard
     protected static float $start = 0.0;
 
     private static string $log_file = 'silverstripe-timeguard.log';
+
     private static int $max_bytes = 200000; // ~200 KB
 
     public static function checkIn(int $seconds = 300): void

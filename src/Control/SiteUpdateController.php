@@ -2,7 +2,9 @@
 
 namespace Sunnysideup\CronJobs\Control;
 
-use PageController;
+use Override;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\Control\Controller;
 use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
@@ -14,10 +16,8 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
-use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
@@ -69,7 +69,7 @@ class SiteUpdateController extends Controller
 
     public function HasContent(): bool
     {
-        return (bool) trim($this->content);
+        return (bool) trim((string) $this->content);
     }
 
     public function runanalysis($request)
@@ -111,29 +111,28 @@ class SiteUpdateController extends Controller
     public function EmergencyLinks()
     {
         $array = $this->config()->get('emergency_array');
-        $doSet = new ArrayList();
+        $doSet = ArrayList::create();
         foreach ($array as $key => $item) {
             $doSet->push(
-                new ArrayData(
-                    [
-                        'Title' => $item['Title'],
-                        'Link' => $item['Link'],
-                        'Description' => $item['Description'] ?? '',
-                    ]
-                )
+                ArrayData::create([
+                    'Title' => $item['Title'],
+                    'Link' => $item['Link'],
+                    'Description' => $item['Description'] ?? '',
+                ])
             );
         }
+
         return $doSet;
     }
 
     public function AnalysisLinks()
     {
-        return AnalysisBaseClass::my_child_links()->sort('Title');
+        return AnalysisBaseClass::my_child_links()->sort(['Title' => 'ASC']);
     }
 
     public function RecipeLinks()
     {
-        return SiteUpdateRecipeBaseClass::my_child_links()->sort('Title');
+        return SiteUpdateRecipeBaseClass::my_child_links()->sort(['Title' => 'ASC']);
     }
 
     public function StepLinks()
@@ -166,6 +165,7 @@ class SiteUpdateController extends Controller
         if ($recipe) {
             return $recipe::inst()->getTitle();
         }
+
         return '';
     }
 
@@ -176,6 +176,7 @@ class SiteUpdateController extends Controller
         if ($runNowObj) {
             return $runNowObj->getTitle();
         }
+
         return '';
     }
 
@@ -206,7 +207,7 @@ class SiteUpdateController extends Controller
     protected function runClassFromRequest($request)
     {
         $className = $this->getClassFromRequest($request);
-        if ($className) {
+        if ($className !== '' && $className !== '0') {
             return $className::run_me($request);
         }
 
@@ -225,11 +226,13 @@ class SiteUpdateController extends Controller
     }
 
 
+    #[Override]
     protected function init()
     {
         if (! Permission::check('ADMIN')) {
             Security::permissionFailure($this);
         }
+
         Environment::increaseTimeLimitTo(1200);
         Environment::increaseMemoryLimitTo();
         parent::init();
@@ -237,6 +240,7 @@ class SiteUpdateController extends Controller
         Requirements::clear();
     }
 
+    #[Override]
     public function Link($action = null)
     {
         return Controller::join_links(

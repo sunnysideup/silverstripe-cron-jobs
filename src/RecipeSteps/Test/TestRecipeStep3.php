@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\CronJobs\RecipeSteps\Test;
 
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 class TestRecipeStep3 extends SiteUpdateRecipeStepBaseClass

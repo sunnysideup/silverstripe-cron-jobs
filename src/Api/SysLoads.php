@@ -16,9 +16,10 @@ class SysLoads
                 $cores = (int) shell_exec('nproc');
                 try {
                     $cores = (int) shell_exec('nproc');
-                } catch (RuntimeException | InvalidArgumentException $e) {
+                } catch (RuntimeException | InvalidArgumentException) {
                     $cores = 1;
                 }
+
                 if ($asPercentages) {
                     return [
                         self::float_2_percentage((float)(($load[0] ?? 0) / $cores)),
@@ -26,15 +27,17 @@ class SysLoads
                         self::float_2_percentage((float)(($load[2] ?? 0) / $cores)),
                     ];
                 }
+
                 return [
                     ($load[0] ?? 0) / $cores,
                     ($load[1] ?? 0) / $cores,
                     ($load[2] ?? 0) / $cores,
                 ];
             }
-        } catch (RuntimeException | InvalidArgumentException $e) {
+        } catch (RuntimeException | InvalidArgumentException) {
             // do nothing
         }
+
         if ($asPercentages) {
             return [
                 self::float_2_percentage(0),
@@ -42,6 +45,7 @@ class SysLoads
                 self::float_2_percentage(0),
             ];
         }
+
         return [
             0,
             0,
@@ -60,12 +64,12 @@ class SysLoads
             $output = [];
             exec('free -m', $output);
 
-            if (empty($output)) {
+            if ($output === []) {
                 return $asPercentage ? self::float_2_percentage(0) : 0;
             }
 
             foreach ($output as $line) {
-                if (strpos($line, 'Mem:') === 0) {
+                if (str_starts_with($line, 'Mem:')) {
                     $parts = preg_split('/\s+/', $line);
                     $total = (int) $parts[1]; // Total memory in MB
                     $available = (int) $parts[6]; // Available memory in MB
@@ -73,11 +77,12 @@ class SysLoads
                     if ($total === 0) {
                         return $asPercentage ? 'error' : 0;
                     }
+
                     $v = ($available / $total);
                     return $asPercentage ? self::float_2_percentage($v) : 0;
                 }
             }
-        } catch (RuntimeException | InvalidArgumentException $e) {
+        } catch (RuntimeException | InvalidArgumentException) {
             // do nothing
         }
 

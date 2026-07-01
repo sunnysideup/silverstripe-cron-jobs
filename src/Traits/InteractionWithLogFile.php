@@ -47,10 +47,11 @@ trait InteractionWithLogFile
     {
         $needles = ['[Emergency]', '[Error]', '[CRITICAL]', '[ALERT]', '[ERROR]'];
         foreach ($needles as $needle) {
-            if (strpos($contents, $needle) !== false) {
+            if (str_contains($contents, $needle)) {
                 return true;
             }
         }
+
         return false;
     }
 }

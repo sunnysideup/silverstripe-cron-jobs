@@ -2,11 +2,13 @@
 
 namespace Sunnysideup\CronJobs\Forms;
 
+use Override;
 use SilverStripe\Forms\DropdownField;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 
 class SiteUpdateDropdownField extends DropdownField
 {
+    #[Override]
     public function getSource()
     {
         $list = [];
@@ -14,6 +16,7 @@ class SiteUpdateDropdownField extends DropdownField
         foreach ($recipes as $className => $recipe) {
             $list[$className] = $recipe->getTitle();
         }
+
         asort($list);
         $list = array_merge(['' => '(Any)'], $list);
         return $list;

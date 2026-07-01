@@ -2,17 +2,19 @@
 
 namespace Sunnysideup\CronJobs\Tasks;
 
-use Sunnysideup\CronJobs\Traits\LogSuccessAndErrorsTrait;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\PolyExecution\PolyOutput;
 
 class SiteUpdateReset extends BuildTask
 {
-    private static $segment = 'site-update-reset';
+    protected static string $commandName = 'site-update-reset';
 
-    protected $title = 'Reset all Site Updates';
+    protected string $title = 'Reset all Site Updates';
 
-    protected $description = 'Set all the Site Updates steps to STOPPED';
+    protected static string $description = 'Set all the Site Updates steps to STOPPED';
 
     protected $verbose = true;
 
@@ -23,13 +25,18 @@ class SiteUpdateReset extends BuildTask
         return $this;
     }
 
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
         DB::query('Update SiteUpdate SET Stopped = 1;');
+        $output->writeln('Updated SiteUpdate table');
         DB::query('Update SiteUpdateStep SET Stopped = 1;');
+        $output->writeln('Updated SiteUpdateStep table');
         DB::query('TRUNCATE SiteUpdateRunNext');
+        $output->writeln('Truncated SiteUpdateRunNext table');
         if ($this->verbose) {
-            DB::alteration_message('DONE');
+            $output->writeln('DONE');
         }
+
+        return Command::SUCCESS;
     }
 }

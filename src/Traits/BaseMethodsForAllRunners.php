@@ -2,8 +2,6 @@
 
 namespace Sunnysideup\CronJobs\Traits;
 
-use InvalidArgumentException;
-use RuntimeException;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\CronJobs\Control\SiteUpdateController;
@@ -50,6 +48,6 @@ trait BaseMethodsForAllRunners
     {
         $string = ClassInfo::shortName(static::class);
 
-        return trim(preg_replace('#(?<!\ )[A-Z]#', ' $0', $string));
+        return trim((string) preg_replace('#(?<!\ )[A-Z]#', ' $0', $string));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\CronJobs\Model\Logs\Custom;
 
+use Override;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\LiteralField;
@@ -53,6 +54,7 @@ class SiteUpdateRunNext extends DataObject
 
     private static $field_labels = [];
 
+    #[Override]
     public function getCMSFields()
     {
         $fields = parent::getCMSFields();
@@ -71,6 +73,7 @@ class SiteUpdateRunNext extends DataObject
         } else {
             $link = '<p>Run the following command from the command line: <pre>vendor/bin/sake dev/tasks/site-update-run</pre></p>';
         }
+
         $fields->addFieldsToTab(
             'Root.Main',
             [
@@ -84,22 +87,26 @@ class SiteUpdateRunNext extends DataObject
         return $fields;
     }
 
+    #[Override]
     public function canCreate($member = null, $context = [])
     {
         return false;
     }
 
+    #[Override]
     public function canEdit($member = null)
     {
         return false;
     }
 
+    #[Override]
     public function getTitle()
     {
         $object = $this->getRunnerObject();
         if (! $object) {
             return 'ERROR: RunnerClassName not found';
         }
+
         return $object->getTitle();
     }
 
@@ -109,6 +116,7 @@ class SiteUpdateRunNext extends DataObject
         if (! $object) {
             return 'ERROR: RunnerClassName not found';
         }
+
         return $object->getDescription();
     }
 
@@ -118,9 +126,11 @@ class SiteUpdateRunNext extends DataObject
         if ($className && class_exists((string) $className)) {
             return $className::inst();
         }
+
         return null;
     }
 
+    #[Override]
     public function CMSEditLink(): string
     {
         return Injector::inst()->get(SiteUpdatesAdmin::class)->getCMSEditLinkForManagedDataObject($this);

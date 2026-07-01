@@ -3,7 +3,6 @@
 namespace Sunnysideup\CronJobs\RecipeSteps\Finalise;
 
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Injector\Injector;
 use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
 use Sunnysideup\CronJobs\Model\Logs\Notes\SiteUpdateNote;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
@@ -117,13 +116,12 @@ class CleanUpSiteUpdatesStep extends SiteUpdateRecipeStepBaseClass
         $now = time();
         $deleted = 0;
         foreach ($files as $file) {
-            if (is_file($file)) {
-                if ($now - filemtime($file) >= 60 * 60 * 24 * $days) {
-                    $deleted++;
-                    unlink($file);
-                }
+            if (is_file($file) && $now - filemtime($file) >= 60 * 60 * 24 * $days) {
+                $deleted++;
+                unlink($file);
             }
         }
+
         $this->logAnything('Deleted '.$deleted .' files older than ' . $days . ' days. Total files '.count($files).' present.');
     }
 

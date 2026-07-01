@@ -2,34 +2,39 @@
 
 namespace Sunnysideup\CronJobs\View;
 
-use Respect\Validation\Rules\Unique;
+use SilverStripe\Model\ModelData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\Core\Convert;
-use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\View\ArrayData;
-use SilverStripe\View\ViewableData;
 
-class Graph extends ViewableData
+class Graph extends ModelData
 {
     private static $height_per_set_in_pixels = 40;
+
     private static $top_bottom_margin_in_pixels = 3;
+
     private static $left_margin_percentage_for_titles = 3;
+
     private static $left_padding_percentage_for_titles = 20;
+
     private static $default_start_date = '-24 hours';
+
     private static $default_end_date = 'now';
-    protected array $sets;
+
+    protected array $sets = [];
 
     protected int $startDate;
+
     protected int $endDate;
+
     protected string $title;
 
     public function __construct()
     {
         parent::__construct();
-        $this->sets = [];
-        $this->startDate = strtotime($this->Config()->get('default_start_date'));
-        $this->endDate = strtotime($this->Config()->get('default_end_date'));
+        $this->startDate = strtotime((string) $this->Config()->get('default_start_date'));
+        $this->endDate = strtotime((string) $this->Config()->get('default_end_date'));
     }
 
     public function render(): string
@@ -66,7 +71,7 @@ class Graph extends ViewableData
      * ```
      * @param string $title
      * @param array $set
-     * @return \Sunnysideup\CronJobs\View\Graph
+     * @return Graph
      */
     public function setSets(array $sets): self
     {
@@ -84,7 +89,7 @@ class Graph extends ViewableData
      * ```
      * @param string $title
      * @param array $set
-     * @return \Sunnysideup\CronJobs\View\Graph
+     * @return Graph
      */
     public function addSet(string $title, array $set): self
     {
@@ -99,8 +104,9 @@ class Graph extends ViewableData
     public function setStartDate($startDate): self
     {
         if (!is_numeric($startDate)) {
-            $startDate = strtotime($startDate);
+            $startDate = strtotime((string) $startDate);
         }
+
         $this->startDate = $startDate;
 
         return $this;
@@ -109,8 +115,9 @@ class Graph extends ViewableData
     public function setEndDate($endDate): self
     {
         if (!is_numeric($endDate)) {
-            $endDate = strtotime($endDate);
+            $endDate = strtotime((string) $endDate);
         }
+
         $this->endDate = $endDate;
 
         return $this;
@@ -136,14 +143,16 @@ class Graph extends ViewableData
                 $duration = $time['DurationInMinutes'] * 60;
                 $class = $time['Class'];
                 $attributeTitle = $time['Title'];
-                $absoluteStart = strtotime($start);
+                $absoluteStart = strtotime((string) $start);
                 $absoluteEnd = $absoluteStart + $duration;
                 if ($absoluteStart < $this->startDate) {
                     $absoluteStart = $this->startDate;
                 }
+
                 if ($absoluteEnd > $this->endDate) {
                     $absoluteEnd = $this->endDate;
                 }
+
                 $relativeStart = $absoluteStart - $this->startDate;
                 $relativeEnd = $absoluteEnd - $this->startDate;
                 $left = ($relativeStart / $span) * 100;
@@ -160,6 +169,7 @@ class Graph extends ViewableData
                     ])
                 );
             }
+
             $al->push(
                 ArrayData::create([
                     'Top' => $top,
@@ -173,6 +183,7 @@ class Graph extends ViewableData
             );
             $height += $heighPerSet + $topBottomMargin;
         }
+
         return $al;
     }
 
@@ -190,9 +201,6 @@ class Graph extends ViewableData
 
     public function Title(): string
     {
-        if (isset($this->title)) {
-            return $this->title;
-        }
-        return 'Activity between ' . date('d-m-Y, H:i', $this->startDate) . ' AND ' . date('d-m-Y, H:i', $this->endDate);
+        return $this->title ?? 'Activity between ' . date('d-m-Y, H:i', $this->startDate) . ' AND ' . date('d-m-Y, H:i', $this->endDate);
     }
 }

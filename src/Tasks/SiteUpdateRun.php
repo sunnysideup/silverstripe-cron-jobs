@@ -2,26 +2,30 @@
 
 namespace Sunnysideup\CronJobs\Tasks;
 
-use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
-use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
-use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
-use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
+use Override;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
+use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
+use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Recipes\Entries\CleanUpSiteUpdatesRecipe;
+use Sunnysideup\CronJobs\Recipes\Entries\CustomRecipe;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use SilverStripe\PolyExecution\PolyOutput;
 
 class SiteUpdateRun extends BuildTask
 {
-    protected $title = 'Run Site Updates';
+    protected string $title = 'Run Site Updates';
 
-    protected $description = '
+    protected static string $description = '
         Build Task to communicate with the SiteUpdateRecipeBaseClass classes.
         Runs any SiteUpdateRunNext objects (to be deleted afterwards).
         If none, then runs the item set through the recipe "GET" variable. ';
 
     protected ?string $recipe = '';
 
-    private static $segment = 'site-update-run';
+    protected static string $commandName = 'site-update-run';
 
 
     public function setRecipe(string $recipe): self
@@ -33,24 +37,19 @@ class SiteUpdateRun extends BuildTask
 
     protected $cleanupAttempt = 0;
 
-    /**
-     * @param mixed $request
-     * @return void
-     */
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
         error_reporting(E_ERROR | E_PARSE);
         // allow the database to be around for longer
         DB::query('SET SESSION wait_timeout=1200;');
         $forceRun = false;
         // recipe already set ...
-        if (! $this->recipe) {
-            if ($request->getVar('recipe')) {
-                // get variable
-                $forceRun = true;
-                $this->recipe = (string) $request->getVar('recipe');
-            }
+        if (!$this->recipe && $input->getOption('recipe')) {
+            // get variable
+            $forceRun = true;
+            $this->recipe = (string) $input->getOption('recipe');
         }
+
         if (!$this->recipe) {
             // check if a run next is listed...
             $runNowObj = SiteUpdateRunNext::get()->first();
@@ -61,7 +60,8 @@ class SiteUpdateRun extends BuildTask
                 } else {
                     $this->recipe = $runNowObj->RunnerClassName;
                 }
-                $outcome = $this->doTheActualRun($request, true);
+
+                $outcome = $this->doTheActualRun($input, $output, true);
                 if ($outcome && $runNowObj) {
                     $runNowObj->delete();
                 }
@@ -70,39 +70,50 @@ class SiteUpdateRun extends BuildTask
                 $this->recipe = WorkOutWhatToRunNext::get_next_recipe_to_run(true);
             }
         }
+
         if ($this->recipe) {
-            $outcome = $this->doTheActualRun($request, $forceRun);
+            $outcome = $this->doTheActualRun($input, $output, $forceRun);
         }
+
         if ($outcome) {
-            echo PHP_EOL . 'RAN: ' . $this->recipe . PHP_EOL;
+            $output->writeln(PHP_EOL . 'RAN: ' . $this->recipe . PHP_EOL);
+        } elseif ($this->cleanupAttempt < 3 && $this->recipe !== CleanUpSiteUpdatesRecipe::class) {
+            $this->cleanupAttempt++;
+            $this->recipe = CleanUpSiteUpdatesRecipe::class;
+            $output->writeln(PHP_EOL . 'RETRYING WITH: ' . $this->recipe . PHP_EOL);
+            $this->doTheActualRun($input, $output, $forceRun);
         } else {
-            if ($this->cleanupAttempt < 3 && $this->recipe !== CleanUpSiteUpdatesRecipe::class) {
-                $this->cleanupAttempt++;
-                $this->recipe = CleanUpSiteUpdatesRecipe::class;
-                echo PHP_EOL . 'RETRYING WITH: ' . $this->recipe . PHP_EOL;
-                $this->doTheActualRun($request, $forceRun);
-            } else {
-                echo PHP_EOL . 'NOTHING HAS BEEN RUN' .  PHP_EOL;
-            }
+            $output->writeln(PHP_EOL . 'NOTHING HAS BEEN RUN' .  PHP_EOL);
         }
+
+        return Command::SUCCESS;
     }
 
-    protected function doTheActualRun($request, bool $forceRun = false): bool
+    protected function doTheActualRun(InputInterface $input, PolyOutput $output, bool $forceRun = false): bool
     {
         if (!class_exists($this->recipe)) {
-            DB::alteration_message('Could not find Recipe, using CustomRecipe!', 'deleted');
+            $output->writeln('Could not find Recipe, using CustomRecipe!');
             $this->recipe = CustomRecipe::class;
         }
+
         $className = $this->recipe;
         $obj = $className::inst();
         if ($obj) {
             if ($forceRun) {
                 $obj->setIgnoreAll(true);
             }
-            return $obj->run($request);
+
+            return $obj->run($input);
         } else {
             user_error('Could not inst() class ' . $this->recipe);
         }
+
         return false;
+    }
+
+    #[Override]
+    public function getOptions(): array
+    {
+        return [new InputOption('recipe', 'r', InputOption::VALUE_OPTIONAL, 'do something specific')];
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sunnysideup\CronJobs\Model\Logs\Notes;
 
 use SilverStripe\ORM\DataObject;
@@ -13,7 +15,7 @@ use Sunnysideup\CronJobs\Traits\NoteTrait;
  * @property string $Title
  * @property string $Message
  * @property int $SiteUpdateID
- * @method \Sunnysideup\CronJobs\Model\Logs\SiteUpdate SiteUpdate()
+ * @method SiteUpdate SiteUpdate()
  */
 class SiteUpdateNote extends DataObject
 {

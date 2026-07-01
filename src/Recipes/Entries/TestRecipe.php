@@ -2,12 +2,10 @@
 
 namespace Sunnysideup\CronJobs\Recipes\Entries;
 
+use Override;
 use SilverStripe\Control\Director;
-use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
 use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
 use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
-use SilverStripe\Control\HTTPRequest;
-use SilverStripe\ORM\DataList;
 use Sunnysideup\CronJobs\RecipeSteps\Test\TestRecipeStep1;
 use Sunnysideup\CronJobs\RecipeSteps\Test\TestRecipeStep2;
 use Sunnysideup\CronJobs\RecipeSteps\Test\TestRecipeStep3;
@@ -19,7 +17,7 @@ use Sunnysideup\CronJobs\RecipeSteps\Test\TestRecipeStep7;
 class TestRecipe extends SiteUpdateRecipeBaseClass
 {
     /**
-     * @var array<class-string<\Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass>>
+     * @var array<class-string<SiteUpdateRecipeStepBaseClass>>
      */
     public const STEPS = [
         TestRecipeStep1::class,
@@ -68,6 +66,7 @@ class TestRecipe extends SiteUpdateRecipeBaseClass
 
     }
 
+    #[Override]
     protected function getForceRun(): bool
     {
         return true;

@@ -2,17 +2,15 @@
 
 namespace Sunnysideup\CronJobs\Analysis;
 
+use SilverStripe\Model\ArrayData;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Control\Director;
 use Sunnysideup\CronJobs\Traits\BaseMethodsForAllRunners;
-use Sunnysideup\CronJobs\Traits\BaseMethodsForRecipesAndSteps;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\View\ArrayData;
-use Sunnysideup\CronJobs\Control\SiteUpdateController;
 
 abstract class AnalysisBaseClass
 {
@@ -101,7 +99,7 @@ abstract class AnalysisBaseClass
     {
         if ($this->HasIdSelection()) {
             if ($this->useDropdownInForm()) {
-                $options = $this->ListToChooseFrom()->sort($this->getTitleFieldForList(), 'ASC')->map('ID', $this->getTitleFieldForList())->toArray();
+                $options = $this->ListToChooseFrom()->sort([$this->getTitleFieldForList() => 'ASC'])->map('ID', $this->getTitleFieldForList())->toArray();
                 $optionsHTML = '';
                 foreach ($options as $id => $title) {
                     $selected = '';
@@ -152,16 +150,14 @@ abstract class AnalysisBaseClass
     public static function my_child_links(): ArrayList
     {
         $array = ClassInfo::subclassesFor(static::class, false);
-        $al = new ArrayList();
+        $al = ArrayList::create();
         foreach ($array as $class) {
             $obj = Injector::inst()->get($class);
-            $arrayData = new ArrayData(
-                [
-                    'Title' => $obj->getTitle(),
-                    'Link' => Director::absoluteURL($obj->Link()),
-                    'Description' => trim($obj->getDescription()),
-                ]
-            );
+            $arrayData = ArrayData::create([
+                'Title' => $obj->getTitle(),
+                'Link' => Director::absoluteURL($obj->Link()),
+                'Description' => trim((string) $obj->getDescription()),
+            ]);
             $al->push($arrayData);
         }
 
@@ -176,6 +172,8 @@ abstract class AnalysisBaseClass
 
             return $obj->run($request);
         }
+
+        return null;
 
     }
 
