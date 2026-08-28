@@ -4,12 +4,6 @@ namespace Sunnysideup\CronJobs\Control;
 
 use PageController;
 use SilverStripe\Control\Controller;
-use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
-use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
-use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
-use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
-use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Environment;
@@ -19,9 +13,15 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
+use Sunnysideup\CronJobs\Admin\SiteUpdatesAdmin;
+use Sunnysideup\CronJobs\Analysis\AnalysisBaseClass;
 use Sunnysideup\CronJobs\Api\WorkOutWhatToRunNext;
 use Sunnysideup\CronJobs\Model\Logs\Custom\SiteUpdateRunNext;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdate;
+use Sunnysideup\CronJobs\Model\Logs\SiteUpdateStep;
 use Sunnysideup\CronJobs\Model\SiteUpdateConfig;
+use Sunnysideup\CronJobs\Recipes\SiteUpdateRecipeBaseClass;
+use Sunnysideup\CronJobs\RecipeSteps\SiteUpdateRecipeStepBaseClass;
 
 class SiteUpdateController extends Controller
 {
@@ -46,7 +46,7 @@ class SiteUpdateController extends Controller
         ],
         [
             'Title' => 'Clear Cache: flush cache and check database',
-            'Link' => '/dev/build/?flush=1',
+            'Link' => '/?flush=1',
             'Description' => 'Flush any caches to update what the website shows (e.g. images).',
         ],
         [
